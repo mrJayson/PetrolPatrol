@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import com.petrolpatrol.petrolpatrol.R;
+import com.petrolpatrol.petrolpatrol.fuelcheck.VolleyQueue;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
@@ -17,6 +18,7 @@ public class SplashActivity extends AppCompatActivity {
         setContentView(R.layout.activity_splash);
 
         // Between setContentView and Intent, perform any app initialization during splash screen
+        VolleyQueue.getInstance(getApplicationContext()); // Initialize volley singleton
 
         Intent intent = new Intent(getApplicationContext(), BaseActivity.class);
         startActivity(intent);

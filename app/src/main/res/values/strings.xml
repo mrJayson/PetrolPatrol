@@ -2,5 +2,12 @@
     <string name="app_name">PetrolPatrol</string>
 
     <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <!-- Volley Error Messages -->
+    <string name="error_network_timeout">error network timeout</string>
+    <string name="error_auth_failure">error auth failure</string>
+    <string name="error_server">error server</string>
+    <string name="error_network">error network</string>
+    <string name="error_parse">error parse</string>
+
 </resources>

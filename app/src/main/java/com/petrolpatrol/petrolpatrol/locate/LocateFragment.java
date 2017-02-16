@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 
 import android.widget.Toast;
 import com.petrolpatrol.petrolpatrol.R;
+import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.service.LocationServiceConnection;
 import com.petrolpatrol.petrolpatrol.service.NewLocationReceiver;
 
@@ -56,12 +57,25 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_locate, container, false);
         FloatingActionButton locateFab = (FloatingActionButton) v.findViewById(R.id.locate_fab);
+//        locateFab.setOnClickListener(new View.OnClickListener() {
+//
+//            @Override
+//            public void onClick(View view) {
+//                registerReceiverToLocationService();
+//                parentListener.startLocating();
+//            }
+//        });
         locateFab.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View view) {
-                registerReceiverToLocationService();
-                parentListener.startLocating();
+                FuelCheckClient client = new FuelCheckClient();
+                client.authToken("QU4yY2IwNGlUSHVsemoxeWNnVnVMaG1uRWE2MVpNOUQ6bHdnS0FxVmNudlRYMjZBbg==", new FuelCheckClient.FuelCheckResponse<String>() {
+                    @Override
+                    public void onCompletion(String res) {
+
+                    }
+                });
             }
         });
 
@@ -82,6 +96,7 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
         Toast.makeText(getActivity(), s, Toast.LENGTH_SHORT).show();
         unregisterReceiverFromLocationService();
         parentListener.stopLocating();
+
     }
 
     /**
