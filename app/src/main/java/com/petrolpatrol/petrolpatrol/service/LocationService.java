@@ -17,6 +17,8 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.petrolpatrol.petrolpatrol.util.Constants;
 
+import java.io.Serializable;
+
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.support.v4.content.PermissionChecker.PERMISSION_GRANTED;
@@ -25,7 +27,8 @@ import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 public class LocationService extends Service implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener {
+        LocationListener,
+        Serializable {
 
     private static final String TAG = makeLogTag(LocationService.class);
 
@@ -45,8 +48,9 @@ public class LocationService extends Service implements
     private IBinder binder;
 
     // Location related members
-    private GoogleApiClient googleApiClient;
-    private LocationRequest locationRequest;
+    private GoogleApiClient mGoogleApiClient;
+    private LocationRequest mLocationRequest;
+    private boolean isCurrentlyLocating;
 
 
     private synchronized GoogleApiClient buildGoogleApiClient() {
@@ -68,16 +72,18 @@ public class LocationService extends Service implements
 
     @Override
     public void onCreate() {
-        googleApiClient = buildGoogleApiClient();
-        locationRequest = buildLocationRequest();
         binder = new LocationServiceBinder();
-        googleApiClient.connect();
+        mGoogleApiClient = buildGoogleApiClient();
+        mLocationRequest = buildLocationRequest();
+        isCurrentlyLocating = false;
+
+        mGoogleApiClient.connect();
     }
 
     @Override
     public void onDestroy() {
         stopLocating();
-        googleApiClient.disconnect();
+        mGoogleApiClient.disconnect();
         super.onDestroy();
     }
 
@@ -88,7 +94,7 @@ public class LocationService extends Service implements
 
     @Override
     public void onConnectionSuspended(int i) {
-        googleApiClient.connect();
+        mGoogleApiClient.connect();
     }
 
     @Override
@@ -99,10 +105,8 @@ public class LocationService extends Service implements
     @Override
     public void onLocationChanged(Location location) {
         Intent intent = new Intent(Constants.NEW_LOCATION_AVAILABLE);
-        intent.putExtra("latitude", location.getLatitude());
-        intent.putExtra("longitude", location.getLongitude());
+        intent.putExtra("location", location);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-
     }
 
     public void startLocating() {
@@ -116,17 +120,23 @@ public class LocationService extends Service implements
 
         // permission granted, request for location updates, when a location is found,
         // the onLocationChanged callback is invoked
-        LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient,locationRequest, this);
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        isCurrentlyLocating = true;
     }
 
     public void stopLocating() {
-        LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
+        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+        isCurrentlyLocating = false;
+    }
+
+    public boolean isCurrentlyLocating() {
+        return isCurrentlyLocating;
     }
 
     /**
      * Local Binder class
      */
-    public class LocationServiceBinder extends Binder {
+    public class LocationServiceBinder extends Binder implements Serializable {
         public LocationService getService() {
             return LocationService.this;
         }
