@@ -28,8 +28,7 @@ public class SharedPreferences {
         * String: SAMPLE_KEY, SAMPLE_STR or just SAMPLE
         */
         OAUTH_TOKEN,
-        OAUTH_ISSUE_TIME,
-        OAUTH_LIFE_SPAN,
+        OAUTH_EXPIRY_TIME,
         REFERENCE_MODIFIED_TIMESTAMP
     }
 

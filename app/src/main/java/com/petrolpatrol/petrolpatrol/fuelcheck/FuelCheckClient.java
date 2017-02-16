@@ -41,9 +41,11 @@ public class FuelCheckClient {
                 try {
                     if (res.isSuccess() && res.dataIsObject()) {
                         JSONObject jsonObject = res.getDataAsObject();
-                        SharedPreferences.getInstance().put(SharedPreferences.Key.OAUTH_TOKEN, jsonObject.getString("access_token"));
-                        SharedPreferences.getInstance().put(SharedPreferences.Key.OAUTH_ISSUE_TIME, jsonObject.getLong("issued_at"));
-                        SharedPreferences.getInstance().put(SharedPreferences.Key.OAUTH_LIFE_SPAN, jsonObject.getLong("expires_in"));
+                        String authToken = jsonObject.getString("access_token");
+                        long issuedAt = jsonObject.getLong("issued_at");
+                        long lifeSpan = jsonObject.getLong("expires_in") * 1000; // Convert to milliseconds
+                        SharedPreferences.getInstance().put(SharedPreferences.Key.OAUTH_TOKEN, authToken);
+                        SharedPreferences.getInstance().put(SharedPreferences.Key.OAUTH_EXPIRY_TIME, issuedAt + lifeSpan);
                     }
                 } catch (JSONException e) {
                     LOGE(TAG, "Auth token Error");

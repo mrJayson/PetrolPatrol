@@ -52,7 +52,7 @@ public class LocationServiceConnection implements ServiceConnection {
         if (isBound()) {
             try {
                 mContext.unbindService(this);
-            } catch (IllegalStateException ise) {
+            } catch (Exception e) {
                 LOGE(TAG, "Service was already unbound when trying to unbind");
             }
         }

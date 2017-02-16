@@ -16,6 +16,7 @@ import com.petrolpatrol.petrolpatrol.datastore.SharedPreferences;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.service.LocationServiceConnection;
 import com.petrolpatrol.petrolpatrol.service.NewLocationReceiver;
+import com.petrolpatrol.petrolpatrol.util.TimeUtils;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
@@ -72,7 +73,13 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
                 registerReceiverToLocationService();
                 parentListener.startLocating();
                 FuelCheckClient client = new FuelCheckClient();
-                client.authToken(getActivity().getString(R.string.base64Encode));
+
+                if (SharedPreferences.getInstance().getString(SharedPreferences.Key.OAUTH_TOKEN) == null ||
+                        TimeUtils.isExpired(SharedPreferences.getInstance().getLong(SharedPreferences.Key.OAUTH_EXPIRY_TIME))) {
+                    // If there is no auth token or it is expired, get a working one
+                    client.authToken(getActivity().getString(R.string.base64Encode));
+                }
+
             }
         });
 

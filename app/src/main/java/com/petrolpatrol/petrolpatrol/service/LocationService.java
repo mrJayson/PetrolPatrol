@@ -121,8 +121,10 @@ public class LocationService extends Service implements
 
         // permission granted, request for location updates, when a location is found,
         // the onLocationChanged callback is invoked
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-        isCurrentlyLocating = true;
+        if (mGoogleApiClient.isConnected()) {
+            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+            isCurrentlyLocating = true;
+        }
     }
 
     public void stopLocating() {

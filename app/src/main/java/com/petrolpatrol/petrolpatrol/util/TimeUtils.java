@@ -16,4 +16,9 @@ public class TimeUtils {
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         return sdf.format(new Date());
     }
+
+    public static boolean isExpired(long expiryTimeMilli) {
+        //TODO consider whether buffer time should be given as a conservative measure
+        return (expiryTimeMilli <= System.currentTimeMillis());
+    }
 }
