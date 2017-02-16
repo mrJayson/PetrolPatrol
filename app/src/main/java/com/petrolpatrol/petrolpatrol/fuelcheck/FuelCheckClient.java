@@ -5,6 +5,7 @@ import android.widget.Toast;
 import com.android.volley.*;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.petrolpatrol.petrolpatrol.R;
+import com.petrolpatrol.petrolpatrol.datastore.SharedPreferences;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -28,7 +29,7 @@ public class FuelCheckClient {
         public void onCompletion(T res);
     }
 
-    public void authToken(String base64Encode, final FuelCheckResponse<String> completion) {
+    public void authToken(String base64Encode) {
         String url = "https://api.onegov.nsw.gov.au/oauth/client_credential/accesstoken?grant_type=client_credentials";
         String authToken = null;
         Map<String, String> headerMap = new HashMap<String, String>();
@@ -38,8 +39,14 @@ public class FuelCheckClient {
             @Override
             public void onCompletion(FuelCheckResult res) {
                 try {
-                    LOGI(TAG, res.getDataAsObject().toString(3));
+                    if (res.isSuccess() && res.dataIsObject()) {
+                        JSONObject jsonObject = res.getDataAsObject();
+                        SharedPreferences.getInstance().put(SharedPreferences.Key.OAUTH_TOKEN, jsonObject.getString("access_token"));
+                        SharedPreferences.getInstance().put(SharedPreferences.Key.OAUTH_ISSUE_TIME, jsonObject.getLong("issued_at"));
+                        SharedPreferences.getInstance().put(SharedPreferences.Key.OAUTH_LIFE_SPAN, jsonObject.getLong("expires_in"));
+                    }
                 } catch (JSONException e) {
+                    LOGE(TAG, "Auth token Error");
                     e.printStackTrace();
                 }
             }

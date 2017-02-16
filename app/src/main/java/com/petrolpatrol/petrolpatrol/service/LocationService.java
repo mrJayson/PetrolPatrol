@@ -22,6 +22,7 @@ import java.io.Serializable;
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.support.v4.content.PermissionChecker.PERMISSION_GRANTED;
+import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
 public class LocationService extends Service implements

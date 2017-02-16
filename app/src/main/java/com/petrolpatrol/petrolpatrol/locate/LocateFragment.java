@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 
 import android.widget.Toast;
 import com.petrolpatrol.petrolpatrol.R;
+import com.petrolpatrol.petrolpatrol.datastore.SharedPreferences;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.service.LocationServiceConnection;
 import com.petrolpatrol.petrolpatrol.service.NewLocationReceiver;
@@ -29,7 +30,6 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
     private NewLocationReceiver newLocationReceiver = new NewLocationReceiver(this);
 
     public static LocateFragment newInstance(LocationServiceConnection locationServiceConnection) {
-        LOGI(TAG, "newInstance");
         // Factory method for creating new fragment instances
         // automatically takes parameters and stores in a bundle for later use in onCreate
         LocateFragment fragment = new LocateFragment();
@@ -69,13 +69,10 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
 
             @Override
             public void onClick(View view) {
+                registerReceiverToLocationService();
+                parentListener.startLocating();
                 FuelCheckClient client = new FuelCheckClient();
-                client.authToken("QU4yY2IwNGlUSHVsemoxeWNnVnVMaG1uRWE2MVpNOUQ6bHdnS0FxVmNudlRYMjZBbg==", new FuelCheckClient.FuelCheckResponse<String>() {
-                    @Override
-                    public void onCompletion(String res) {
-
-                    }
-                });
+                client.authToken(getActivity().getString(R.string.base64Encode));
             }
         });
 

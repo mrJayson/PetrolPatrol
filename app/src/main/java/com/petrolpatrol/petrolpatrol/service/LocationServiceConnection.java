@@ -8,10 +8,14 @@ import android.os.IBinder;
 
 import java.io.Serializable;
 
+import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGE;
+import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
+
 /**
  * Created by jason on 15/02/17.
  */
 public class LocationServiceConnection implements ServiceConnection {
+    private static final String TAG = makeLogTag(LocationServiceConnection.class);
 
     private LocationService locationService;
     private boolean isBound;
@@ -46,7 +50,11 @@ public class LocationServiceConnection implements ServiceConnection {
     public void unbindService() {
         // cannot unbind an already unbound service, an exception will be thrown
         if (isBound()) {
-            mContext.unbindService(this);
+            try {
+                mContext.unbindService(this);
+            } catch (IllegalStateException ise) {
+                LOGE(TAG, "Service was already unbound when trying to unbind");
+            }
         }
     }
 

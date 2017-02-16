@@ -1,5 +1,6 @@
 package com.petrolpatrol.petrolpatrol.ui;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.ActivityCompat;
@@ -87,6 +88,17 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
             default:
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
+    }
+
+    // Debug purposes
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
