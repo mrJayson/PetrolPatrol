@@ -72,13 +72,14 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
             public void onClick(View view) {
                 registerReceiverToLocationService();
                 parentListener.startLocating();
-                FuelCheckClient client = new FuelCheckClient();
+                FuelCheckClient client = new FuelCheckClient(getContext());
 
                 if (SharedPreferences.getInstance().getString(SharedPreferences.Key.OAUTH_TOKEN) == null ||
                         TimeUtils.isExpired(SharedPreferences.getInstance().getLong(SharedPreferences.Key.OAUTH_EXPIRY_TIME))) {
                     // If there is no auth token or it is expired, get a working one
                     client.authToken(getActivity().getString(R.string.base64Encode));
                 }
+                client.getFuelPricesWithinRadius(-33.8573284, 150.9372339, "price", "E10");
 
             }
         });
