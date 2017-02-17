@@ -18,7 +18,7 @@ public class Station {
     private Map<String, Price> prices;
 
 
-    private class Location {
+    public static class Location {
         private final double latitude;
         private final double longitude;
         private final double distance;
@@ -41,6 +41,10 @@ public class Station {
         this.brand = brand;
         this.location = location;
         this.prices = new HashMap<String, Price>();
+    }
+
+    public int getId() {
+        return id;
     }
 
     public String getName() {
