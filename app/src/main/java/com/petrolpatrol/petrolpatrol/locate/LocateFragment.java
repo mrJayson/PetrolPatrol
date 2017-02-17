@@ -30,7 +30,7 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
     private Listener parentListener;
     private NewLocationReceiver newLocationReceiver = new NewLocationReceiver(this);
 
-    public static LocateFragment newInstance(LocationServiceConnection locationServiceConnection) {
+    public static LocateFragment newInstance() {
         // Factory method for creating new fragment instances
         // automatically takes parameters and stores in a bundle for later use in onCreate
         LocateFragment fragment = new LocateFragment();
@@ -58,33 +58,37 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_locate, container, false);
         FloatingActionButton locateFab = (FloatingActionButton) v.findViewById(R.id.locate_fab);
-//        locateFab.setOnClickListener(new View.OnClickListener() {
-//
-//            @Override
-//            public void onClick(View view) {
-//                registerReceiverToLocationService();
-//                parentListener.startLocating();
-//            }
-//        });
+
         locateFab.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View view) {
                 registerReceiverToLocationService();
                 parentListener.startLocating();
-                FuelCheckClient client = new FuelCheckClient(getContext());
 
-                if (SharedPreferences.getInstance().getString(SharedPreferences.Key.OAUTH_TOKEN) == null ||
-                        TimeUtils.isExpired(SharedPreferences.getInstance().getLong(SharedPreferences.Key.OAUTH_EXPIRY_TIME))) {
-                    // If there is no auth token or it is expired, get a working one
-                    client.authToken(getActivity().getString(R.string.base64Encode));
-                }
-                client.getFuelPricesWithinRadius(-33.8573284, 150.9372339, "price", "E10");
 
             }
         });
 
         return v;
+    }
+
+    @Override
+    public void onLocationReceived(Location location) {
+
+        unregisterReceiverFromLocationService();
+        parentListener.stopLocating();
+
+        FuelCheckClient client = new FuelCheckClient(getContext());
+
+        if (SharedPreferences.getInstance().getString(SharedPreferences.Key.OAUTH_TOKEN) == null ||
+                TimeUtils.isExpired(SharedPreferences.getInstance().getLong(SharedPreferences.Key.OAUTH_EXPIRY_TIME))) {
+            // If there is no auth token or it is expired, get a working one
+            client.authToken(getActivity().getString(R.string.base64Encode));
+        }
+        client.getFuelPricesWithinRadius(location.getLatitude(), location.getLongitude(), "price", "E10");
+        parentListener.displayListFragment();
+
     }
 
     private void registerReceiverToLocationService() {
@@ -93,15 +97,6 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
 
     private void unregisterReceiverFromLocationService() {
         newLocationReceiver.unregister(getActivity());
-    }
-
-    @Override
-    public void onLocationReceived(Location location) {
-        String s = String.valueOf(location.getLatitude()) + ", " + String.valueOf(location.getLongitude());
-        Toast.makeText(getActivity(), s, Toast.LENGTH_SHORT).show();
-        unregisterReceiverFromLocationService();
-        parentListener.stopLocating();
-
     }
 
     /**
@@ -117,6 +112,7 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
     public interface Listener {
         void startLocating();
         void stopLocating();
+        void displayListFragment();
     }
 
     @Override
@@ -129,7 +125,7 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
             parentListener = (Listener) context;
         } else {
             throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
+                    + " must implement Listener");
         }
     }
 

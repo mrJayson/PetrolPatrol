@@ -3,6 +3,7 @@ package com.petrolpatrol.petrolpatrol.ui;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -11,6 +12,7 @@ import android.os.Bundle;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 import com.petrolpatrol.petrolpatrol.R;
+import com.petrolpatrol.petrolpatrol.locate.ListFragment;
 import com.petrolpatrol.petrolpatrol.locate.LocateFragment;
 import com.petrolpatrol.petrolpatrol.service.LocationService;
 import com.petrolpatrol.petrolpatrol.service.LocationServiceConnection;
@@ -22,7 +24,7 @@ import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
-public class BaseActivity extends AppCompatActivity implements LocateFragment.Listener {
+public class BaseActivity extends AppCompatActivity implements LocateFragment.Listener, ListFragment.Listener {
 
     private static final String TAG = makeLogTag(BaseActivity.class);
 
@@ -117,14 +119,23 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
 
     private void displayLocateFragment() {
         FragmentTransaction transaction = mfragmentManager.beginTransaction();
-
-        LocateFragment locateFragment = LocateFragment.newInstance(mLocationServiceConnection);
-
+        LocateFragment locateFragment = LocateFragment.newInstance();
         transaction.replace(R.id.fragment_container, locateFragment);
-
         transaction.commit();
 
     }
 
+    @Override
+    public void displayListFragment() {
+        FragmentTransaction transaction = mfragmentManager.beginTransaction();
+        ListFragment listFragment = ListFragment.newInstance("","");
+        transaction.replace(R.id.fragment_container, listFragment);
+        transaction.commit();
+    }
 
+
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
+    }
 }
