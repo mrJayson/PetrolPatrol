@@ -27,6 +27,7 @@ public class SQLiteClient extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "PetrolPatrol.sqlite";
 
+    private static final String TABLE_METADATA = "metadata";
     private static final String TABLE_BRANDS = "brands";
     private static final String TABLE_FUELTYPES = "fueltypes";
     private static final String TABLE_STATIONS = "stations";
@@ -39,13 +40,27 @@ public class SQLiteClient extends SQLiteOpenHelper {
     private static final String COLUMN_LATITUDE = "latitude";
     private static final String COLUMN_LONGITUDE = "longitude";
     private static final String COLUMN_CODE = "code";
+    private static final String COLUMN_KEY = "key";
+    private static final String COLUMN_VALUE = "value";
 
     public SQLiteClient(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
     }
 
+    public SQLiteClient(Context context) {
+        this(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
+
+        String CREATE_TABLE_METADATA = "CREATE TABLE " + TABLE_METADATA + "("
+                + COLUMN_KEY + " TEXT, "
+                + COLUMN_VALUE + " TEXT, "
+                + "UNIQUE (" + COLUMN_KEY + ")"
+                + ")";
+        sqLiteDatabase.execSQL(CREATE_TABLE_METADATA);;
+
         String CREATE_TABLE_BRANDS = "CREATE TABLE " + TABLE_BRANDS + "("
                 + COLUMN_ID + " INTEGER PRIMARY KEY, "
                 + COLUMN_NAME + " TEXT NOT NULL, "
@@ -100,6 +115,26 @@ public class SQLiteClient extends SQLiteOpenHelper {
     }
 
     /*
+     * Metadata
+     */
+
+    public String getMetadata(String name) {
+        String metadata = null;
+        Cursor cursor = databaseHandle.query(TABLE_METADATA, null, COLUMN_KEY + " = \"" + name + "\"", null, null, null, null);
+        if (cursor.moveToFirst()) {
+            metadata = cursor.getString(cursor.getColumnIndex(COLUMN_VALUE));
+        }
+        return metadata;
+    }
+
+    public void setMetadata(String key, String value) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(COLUMN_KEY, key);
+        contentValues.put(COLUMN_VALUE, value);
+        databaseHandle.insertWithOnConflict(TABLE_METADATA, null, contentValues, SQLiteDatabase.CONFLICT_REPLACE);
+    }
+
+    /*
      * Brand
      */
 
@@ -107,7 +142,7 @@ public class SQLiteClient extends SQLiteOpenHelper {
         Brand brand = null;
         Cursor cursor = databaseHandle.query(TABLE_BRANDS, null, COLUMN_ID + " = \"" + id + "\"", null, null, null, null);
         if (cursor.moveToFirst()) {
-            brand = new Brand(cursor.getInt(0), cursor.getString(1));
+            brand = new Brand(cursor.getInt(cursor.getColumnIndex(COLUMN_ID)), cursor.getString(cursor.getColumnIndex(COLUMN_NAME)));
         }
         cursor.close();
         return  brand;
@@ -117,8 +152,7 @@ public class SQLiteClient extends SQLiteOpenHelper {
         Brand brand = null;
         Cursor cursor = databaseHandle.query(TABLE_BRANDS, null, COLUMN_NAME + " = \"" + name + "\"", null, null, null, null);
         if (cursor.moveToFirst()) {
-            brand = new Brand(cursor.getInt(0), cursor.getString(1));
-        }
+            brand = new Brand(cursor.getInt(cursor.getColumnIndex(COLUMN_ID)), cursor.getString(cursor.getColumnIndex(COLUMN_NAME)));        }
         cursor.close();
         return  brand;
     }
@@ -128,7 +162,7 @@ public class SQLiteClient extends SQLiteOpenHelper {
         Cursor cursor = databaseHandle.query(TABLE_BRANDS, null, null, null, null, null, null);
         Brand brand;
         while (cursor.moveToNext()) {
-            brand = new Brand(cursor.getInt(0), cursor.getString(1));
+            brand = new Brand(cursor.getInt(cursor.getColumnIndex(COLUMN_ID)), cursor.getString(cursor.getColumnIndex(COLUMN_NAME)));
             allBrands.add(brand);
         }
         cursor.close();
@@ -149,7 +183,10 @@ public class SQLiteClient extends SQLiteOpenHelper {
         FuelType fuelType = null;
         Cursor cursor = databaseHandle.query(TABLE_FUELTYPES, null, COLUMN_CODE + " = \"" + code + "\"", null, null, null, null);
         if (cursor.moveToFirst()) {
-            fuelType = new FuelType(cursor.getInt(0), cursor.getString(1), cursor.getString(2));
+            fuelType = new FuelType(cursor.getInt(
+                    cursor.getColumnIndex(COLUMN_ID)),
+                    cursor.getString(cursor.getColumnIndex(COLUMN_CODE)),
+                    cursor.getString(cursor.getColumnIndex(COLUMN_NAME)));
         }
         cursor.close();
         return  fuelType;
@@ -159,19 +196,24 @@ public class SQLiteClient extends SQLiteOpenHelper {
         FuelType fuelType = null;
         Cursor cursor = databaseHandle.query(TABLE_FUELTYPES, null, COLUMN_ID + " = \"" + id + "\"", null, null, null, null);
         if (cursor.moveToFirst()) {
-            fuelType = new FuelType(cursor.getInt(0), cursor.getString(1), cursor.getString(2));
+            fuelType = new FuelType(cursor.getInt(
+                    cursor.getColumnIndex(COLUMN_ID)),
+                    cursor.getString(cursor.getColumnIndex(COLUMN_CODE)),
+                    cursor.getString(cursor.getColumnIndex(COLUMN_NAME)));
         }
         cursor.close();
         return  fuelType;
     }
 
     public List<FuelType> getAllFuelTypes() {
-
         List<FuelType> allFuelTypes = new ArrayList<FuelType>();
         Cursor cursor = databaseHandle.query(TABLE_FUELTYPES, null, null, null, null, null, null);
         FuelType fuelType;
         while (cursor.moveToNext()) {
-            fuelType = new FuelType(cursor.getInt(0), cursor.getString(1), cursor.getString(2));
+            fuelType = new FuelType(cursor.getInt(
+                    cursor.getColumnIndex(COLUMN_ID)),
+                    cursor.getString(cursor.getColumnIndex(COLUMN_CODE)),
+                    cursor.getString(cursor.getColumnIndex(COLUMN_NAME)));
             allFuelTypes.add(fuelType);
         }
         cursor.close();
@@ -194,18 +236,18 @@ public class SQLiteClient extends SQLiteOpenHelper {
         Cursor cursor = databaseHandle.query(TABLE_STATIONS, null, COLUMN_ID + " = \"" + id + "\"", null, null, null, null);
         if (cursor.moveToFirst()) {
             station = new Station(
-                    cursor.getInt(0),
-                    cursor.getString(1),
-                    cursor.getString(2),
-                    getBrand(cursor.getInt(3)),
-                    new Station.Location(cursor.getDouble(4),cursor.getDouble(5)));
+                    getBrand(cursor.getInt(cursor.getColumnIndex(COLUMN_BRAND))), cursor.getInt(cursor.getColumnIndex(COLUMN_ID)),
+                    cursor.getString(cursor.getColumnIndex(COLUMN_NAME)),
+                    cursor.getString(cursor.getColumnIndex(COLUMN_ADDRESS)),
+                    cursor.getColumnIndex(COLUMN_LATITUDE),
+                    cursor.getDouble(cursor.getColumnIndex(COLUMN_LONGITUDE))
+            );
         }
         cursor.close();
         return station;
     }
 
     public void insertStation(Station station) {
-
         ContentValues contentValues = new ContentValues();
         contentValues.put(COLUMN_ID, station.getId());
         contentValues.put(COLUMN_NAME, station.getName());

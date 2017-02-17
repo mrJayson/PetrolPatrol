@@ -9,7 +9,7 @@ import java.util.TimeZone;
  */
 public class TimeUtils {
 
-    public static final String epochTime = "01/01/1970 00:00:00";
+    public static final String epochTimeZero = "01/01/1970 00:00:00";
 
     public static String UTCTimestamp() {
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss a");

@@ -1,19 +1,27 @@
 package com.petrolpatrol.petrolpatrol.fuelcheck;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.widget.Toast;
 import com.android.volley.*;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 import com.petrolpatrol.petrolpatrol.R;
+import com.petrolpatrol.petrolpatrol.datastore.SQLiteClient;
 import com.petrolpatrol.petrolpatrol.datastore.SharedPreferences;
+import com.petrolpatrol.petrolpatrol.model.Brand;
+import com.petrolpatrol.petrolpatrol.model.FuelType;
+import com.petrolpatrol.petrolpatrol.model.Station;
 import com.petrolpatrol.petrolpatrol.util.IDUtils;
 import com.petrolpatrol.petrolpatrol.util.TimeUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGE;
@@ -39,12 +47,12 @@ public class FuelCheckClient {
         public void onCompletion(T res);
     }
 
-    public void authToken(String base64Encode) {
+    public void authToken() {
         String url = "https://api.onegov.nsw.gov.au/oauth/client_credential/accesstoken?grant_type=client_credentials";
 
         // Prepare the header arguments
         Map<String, String> headerMap = new HashMap<String, String>();
-        headerMap.put("Authorization", "Basic " + base64Encode);
+        headerMap.put("Authorization", "Basic " + context.getString(R.string.base64Encode));
         headerMap.put("dataType", "json");
         requestGET(url, headerMap, new FuelCheckResponse<FuelCheckResult>() {
             @Override
@@ -128,6 +136,142 @@ public class FuelCheckClient {
         });
     }
 
+    public void getReferenceData() {
+        String url = "https://api.onegov.nsw.gov.au/FuelCheckRefData/v1/fuel/lovs";
+        SQLiteClient sqliteClient = new SQLiteClient(context);
+        sqliteClient.open();
+        String ifModifiedSince = sqliteClient.getMetadata("REFERENCE_MODIFIED_TIMESTAMP");
+        sqliteClient.close();
+        if (ifModifiedSince == null) {
+            ifModifiedSince = TimeUtils.epochTimeZero;
+        }
+        String authToken = SharedPreferences.getInstance().getString(SharedPreferences.Key.OAUTH_TOKEN);
+
+        // Prepare the header arguments
+        Map<String, String> headerMap = new HashMap<String, String>();
+        headerMap.put("apikey", context.getString(R.string.clientID));
+        headerMap.put("transactionid", IDUtils.UUID());
+        headerMap.put("requesttimestamp", TimeUtils.UTCTimestamp());
+        headerMap.put("if-modified-since", ifModifiedSince);
+        headerMap.put("Content-Type", "application/json; charset=utf-8");
+        headerMap.put("Authorization", "Bearer "+ authToken);
+
+        requestGET(url, headerMap, new FuelCheckResponse<FuelCheckResult>() {
+            @Override
+            public void onCompletion(FuelCheckResult res) {
+                if (res.isSuccess()) {
+                    // Add Brands and FuelTypes first, then stations
+                    JSONArray JSONResponse;
+                    Gson gson = new Gson();
+                    final SQLiteClient sqliteClient = new SQLiteClient(context);
+
+                    try {
+                        // Brands
+                        if (res.getDataAsObject().get("brands") instanceof JSONObject
+                                && res.getDataAsObject().getJSONObject("brands").get("items") instanceof JSONArray) {
+                            JSONResponse = res.getDataAsObject().getJSONObject("brands").getJSONArray("items");
+                        }
+                        else if (res.getDataAsObject().get("brands") instanceof JSONArray) {
+                            JSONResponse = res.getDataAsObject().getJSONArray("brands");
+                        } else {
+                            throw new JSONException("Invalid JSON");
+                        }
+                        Type brandListType = new TypeToken<ArrayList<Brand>>(){}.getType();
+                        List<Brand> brands = gson.fromJson(JSONResponse.toString(),brandListType);
+
+                        // Insert into database
+                        sqliteClient.open();
+                        for (Brand b : brands) {
+                            sqliteClient.insertBrand(b);
+                        }
+                        sqliteClient.close();
+
+                        // FuelTypes
+                        if (res.getDataAsObject().get("fueltypes") instanceof JSONObject
+                                && res.getDataAsObject().getJSONObject("fueltypes").get("items") instanceof JSONArray) {
+                            JSONResponse = res.getDataAsObject().getJSONObject("fueltypes").getJSONArray("items");
+                        }
+                        else if (res.getDataAsObject().get("fueltypes") instanceof JSONArray) {
+                            JSONResponse = res.getDataAsObject().getJSONArray("fueltypes");
+                        } else {
+                            throw new JSONException("Invalid JSON");
+                        }
+                        Type fuelTypeListType = new TypeToken<ArrayList<FuelType>>(){}.getType();
+                        List<FuelType> fuelTypes = gson.fromJson(JSONResponse.toString(),fuelTypeListType);
+
+                        // Insert into database
+                        sqliteClient.open();
+                        for (FuelType ft : fuelTypes) {
+                            sqliteClient.insertFuelType(ft);
+                        }
+                        sqliteClient.close();
+
+                        // Stations
+                        if (res.getDataAsObject().get("stations") instanceof JSONObject
+                                && res.getDataAsObject().getJSONObject("stations").get("items") instanceof JSONArray) {
+                            JSONResponse = res.getDataAsObject().getJSONObject("stations").getJSONArray("items");
+                        }
+                        else if (res.getDataAsObject().get("stations") instanceof JSONArray) {
+                            JSONResponse = res.getDataAsObject().getJSONArray("stations");
+                        } else {
+                            throw new JSONException("Invalid JSON");
+                        }
+
+                        List<Station> stations = new ArrayList<Station>();
+                        // Custom deserializer needed to deal with non-primitive types in the ServiceStation class
+                        JsonDeserializer<Station> deserializer = new JsonDeserializer<Station>() {
+                            @Override
+                            public Station deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+                                JsonObject stationJson = json.getAsJsonObject();
+                                JsonObject locationJson = stationJson.getAsJsonObject("location");
+                                double distance = Station.NO_DISTANCE;
+                                if (locationJson.has("distance")) {
+                                    distance = locationJson.get("distance").getAsDouble();
+                                }
+                                sqliteClient.open();
+                                Brand brand = sqliteClient.getBrand(stationJson.get("brand").getAsString());
+                                sqliteClient.close();
+                                return new Station(
+                                        brand,
+                                        stationJson.get("code").getAsInt(),
+                                        stationJson.get("name").getAsString(),
+                                        stationJson.get("address").getAsString(),
+                                        locationJson.get("latitude").getAsDouble(),
+                                        locationJson.get("longitude").getAsDouble(),
+                                        distance
+                                );
+                            }
+                        };
+
+                        GsonBuilder gsonBuilder = new GsonBuilder();
+                        gsonBuilder.registerTypeAdapter(Station.class, deserializer);
+                        Gson customGson = gsonBuilder.create();
+
+                        for (int i = 0; i < JSONResponse.length(); i++) {
+                            stations.add(customGson.fromJson(JSONResponse.get(i).toString(), Station.class));
+                        }
+
+                        // Insert into database
+                        sqliteClient.open();
+                        for (Station station : stations) {
+                            sqliteClient.insertStation(station);
+                        }
+                        sqliteClient.close();
+
+                        sqliteClient.open();
+                        sqliteClient.setMetadata("REFERENCE_MODIFIED_TIMESTAMP", TimeUtils.UTCTimestamp());
+                        LOGI(TAG, sqliteClient.getMetadata("REFERENCE_MODIFIED_TIMESTAMP"));
+                        sqliteClient.close();
+
+                    } catch (Exception e) {
+                        LOGE(TAG, "Error occurred processing reference data");
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+    }
+
     public void requestGET(String url, final Map<String, String> headerMap, final FuelCheckResponse<FuelCheckResult> completion) {
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
@@ -162,6 +306,7 @@ public class FuelCheckClient {
                 res.setSuccess(false);
                 completion.onCompletion(res);
                 displayVolleyResponseError(error);
+                LOGE(TAG,String.valueOf(error.networkResponse.data));
             }
         }) {
             /**

@@ -5,17 +5,23 @@ package com.petrolpatrol.petrolpatrol.model;
  */
 public class FuelType {
 
-    private final Integer id;
+    public static final int NO_ID = -1;
+
+    private final int id;
     private final String code;
     private final String name;
 
-    public FuelType(Integer id, String code, String name) {
+    public FuelType(String code, String name) {
+        this(NO_ID, code, name);
+    }
+
+    public FuelType(int id, String code, String name) {
         this.id = id;
         this.code = code;
         this.name = name;
     }
 
-    public Integer getId() {
+    public int getId() {
         return id;
     }
 

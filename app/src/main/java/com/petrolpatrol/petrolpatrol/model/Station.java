@@ -8,12 +8,13 @@ import java.util.Map;
  */
 public class Station {
 
-    private static final int NO_DISTANCE = 0;
+    public static final int NO_ID = -1;
+    public static final int NO_DISTANCE = 0;
 
+    private final Brand brand;
     private final int id;
     private final String name;
     private final String address;
-    private final Brand brand;
     private final Location location;
     private Map<String, Price> prices;
 
@@ -34,12 +35,24 @@ public class Station {
         }
     }
 
-    public Station(int id, String name, String address, Brand brand, Location location) {
+    public Station(Brand brand, String name, String address, double latitude, double longitude) {
+        this(brand, NO_ID, name, address, latitude, longitude, NO_DISTANCE);
+    }
+
+    public Station(Brand brand, int id, String name, String address, double latitude, double longitude) {
+        this(brand, id, name, address, latitude, longitude, NO_DISTANCE);
+    }
+
+    public Station(Brand brand, String name, String address, double latitude, double longitude, double distance) {
+        this(brand, NO_ID, name, address, latitude, longitude, distance);
+    }
+
+    public Station(Brand brand, int id, String name, String address, double latitude, double longitude, double distance) {
         this.id = id;
         this.name = name;
         this.address = address;
         this.brand = brand;
-        this.location = location;
+        this.location = new Location(latitude, longitude, distance);
         this.prices = new HashMap<String, Price>();
     }
 

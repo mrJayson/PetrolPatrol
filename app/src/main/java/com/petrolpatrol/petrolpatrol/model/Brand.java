@@ -5,8 +5,14 @@ package com.petrolpatrol.petrolpatrol.model;
  */
 public class Brand {
 
+    public static final int NO_ID = -1;
+
     private final int id;
     private final String name;
+
+    public Brand(String name) {
+        this(NO_ID, name);
+    }
 
     public Brand(int id, String name) {
         this.id = id;
