@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item type="id" name="id_menu_search"/>
+    <item type="id" name="id_group_fueltype"/>
+    <item type="id" name="id_menu_sort"/>
+    <item type="id" name="id_menu_sort_price"/>
+    <item type="id" name="id_menu_sort_distance"/>
+    <item type="id" name="id_menu_settings"/>
+</resources>

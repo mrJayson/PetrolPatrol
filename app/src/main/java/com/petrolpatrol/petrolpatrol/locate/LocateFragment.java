@@ -63,7 +63,7 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
 //            @Override
 //            public void onClick(View view) {
 //                registerReceiverToLocationService();
-//                parentListener.startLocating();
+//                parentListener.statLocating();
 //            }
 //        });
 

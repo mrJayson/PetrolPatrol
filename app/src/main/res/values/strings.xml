@@ -1,7 +1,13 @@
 <resources>
     <string name="app_name">PetrolPatrol</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
+    <!--Menu Items-->
+    <string name="menu_search">Search</string>
+    <string name="menu_fueltype">Fueltype</string>
+    <string name="menu_sort">Sort</string>
+    <string name="menu_sort_price">Price</string>
+    <string name="menu_sort_distance">Distance</string>
+    <string name="menu_settings">Settings</string>
 
     <!-- Volley Error Messages -->
     <string name="error_network_timeout">error network timeout</string>

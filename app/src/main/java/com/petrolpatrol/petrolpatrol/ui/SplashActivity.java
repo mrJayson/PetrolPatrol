@@ -20,6 +20,7 @@ public class SplashActivity extends AppCompatActivity {
 
         // Between setContentView and Intent, perform any app initialization during splash screen
         SharedPreferences.getInstance(getApplicationContext()); // Initialize sharedPreferences singleton
+        SharedPreferences.getInstance().initialize(); // Populate entries in SharedPreferences if necessary
         VolleyQueue.getInstance(getApplicationContext()); // Initialize volley singleton
 
         Intent intent = new Intent(getApplicationContext(), BaseActivity.class);

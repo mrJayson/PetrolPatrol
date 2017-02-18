@@ -1,6 +1,7 @@
 package com.petrolpatrol.petrolpatrol.datastore;
 
 import android.content.Context;
+import com.petrolpatrol.petrolpatrol.R;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
@@ -28,7 +29,9 @@ public class SharedPreferences {
         * String: SAMPLE_KEY, SAMPLE_STR or just SAMPLE
         */
         OAUTH_TOKEN,
-        OAUTH_EXPIRY_TIME
+        OAUTH_EXPIRY_TIME,
+        DEFAULT_FUELTYPE,
+        DEFAULT_SORTBY
     }
 
     private SharedPreferences(Context context) {
@@ -49,6 +52,19 @@ public class SharedPreferences {
             throw new IllegalStateException("Need to initialize the singleton with Context first");
         }
         return instance;
+    }
+
+    public void initialize() {
+
+        // If there is no entry for fuelType, set it to the default
+        if (getString(Key.DEFAULT_FUELTYPE) == null) {
+            put(Key.DEFAULT_FUELTYPE, context.getString(R.string.default_fueltype));
+        }
+
+        // If there is no entry for sortBy, set it to the default
+        if (getString(Key.DEFAULT_SORTBY) == null) {
+            put(Key.DEFAULT_SORTBY, context.getString(R.string.default_sortby));
+        }
     }
 
     // getters
