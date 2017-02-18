@@ -14,8 +14,11 @@ import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.SQLiteClient;
 import com.petrolpatrol.petrolpatrol.datastore.SharedPreferences;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
+import com.petrolpatrol.petrolpatrol.model.Price;
 import com.petrolpatrol.petrolpatrol.service.NewLocationReceiver;
 import com.petrolpatrol.petrolpatrol.util.TimeUtils;
+
+import java.util.List;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
@@ -58,26 +61,26 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
         View v = inflater.inflate(R.layout.fragment_locate, container, false);
         FloatingActionButton locateFab = (FloatingActionButton) v.findViewById(R.id.locate_fab);
 
-//        locateFab.setOnClickListener(new View.OnClickListener() {
-//
-//            @Override
-//            public void onClick(View view) {
-//                registerReceiverToLocationService();
-//                parentListener.statLocating();
-//            }
-//        });
-
         locateFab.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View view) {
-                FuelCheckClient client = new FuelCheckClient(getContext());
-                //client.authToken();
-                client.getReferenceData();
-                //TODO run getReference at every app start, consider the case where there is no internet
-
+                registerReceiverToLocationService();
+                parentListener.startLocating();
             }
         });
+
+//        locateFab.setOnClickListener(new View.OnClickListener() {
+//
+//            @Override
+//            public void onClick(View view) {
+//                FuelCheckClient client = new FuelCheckClient(getContext());
+//                //client.authToken();
+//                client.getReferenceData();
+//                //TODO run getReference at every app start, consider the case where there is no internet
+//
+//            }
+//        });
 
         return v;
     }
@@ -90,7 +93,12 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
 
         FuelCheckClient client = new FuelCheckClient(getContext());
 
-        client.getFuelPricesWithinRadius(location.getLatitude(), location.getLongitude(), "price", "E10");
+        client.getFuelPricesWithinRadius(location.getLatitude(), location.getLongitude(), parentListener.getSelectedSortBy(), parentListener.getSelectedFuelType(), new FuelCheckClient.FuelCheckResponse<List<Price>>() {
+            @Override
+            public void onCompletion(List<Price> res) {
+
+            }
+        });
         parentListener.displayListFragment();
 
     }
@@ -117,6 +125,8 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
         void startLocating();
         void stopLocating();
         void displayListFragment();
+        String getSelectedFuelType();
+        String getSelectedSortBy();
     }
 
     @Override

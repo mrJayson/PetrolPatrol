@@ -11,6 +11,7 @@ import com.petrolpatrol.petrolpatrol.datastore.SQLiteClient;
 import com.petrolpatrol.petrolpatrol.datastore.SharedPreferences;
 import com.petrolpatrol.petrolpatrol.model.Brand;
 import com.petrolpatrol.petrolpatrol.model.FuelType;
+import com.petrolpatrol.petrolpatrol.model.Price;
 import com.petrolpatrol.petrolpatrol.model.Station;
 import com.petrolpatrol.petrolpatrol.util.IDUtils;
 import com.petrolpatrol.petrolpatrol.util.TimeUtils;
@@ -47,34 +48,7 @@ public class FuelCheckClient {
         public void onCompletion(T res);
     }
 
-    private void authToken(final FuelCheckResponse<FuelCheckResult> completion) {
-        String url = "https://api.onegov.nsw.gov.au/oauth/client_credential/accesstoken?grant_type=client_credentials";
-
-        // Prepare the header arguments
-        Map<String, String> headerMap = new HashMap<>();
-        headerMap.put("Authorization", "Basic " + context.getString(R.string.base64Encode));
-        headerMap.put("dataType", "json");
-        requestGET(url, headerMap, new FuelCheckResponse<FuelCheckResult>() {
-            @Override
-            public void onCompletion(FuelCheckResult res) {
-                try {
-                    if (res.isSuccess() && res.dataIsObject()) {
-                        JSONObject jsonObject = res.getDataAsObject();
-                        String authToken = jsonObject.getString("access_token");
-                        SharedPreferences.getInstance().put(SharedPreferences.Key.OAUTH_TOKEN, authToken);
-                        if (completion != null) {
-                            completion.onCompletion(res);
-                        }
-                    }
-                } catch (JSONException e) {
-                    LOGE(TAG, "Auth token Error");
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
-    public void getFuelPricesWithinRadius(double latitude, double longitude, String sortBy, String fuelType) {
+    public void getFuelPricesWithinRadius(double latitude, double longitude, String sortBy, String fuelType, final FuelCheckResponse<List<Price>> completion) {
         String url = "https://api.onegov.nsw.gov.au/FuelPriceCheck/v1/fuel/prices/nearby";
 
         // Prepare the header arguments
@@ -124,15 +98,62 @@ public class FuelCheckClient {
 
             @Override
             public void onCompletion(FuelCheckResult res) {
+                JSONArray JSONResponse;
+                GsonBuilder gsonBuilder = new GsonBuilder();
+                List<Price> prices = new ArrayList<>();
+                final SQLiteClient sqliteClient = new SQLiteClient(context);
+
                 try {
                     if (res.isSuccess() && res.dataIsObject()) {
-                        JSONArray pricesJSON = res.getDataAsObject().getJSONArray("prices");
-                        LOGI(TAG, pricesJSON.toString(4));
+                        if (res.getDataAsObject().get("stations") instanceof JSONArray && res.getDataAsObject().get("prices") instanceof JSONArray) {
+                            JSONResponse = res.getDataAsObject().getJSONArray("stations");
+
+                            final Map<Integer, Station> map = new HashMap<>();
+                            for (Station station : toStationObjects(JSONResponse)) {
+                                map.put(station.getId(), station);
+                            }
+
+                            // Custom deserializer needed to deal with non-primitive types in the Price class
+                            JsonDeserializer<Price> deserializer = new JsonDeserializer<Price>() {
+                                @Override
+                                public Price deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+                                    JsonObject priceJson = json.getAsJsonObject();
+                                    Station station = map.get(priceJson.get("stationcode").getAsInt());
+                                    sqliteClient.open();
+                                    FuelType fuelType = sqliteClient.getFuelType(priceJson.get("fueltype").getAsString());
+                                    sqliteClient.close();
+
+                                    Price price = new Price(
+                                            station,
+                                            fuelType,
+                                            priceJson.get("price").getAsDouble(),
+                                            priceJson.get("lastupdated").getAsString()
+                                            );
+
+                                    // Create self reference in the station object
+                                    price.getStation().setPrice(price);
+                                    return price;
+                                }
+                            };
+
+                            JSONResponse = res.getDataAsObject().getJSONArray("prices");
+
+                            gsonBuilder.registerTypeAdapter(Price.class, deserializer);
+                            Gson gson = gsonBuilder.create();
+
+                            for (int i = 0; i < JSONResponse.length(); i++) {
+                                prices.add(gson.fromJson(JSONResponse.get(i).toString(),Price.class));
+                            }
+
+                        } else {
+                            throw new JSONException("Invalid JSON");
+                        }
                     }
                 } catch (Exception e) {
                     LOGE(TAG, "Error occurred processing data");
                     e.printStackTrace();
                 }
+                completion.onCompletion(prices);
             }
         });
     }
@@ -218,39 +239,7 @@ public class FuelCheckClient {
                             throw new JSONException("Invalid JSON");
                         }
 
-                        List<Station> stations = new ArrayList<>();
-                        // Custom deserializer needed to deal with non-primitive types in the ServiceStation class
-                        JsonDeserializer<Station> deserializer = new JsonDeserializer<Station>() {
-                            @Override
-                            public Station deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-                                JsonObject stationJson = json.getAsJsonObject();
-                                JsonObject locationJson = stationJson.getAsJsonObject("location");
-                                double distance = Station.NO_DISTANCE;
-                                if (locationJson.has("distance")) {
-                                    distance = locationJson.get("distance").getAsDouble();
-                                }
-                                sqliteClient.open();
-                                Brand brand = sqliteClient.getBrand(stationJson.get("brand").getAsString());
-                                sqliteClient.close();
-                                return new Station(
-                                        brand,
-                                        stationJson.get("code").getAsInt(),
-                                        stationJson.get("name").getAsString(),
-                                        stationJson.get("address").getAsString(),
-                                        locationJson.get("latitude").getAsDouble(),
-                                        locationJson.get("longitude").getAsDouble(),
-                                        distance
-                                );
-                            }
-                        };
-
-                        GsonBuilder gsonBuilder = new GsonBuilder();
-                        gsonBuilder.registerTypeAdapter(Station.class, deserializer);
-                        Gson customGson = gsonBuilder.create();
-
-                        for (int i = 0; i < JSONResponse.length(); i++) {
-                            stations.add(customGson.fromJson(JSONResponse.get(i).toString(), Station.class));
-                        }
+                        List<Station> stations = toStationObjects(JSONResponse);
 
                         // Insert into database
                         sqliteClient.open();
@@ -267,6 +256,33 @@ public class FuelCheckClient {
                         LOGE(TAG, "Error occurred processing reference data");
                         e.printStackTrace();
                     }
+                }
+            }
+        });
+    }
+
+    private void authToken(final FuelCheckResponse<FuelCheckResult> completion) {
+        String url = "https://api.onegov.nsw.gov.au/oauth/client_credential/accesstoken?grant_type=client_credentials";
+
+        // Prepare the header arguments
+        Map<String, String> headerMap = new HashMap<>();
+        headerMap.put("Authorization", "Basic " + context.getString(R.string.base64Encode));
+        headerMap.put("dataType", "json");
+        requestGET(url, headerMap, new FuelCheckResponse<FuelCheckResult>() {
+            @Override
+            public void onCompletion(FuelCheckResult res) {
+                try {
+                    if (res.isSuccess() && res.dataIsObject()) {
+                        JSONObject jsonObject = res.getDataAsObject();
+                        String authToken = jsonObject.getString("access_token");
+                        SharedPreferences.getInstance().put(SharedPreferences.Key.OAUTH_TOKEN, authToken);
+                        if (completion != null) {
+                            completion.onCompletion(res);
+                        }
+                    }
+                } catch (JSONException e) {
+                    LOGE(TAG, "Auth token Error");
+                    e.printStackTrace();
                 }
             }
         });
@@ -436,5 +452,56 @@ public class FuelCheckClient {
 
         // Hand the request over to the request queue
         VolleyQueue.getInstance().addToRequestQueue(jsonObjectRequest);
+    }
+
+    private List<Price> toPriceObjects(JSONArray JSON) {
+        final SQLiteClient sqliteClient = new SQLiteClient(context);
+        List<Price> prices = new ArrayList<>();
+        return prices;
+    }
+
+    private List<Station> toStationObjects(JSONArray JSON) {
+
+        final SQLiteClient sqliteClient = new SQLiteClient(context);
+        List<Station> stations = new ArrayList<>();
+
+        // Custom deserializer needed to deal with non-primitive types in the ServiceStation class
+        JsonDeserializer<Station> deserializer = new JsonDeserializer<Station>() {
+            @Override
+            public Station deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+                JsonObject stationJson = json.getAsJsonObject();
+                JsonObject locationJson = stationJson.getAsJsonObject("location");
+                double distance = Station.NO_DISTANCE;
+                if (locationJson.has("distance")) {
+                    distance = locationJson.get("distance").getAsDouble();
+                }
+                sqliteClient.open();
+                Brand brand = sqliteClient.getBrand(stationJson.get("brand").getAsString());
+                sqliteClient.close();
+                return new Station(
+                        brand,
+                        stationJson.get("code").getAsInt(),
+                        stationJson.get("name").getAsString(),
+                        stationJson.get("address").getAsString(),
+                        locationJson.get("latitude").getAsDouble(),
+                        locationJson.get("longitude").getAsDouble(),
+                        distance
+                );
+            }
+        };
+
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(Station.class, deserializer);
+        Gson customGson = gsonBuilder.create();
+
+        try {
+            for (int i = 0; i < JSON.length(); i++) {
+                stations.add(customGson.fromJson(JSON.get(i).toString(), Station.class));
+            }
+        } catch (JSONException e) {
+            LOGE(TAG, "Error occurred processing JSONStations");
+            e.printStackTrace();
+        }
+        return stations;
     }
 }

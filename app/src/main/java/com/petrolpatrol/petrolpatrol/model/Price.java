@@ -5,14 +5,20 @@ package com.petrolpatrol.petrolpatrol.model;
  */
 public class Price {
 
+    private final Station station;
     private final FuelType fuelType;
     private final double price;
     private final String lastUpdated;
 
-    public Price(FuelType fuelType, double price, String lastUpdated) {
+    public Price(Station station, FuelType fuelType, double price, String lastUpdated) {
+        this.station = station;
         this.fuelType = fuelType;
         this.price = price;
         this.lastUpdated = lastUpdated;
+    }
+
+    public Station getStation() {
+        return station;
     }
 
     public FuelType getFuelType() {

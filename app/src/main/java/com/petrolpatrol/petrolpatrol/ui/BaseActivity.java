@@ -63,7 +63,7 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
         }
 
         selectedFuelType = SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_FUELTYPE);
-        selectedFuelType = SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_SORTBY);
+        selectedSortBy = SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_SORTBY);
 
         // Show the locate fragment each time on start up
         displayLocateFragment();
@@ -172,8 +172,7 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
             case R.id.id_menu_sort_price:
             case R.id.id_menu_sort_distance:
                 item.setChecked(true);
-                SharedPreferences.getInstance().put(SharedPreferences.Key.DEFAULT_FUELTYPE, String.valueOf(item.getTitle()));
-                //displayNearbyStations();
+                SharedPreferences.getInstance().put(SharedPreferences.Key.DEFAULT_SORTBY, String.valueOf(item.getTitle()));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -259,6 +258,15 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
         transaction.commit();
     }
 
+    @Override
+    public String getSelectedFuelType() {
+        return selectedFuelType;
+    }
+
+    @Override
+    public String getSelectedSortBy() {
+        return selectedSortBy;
+    }
 
     @Override
     public void onFragmentInteraction(Uri uri) {
