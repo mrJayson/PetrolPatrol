@@ -72,7 +72,7 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
             @Override
             public void onClick(View view) {
                 FuelCheckClient client = new FuelCheckClient(getContext());
-                client.authToken();
+                //client.authToken();
                 client.getReferenceData();
                 //TODO run getReference at every app start, consider the case where there is no internet
 
@@ -90,11 +90,6 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
 
         FuelCheckClient client = new FuelCheckClient(getContext());
 
-        if (SharedPreferences.getInstance().getString(SharedPreferences.Key.OAUTH_TOKEN) == null ||
-                TimeUtils.isExpired(SharedPreferences.getInstance().getLong(SharedPreferences.Key.OAUTH_EXPIRY_TIME))) {
-            // If there is no auth token or it is expired, get a working one
-            client.authToken();
-        }
         client.getFuelPricesWithinRadius(location.getLatitude(), location.getLongitude(), "price", "E10");
         parentListener.displayListFragment();
 

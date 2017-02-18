@@ -29,7 +29,6 @@ public class SharedPreferences {
         * String: SAMPLE_KEY, SAMPLE_STR or just SAMPLE
         */
         OAUTH_TOKEN,
-        OAUTH_EXPIRY_TIME,
         DEFAULT_FUELTYPE,
         DEFAULT_SORTBY
     }

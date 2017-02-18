@@ -47,11 +47,11 @@ public class FuelCheckClient {
         public void onCompletion(T res);
     }
 
-    public void authToken() {
+    private void authToken(final FuelCheckResponse<FuelCheckResult> completion) {
         String url = "https://api.onegov.nsw.gov.au/oauth/client_credential/accesstoken?grant_type=client_credentials";
 
         // Prepare the header arguments
-        Map<String, String> headerMap = new HashMap<String, String>();
+        Map<String, String> headerMap = new HashMap<>();
         headerMap.put("Authorization", "Basic " + context.getString(R.string.base64Encode));
         headerMap.put("dataType", "json");
         requestGET(url, headerMap, new FuelCheckResponse<FuelCheckResult>() {
@@ -61,10 +61,10 @@ public class FuelCheckClient {
                     if (res.isSuccess() && res.dataIsObject()) {
                         JSONObject jsonObject = res.getDataAsObject();
                         String authToken = jsonObject.getString("access_token");
-                        long issuedAt = jsonObject.getLong("issued_at");
-                        long lifeSpan = jsonObject.getLong("expires_in") * 1000; // Convert to milliseconds
                         SharedPreferences.getInstance().put(SharedPreferences.Key.OAUTH_TOKEN, authToken);
-                        SharedPreferences.getInstance().put(SharedPreferences.Key.OAUTH_EXPIRY_TIME, issuedAt + lifeSpan);
+                        if (completion != null) {
+                            completion.onCompletion(res);
+                        }
                     }
                 } catch (JSONException e) {
                     LOGE(TAG, "Auth token Error");
@@ -78,7 +78,7 @@ public class FuelCheckClient {
         String url = "https://api.onegov.nsw.gov.au/FuelPriceCheck/v1/fuel/prices/nearby";
 
         // Prepare the header arguments
-        Map<String, String> headerMap = new HashMap<String, String>();
+        Map<String, String> headerMap = new HashMap<>();
         headerMap.put("apikey", context.getString(R.string.clientID));
         headerMap.put("transactionid", IDUtils.UUID());
         headerMap.put("requesttimestamp", TimeUtils.UTCTimestamp());
@@ -130,7 +130,8 @@ public class FuelCheckClient {
                         LOGI(TAG, pricesJSON.toString(4));
                     }
                 } catch (Exception e) {
-
+                    LOGE(TAG, "Error occurred processing data");
+                    e.printStackTrace();
                 }
             }
         });
@@ -148,7 +149,7 @@ public class FuelCheckClient {
         String authToken = SharedPreferences.getInstance().getString(SharedPreferences.Key.OAUTH_TOKEN);
 
         // Prepare the header arguments
-        Map<String, String> headerMap = new HashMap<String, String>();
+        Map<String, String> headerMap = new HashMap<>();
         headerMap.put("apikey", context.getString(R.string.clientID));
         headerMap.put("transactionid", IDUtils.UUID());
         headerMap.put("requesttimestamp", TimeUtils.UTCTimestamp());
@@ -217,7 +218,7 @@ public class FuelCheckClient {
                             throw new JSONException("Invalid JSON");
                         }
 
-                        List<Station> stations = new ArrayList<Station>();
+                        List<Station> stations = new ArrayList<>();
                         // Custom deserializer needed to deal with non-primitive types in the ServiceStation class
                         JsonDeserializer<Station> deserializer = new JsonDeserializer<Station>() {
                             @Override
@@ -260,7 +261,6 @@ public class FuelCheckClient {
 
                         sqliteClient.open();
                         sqliteClient.setMetadata("REFERENCE_MODIFIED_TIMESTAMP", TimeUtils.UTCTimestamp());
-                        LOGI(TAG, sqliteClient.getMetadata("REFERENCE_MODIFIED_TIMESTAMP"));
                         sqliteClient.close();
 
                     } catch (Exception e) {
@@ -272,7 +272,7 @@ public class FuelCheckClient {
         });
     }
 
-    public void requestGET(String url, final Map<String, String> headerMap, final FuelCheckResponse<FuelCheckResult> completion) {
+    private void requestGET(final String url, final Map<String, String> headerMap, final FuelCheckResponse<FuelCheckResult> completion) {
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
                 new Response.Listener<JSONObject>() {
@@ -280,7 +280,7 @@ public class FuelCheckClient {
                     /**
                      * Called when a response is received.
                      *
-                     * @param response
+                     * @param response The volley response
                      */
                     @Override
                     public void onResponse(JSONObject response) {
@@ -298,15 +298,44 @@ public class FuelCheckClient {
              * Callback method that an error has been occurred with the
              * provided error code and optional user-readable message.
              *
-             * @param error
+             * @param error The error response
              */
             @Override
             public void onErrorResponse(VolleyError error) {
                 FuelCheckResult res = new FuelCheckResult();
                 res.setSuccess(false);
                 completion.onCompletion(res);
-                displayVolleyResponseError(error);
-                LOGE(TAG,String.valueOf(error.networkResponse.data));
+
+                // Error Handling
+                Context context = VolleyQueue.getInstance().getContext();
+                if (error instanceof TimeoutError || error instanceof NoConnectionError) {
+                    Toast.makeText(context,
+                            context.getString(R.string.error_network_timeout),
+                            Toast.LENGTH_LONG).show();
+                } else if (error instanceof AuthFailureError) {
+                    // Auth token is invalid, attempt to get a new one
+                    authToken(new FuelCheckResponse<FuelCheckResult>() {
+                        @Override
+                        public void onCompletion(FuelCheckResult res) {
+                            String authToken = SharedPreferences.getInstance().getString(SharedPreferences.Key.OAUTH_TOKEN);
+                            headerMap.put("Authorization", "Bearer "+ authToken);
+                            requestGET(url, headerMap, completion);
+                        }
+                    });
+
+                } else if (error instanceof ServerError) {
+                    Toast.makeText(context,
+                            context.getString(R.string.error_server),
+                            Toast.LENGTH_LONG).show();
+                } else if (error instanceof NetworkError) {
+                    Toast.makeText(context,
+                            context.getString(R.string.error_network),
+                            Toast.LENGTH_LONG).show();
+                } else if (error instanceof ParseError) {
+                    Toast.makeText(context,
+                            context.getString(R.string.error_parse),
+                            Toast.LENGTH_LONG).show();
+                }
             }
         }) {
             /**
@@ -326,7 +355,7 @@ public class FuelCheckClient {
         VolleyQueue.getInstance().addToRequestQueue(jsonObjectRequest);
     }
 
-    public void requestPOST(String url, final Map<String, String> headerMap, JSONObject jsonBody, final FuelCheckResponse<FuelCheckResult> completion) {
+    private void requestPOST(final String url, final Map<String, String> headerMap, final JSONObject jsonBody, final FuelCheckResponse<FuelCheckResult> completion) {
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, jsonBody,
                 new Response.Listener<JSONObject>() {
@@ -334,7 +363,7 @@ public class FuelCheckClient {
                     /**
                      * Called when a response is received.
                      *
-                     * @param response
+                     * @param response The volley response
                      */
                     @Override
                     public void onResponse(JSONObject response) {
@@ -352,14 +381,44 @@ public class FuelCheckClient {
              * Callback method that an error has been occurred with the
              * provided error code and optional user-readable message.
              *
-             * @param error
+             * @param error The error response
              */
             @Override
             public void onErrorResponse(VolleyError error) {
                 FuelCheckResult res = new FuelCheckResult();
                 res.setSuccess(false);
                 completion.onCompletion(res);
-                displayVolleyResponseError(error);
+
+                // Error Handling
+                Context context = VolleyQueue.getInstance().getContext();
+                if (error instanceof TimeoutError || error instanceof NoConnectionError) {
+                    Toast.makeText(context,
+                            context.getString(R.string.error_network_timeout),
+                            Toast.LENGTH_LONG).show();
+                } else if (error instanceof AuthFailureError) {
+                    // Auth token is invalid, attempt to get a new one
+                    authToken(new FuelCheckResponse<FuelCheckResult>() {
+                        @Override
+                        public void onCompletion(FuelCheckResult res) {
+                            String authToken = SharedPreferences.getInstance().getString(SharedPreferences.Key.OAUTH_TOKEN);
+                            headerMap.put("Authorization", "Bearer "+ authToken);
+                            requestPOST(url, headerMap, jsonBody, completion);
+                        }
+                    });
+
+                } else if (error instanceof ServerError) {
+                    Toast.makeText(context,
+                            context.getString(R.string.error_server),
+                            Toast.LENGTH_LONG).show();
+                } else if (error instanceof NetworkError) {
+                    Toast.makeText(context,
+                            context.getString(R.string.error_network),
+                            Toast.LENGTH_LONG).show();
+                } else if (error instanceof ParseError) {
+                    Toast.makeText(context,
+                            context.getString(R.string.error_parse),
+                            Toast.LENGTH_LONG).show();
+                }
             }
         }) {
             /**
@@ -378,30 +437,4 @@ public class FuelCheckClient {
         // Hand the request over to the request queue
         VolleyQueue.getInstance().addToRequestQueue(jsonObjectRequest);
     }
-
-    private void displayVolleyResponseError(VolleyError error) {
-        Context context = VolleyQueue.getInstance().getContext();
-        if (error instanceof TimeoutError || error instanceof NoConnectionError) {
-            Toast.makeText(context,
-                    context.getString(R.string.error_network_timeout),
-                    Toast.LENGTH_LONG).show();
-        } else if (error instanceof AuthFailureError) {
-            Toast.makeText(context,
-                    context.getString(R.string.error_auth_failure),
-                    Toast.LENGTH_LONG).show();
-        } else if (error instanceof ServerError) {
-            Toast.makeText(context,
-                    context.getString(R.string.error_server),
-                    Toast.LENGTH_LONG).show();
-        } else if (error instanceof NetworkError) {
-            Toast.makeText(context,
-                    context.getString(R.string.error_network),
-                    Toast.LENGTH_LONG).show();
-        } else if (error instanceof ParseError) {
-            Toast.makeText(context,
-                    context.getString(R.string.error_parse),
-                    Toast.LENGTH_LONG).show();
-        }
-    }
-
 }
