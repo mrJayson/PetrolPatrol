@@ -10,7 +10,7 @@
     <string name="menu_settings">Settings</string>
 
     <!-- Volley Error Messages -->
-    <string name="error_network_timeout">error network timeout</string>
+    <string name="error_network_timeout">There is a problem with the internet connection</string>
     <string name="error_auth_failure">error auth failure</string>
     <string name="error_server">error server</string>
     <string name="error_network">error network</string>

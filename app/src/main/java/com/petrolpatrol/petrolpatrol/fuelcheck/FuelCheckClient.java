@@ -159,7 +159,7 @@ public class FuelCheckClient {
         });
     }
 
-    public void getReferenceData() {
+    public void getReferenceData(final FuelCheckResponse completion) {
         String url = "https://api.onegov.nsw.gov.au/FuelCheckRefData/v1/fuel/lovs";
         SQLiteClient sqliteClient = new SQLiteClient(context);
         sqliteClient.open();
@@ -252,6 +252,8 @@ public class FuelCheckClient {
                         sqliteClient.open();
                         sqliteClient.setMetadata("REFERENCE_MODIFIED_TIMESTAMP", TimeUtils.UTCTimestamp());
                         sqliteClient.close();
+
+                        completion.onCompletion(res);
 
                     } catch (Exception e) {
                         LOGE(TAG, "Error occurred processing reference data");
