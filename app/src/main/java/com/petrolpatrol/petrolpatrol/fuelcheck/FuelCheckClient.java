@@ -48,7 +48,7 @@ public class FuelCheckClient {
         public void onCompletion(T res);
     }
 
-    public void getFuelPricesWithinRadius(double latitude, double longitude, String sortBy, String fuelType, final FuelCheckResponse<List<Price>> completion) {
+    public void getFuelPricesWithinRadius(double latitude, double longitude, String sortBy, String fuelType, final FuelCheckResponse<List<Station>> completion) {
         String url = "https://api.onegov.nsw.gov.au/FuelPriceCheck/v1/fuel/prices/nearby";
 
         // Prepare the header arguments
@@ -100,7 +100,7 @@ public class FuelCheckClient {
             public void onCompletion(FuelCheckResult res) {
                 JSONArray JSONResponse;
                 GsonBuilder gsonBuilder = new GsonBuilder();
-                List<Price> prices = new ArrayList<>();
+                List<Station> orderedStationList = new ArrayList<>();
                 final SQLiteClient sqliteClient = new SQLiteClient(context);
 
                 try {
@@ -124,14 +124,12 @@ public class FuelCheckClient {
                                     sqliteClient.close();
 
                                     Price price = new Price(
-                                            station,
+                                            priceJson.get("stationcode").getAsInt(),
                                             fuelType,
                                             priceJson.get("price").getAsDouble(),
                                             priceJson.get("lastupdated").getAsString()
                                             );
 
-                                    // Create self reference in the station object
-                                    price.getStation().setPrice(price);
                                     return price;
                                 }
                             };
@@ -142,7 +140,10 @@ public class FuelCheckClient {
                             Gson gson = gsonBuilder.create();
 
                             for (int i = 0; i < JSONResponse.length(); i++) {
-                                prices.add(gson.fromJson(JSONResponse.get(i).toString(),Price.class));
+                                Price price = gson.fromJson(JSONResponse.get(i).toString(),Price.class);
+                                Station station = (map.get(price.getStationID()));
+                                station.setPrice(price);
+                                orderedStationList.add(station);
                             }
 
                         } else {
@@ -153,7 +154,7 @@ public class FuelCheckClient {
                     LOGE(TAG, "Error occurred processing data");
                     e.printStackTrace();
                 }
-                completion.onCompletion(prices);
+                completion.onCompletion(orderedStationList);
             }
         });
     }

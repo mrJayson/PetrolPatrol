@@ -15,6 +15,7 @@ import com.petrolpatrol.petrolpatrol.datastore.SQLiteClient;
 import com.petrolpatrol.petrolpatrol.datastore.SharedPreferences;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.model.Price;
+import com.petrolpatrol.petrolpatrol.model.Station;
 import com.petrolpatrol.petrolpatrol.service.NewLocationReceiver;
 import com.petrolpatrol.petrolpatrol.util.TimeUtils;
 
@@ -93,14 +94,13 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
 
         FuelCheckClient client = new FuelCheckClient(getContext());
 
-        client.getFuelPricesWithinRadius(location.getLatitude(), location.getLongitude(), parentListener.getSelectedSortBy(), parentListener.getSelectedFuelType(), new FuelCheckClient.FuelCheckResponse<List<Price>>() {
+        client.getFuelPricesWithinRadius(location.getLatitude(), location.getLongitude(), parentListener.getSelectedSortBy(), parentListener.getSelectedFuelType(), new FuelCheckClient.FuelCheckResponse<List<Station>>() {
             @Override
-            public void onCompletion(List<Price> res) {
+            public void onCompletion(List<Station> res) {
 
             }
         });
-        parentListener.displayListFragment();
-
+        //parentListener.displayListFragment();d
     }
 
     private void registerReceiverToLocationService() {
