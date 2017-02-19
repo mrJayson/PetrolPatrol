@@ -21,6 +21,8 @@ import com.petrolpatrol.petrolpatrol.datastore.SharedPreferences;
 import com.petrolpatrol.petrolpatrol.locate.ListFragment;
 import com.petrolpatrol.petrolpatrol.locate.LocateFragment;
 import com.petrolpatrol.petrolpatrol.model.FuelType;
+import com.petrolpatrol.petrolpatrol.model.Price;
+import com.petrolpatrol.petrolpatrol.model.Station;
 import com.petrolpatrol.petrolpatrol.service.LocationService;
 import com.petrolpatrol.petrolpatrol.service.LocationServiceConnection;
 import com.petrolpatrol.petrolpatrol.util.Constants;
@@ -88,7 +90,7 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
 
         SQLiteClient sqLiteClient = new SQLiteClient(getApplicationContext());
 
-        /**
+        /*
          * Search button
          */
 
@@ -96,7 +98,7 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
         menuItem.setIcon(R.drawable.ic_search_white_24dp);
         menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
 
-        /**
+        /*
          * FuelTypes submenu
          */
 
@@ -131,7 +133,7 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
         }
         subMenu.setGroupCheckable(R.id.id_group_fueltype, true, true);
 
-        /**
+        /*
          * SortBy submenu
          */
 
@@ -247,13 +249,12 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
         LocateFragment locateFragment = LocateFragment.newInstance();
         transaction.replace(R.id.fragment_container, locateFragment);
         transaction.commit();
-
     }
 
     @Override
-    public void displayListFragment() {
+    public void displayListFragment(List<Station> list) {
         FragmentTransaction transaction = mfragmentManager.beginTransaction();
-        ListFragment listFragment = ListFragment.newInstance("","");
+        ListFragment listFragment = ListFragment.newInstance(list);
         transaction.replace(R.id.fragment_container, listFragment);
         transaction.commit();
     }

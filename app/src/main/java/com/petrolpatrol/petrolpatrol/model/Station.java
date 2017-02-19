@@ -1,12 +1,15 @@
 package com.petrolpatrol.petrolpatrol.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Created by jason on 17/02/17.
  */
-public class Station {
+public class Station implements Parcelable {
 
     public static final int NO_ID = -1;
     public static final int NO_DISTANCE = 0;
@@ -97,4 +100,49 @@ public class Station {
             prices.put(price.getFuelType().getCode(), price);
         }
     }
+
+    protected Station(Parcel in) {
+        brand = (Brand) in.readValue(Brand.class.getClassLoader());
+        id = in.readInt();
+        name = in.readString();
+        address = in.readString();
+        location = (Location) in.readValue(Location.class.getClassLoader());
+        prices = new HashMap<>();
+        int size = in.readInt();
+        for (int i = 0; i < size; i++) {
+            prices.put(in.readString(), (Price) in.readValue(Price.class.getClassLoader()));
+        }
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeValue(brand);
+        dest.writeInt(id);
+        dest.writeString(name);
+        dest.writeString(address);
+        dest.writeValue(location);
+        dest.writeInt(prices.size());
+        for(Map.Entry<String, Price> entry : prices.entrySet()) {
+            dest.writeString(entry.getKey());
+            dest.writeValue(entry.getValue());
+        }
+    }
+
+    @SuppressWarnings("unused")
+    public static final Parcelable.Creator<Station> CREATOR = new Parcelable.Creator<Station>() {
+        @Override
+        public Station createFromParcel(Parcel in) {
+            return new Station(in);
+        }
+
+        @Override
+        public Station[] newArray(int size) {
+            return new Station[size];
+        }
+    };
 }

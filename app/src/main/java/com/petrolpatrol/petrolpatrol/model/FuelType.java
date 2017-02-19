@@ -1,9 +1,12 @@
 package com.petrolpatrol.petrolpatrol.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Created by jason on 17/02/17.
  */
-public class FuelType {
+public class FuelType implements Parcelable {
 
     public static final int NO_ID = -1;
 
@@ -32,4 +35,35 @@ public class FuelType {
     public String getName() {
         return name;
     }
+
+    protected FuelType(Parcel in) {
+        id = in.readInt();
+        code = in.readString();
+        name = in.readString();
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(id);
+        dest.writeString(code);
+        dest.writeString(name);
+    }
+
+    @SuppressWarnings("unused")
+    public static final Parcelable.Creator<FuelType> CREATOR = new Parcelable.Creator<FuelType>() {
+        @Override
+        public FuelType createFromParcel(Parcel in) {
+            return new FuelType(in);
+        }
+
+        @Override
+        public FuelType[] newArray(int size) {
+            return new FuelType[size];
+        }
+    };
 }

@@ -97,10 +97,9 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
         client.getFuelPricesWithinRadius(location.getLatitude(), location.getLongitude(), parentListener.getSelectedSortBy(), parentListener.getSelectedFuelType(), new FuelCheckClient.FuelCheckResponse<List<Station>>() {
             @Override
             public void onCompletion(List<Station> res) {
-
+                parentListener.displayListFragment(res);
             }
         });
-        //parentListener.displayListFragment();d
     }
 
     private void registerReceiverToLocationService() {
@@ -124,7 +123,7 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
     public interface Listener {
         void startLocating();
         void stopLocating();
-        void displayListFragment();
+        void displayListFragment(List<Station> list);
         String getSelectedFuelType();
         String getSelectedSortBy();
     }

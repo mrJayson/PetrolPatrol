@@ -1,9 +1,12 @@
 package com.petrolpatrol.petrolpatrol.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Created by jason on 17/02/17.
  */
-public class Price {
+public class Price implements Parcelable {
 
     private final int stationID;
     private final FuelType fuelType;
@@ -32,4 +35,38 @@ public class Price {
     public String getLastUpdated() {
         return lastUpdated;
     }
+
+
+    protected Price(Parcel in) {
+        stationID = in.readInt();
+        fuelType = (FuelType) in.readValue(FuelType.class.getClassLoader());
+        price = in.readDouble();
+        lastUpdated = in.readString();
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(stationID);
+        dest.writeValue(fuelType);
+        dest.writeDouble(price);
+        dest.writeString(lastUpdated);
+    }
+
+    @SuppressWarnings("unused")
+    public static final Parcelable.Creator<Price> CREATOR = new Parcelable.Creator<Price>() {
+        @Override
+        public Price createFromParcel(Parcel in) {
+            return new Price(in);
+        }
+
+        @Override
+        public Price[] newArray(int size) {
+            return new Price[size];
+        }
+    };
 }
