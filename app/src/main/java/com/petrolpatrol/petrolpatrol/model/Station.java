@@ -22,7 +22,7 @@ public class Station implements Parcelable {
     private Map<String, Price> prices;
 
 
-    public static class Location {
+    public static class Location implements Parcelable {
         private final double latitude;
         private final double longitude;
         private final double distance;
@@ -36,6 +36,37 @@ public class Station implements Parcelable {
         public Location(double latitude, double longitude) {
             this(latitude,longitude, NO_DISTANCE);
         }
+
+        protected Location(Parcel in) {
+            latitude = in.readDouble();
+            longitude = in.readDouble();
+            distance = in.readDouble();
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeDouble(latitude);
+            dest.writeDouble(longitude);
+            dest.writeDouble(distance);
+        }
+
+        @SuppressWarnings("unused")
+        public static final Parcelable.Creator<Location> CREATOR = new Parcelable.Creator<Location>() {
+            @Override
+            public Location createFromParcel(Parcel in) {
+                return new Location(in);
+            }
+
+            @Override
+            public Location[] newArray(int size) {
+                return new Location[size];
+            }
+        };
     }
 
     public Station(Brand brand, String name, String address, double latitude, double longitude) {

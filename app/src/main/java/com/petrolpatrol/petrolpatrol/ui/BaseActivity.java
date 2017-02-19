@@ -55,11 +55,7 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
         setSupportActionBar(toolbar);
 
         mLocationServiceConnection = new LocationServiceConnection(this);
-    }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
         if (requestLocationPermissionsIfNecessary()) {
             bindToLocationService();
         }
@@ -69,6 +65,11 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
 
         // Show the locate fragment each time on start up
         displayLocateFragment();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
     }
 
     @Override
@@ -269,8 +270,4 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
         return selectedSortBy;
     }
 
-    @Override
-    public void onFragmentInteraction(Uri uri) {
-
-    }
 }

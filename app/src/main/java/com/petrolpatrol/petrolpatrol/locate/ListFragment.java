@@ -2,22 +2,21 @@ package com.petrolpatrol.petrolpatrol.locate;
 
 import android.app.Activity;
 import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.RecyclerView.LayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.petrolpatrol.petrolpatrol.R;
-import com.petrolpatrol.petrolpatrol.model.Price;
 import com.petrolpatrol.petrolpatrol.model.Station;
 
 import java.util.ArrayList;
-import java.util.List;
-
 import java.util.List;
 
 /**
@@ -29,14 +28,12 @@ import java.util.List;
  * create an instance of this fragment.
  */
 public class ListFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 
-    private static final String ARG_LIST = "list";
+    private static final String ARG_LIST = "stations";
+    private List<Station> stations;
+    private Listener parentListener;
 
-    private List<Station> list;
-
-    private Listener mListener;
+    private RecyclerView container_content;
 
     public ListFragment() {
         // Required empty public constructor
@@ -46,7 +43,7 @@ public class ListFragment extends Fragment {
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param list The list to be displayed in the list fragment.
+     * @param list The stations to be displayed in the stations fragment.
      * @return A new instance of fragment ListFragment.
      */
     // TODO: Rename and change types and number of parameters
@@ -62,7 +59,7 @@ public class ListFragment extends Fragment {
     public void onAttach(Context context) {
         super.onAttach(context);
         if (context instanceof Listener) {
-            mListener = (Listener) context;
+            parentListener = (Listener) context;
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement Listener");
@@ -73,13 +70,12 @@ public class ListFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            list = getArguments().getParcelableArrayList(ARG_LIST);
+            stations = getArguments().getParcelableArrayList(ARG_LIST);
         }
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_list, container, false);
     }
@@ -97,6 +93,7 @@ public class ListFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        container_content = (RecyclerView) view.findViewById(R.id.container_content);
     }
 
     /**
@@ -137,6 +134,10 @@ public class ListFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
+        LayoutManager layoutManager = new LinearLayoutManager(getActivity());
+        RecyclerView.Adapter adapter = new ListAdapter(getContext(), stations, parentListener.getSelectedFuelType());
+        container_content.setLayoutManager(layoutManager);
+        container_content.setAdapter(adapter);
     }
 
     /**
@@ -173,14 +174,7 @@ public class ListFragment extends Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
-    }
-
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
+        parentListener = null;
     }
 
     /**
@@ -194,7 +188,7 @@ public class ListFragment extends Fragment {
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface Listener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+        String getSelectedFuelType();
+        String getSelectedSortBy();
     }
 }
