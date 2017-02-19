@@ -56,14 +56,14 @@ public class SharedPreferences {
     public void initialize() {
 
         // If there is no entry for fuelType, set it to the default
-
-        put(Key.DEFAULT_FUELTYPE, context.getString(R.string.default_fueltype));
-
+        if (getString(Key.DEFAULT_FUELTYPE) == null) {
+            put(Key.DEFAULT_FUELTYPE, context.getString(R.string.default_fueltype));
+        }
 
         // If there is no entry for sortBy, set it to the default
-
-        put(Key.DEFAULT_SORTBY, context.getString(R.string.default_sortby));
-
+        if (getString(Key.DEFAULT_SORTBY) == null) {
+            put(Key.DEFAULT_SORTBY, context.getString(R.string.default_sortby));
+        }
     }
 
     // getters

@@ -71,18 +71,6 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
             }
         });
 
-//        locateFab.setOnClickListener(new View.OnClickListener() {
-//
-//            @Override
-//            public void onClick(View view) {
-//                FuelCheckClient client = new FuelCheckClient(getContext());
-//                //client.authToken();
-//                client.getReferenceData();
-//                //TODO run getReference at every app start, consider the case where there is no internet
-//
-//            }
-//        });
-
         return v;
     }
 

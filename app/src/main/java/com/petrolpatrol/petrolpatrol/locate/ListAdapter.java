@@ -112,5 +112,8 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         return stations.size();
     }
 
-
+    public void clear() {
+        stations.clear();
+        notifyDataSetChanged();
+    }
 }

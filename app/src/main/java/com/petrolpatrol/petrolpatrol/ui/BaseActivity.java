@@ -123,7 +123,7 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
                 @Override
                 public boolean onMenuItemClick(MenuItem menuItem) {
                     menuItem.setChecked(true);
-                    SharedPreferences.getInstance().put(SharedPreferences.Key.DEFAULT_FUELTYPE, String.valueOf(menuItem.getTitle()));
+                    selectedFuelType = String.valueOf(menuItem.getTitle());
                     return true;
                 }
             });
@@ -175,7 +175,7 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
             case R.id.id_menu_sort_price:
             case R.id.id_menu_sort_distance:
                 item.setChecked(true);
-                SharedPreferences.getInstance().put(SharedPreferences.Key.DEFAULT_SORTBY, String.valueOf(item.getTitle()));
+                selectedSortBy = String.valueOf(item.getTitle());
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

@@ -2,10 +2,12 @@ package com.petrolpatrol.petrolpatrol.locate;
 
 import android.app.Activity;
 import android.content.Context;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.LayoutManager;
@@ -14,7 +16,9 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.petrolpatrol.petrolpatrol.R;
+import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.model.Station;
+import com.petrolpatrol.petrolpatrol.service.NewLocationReceiver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,12 +31,15 @@ import java.util.List;
  * Use the {@link ListFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class ListFragment extends Fragment {
+public class ListFragment extends Fragment implements NewLocationReceiver.Listener{
 
     private static final String ARG_LIST = "stations";
     private List<Station> stations;
     private Listener parentListener;
+    private NewLocationReceiver newLocationReceiver = new NewLocationReceiver(this);
 
+
+    private SwipeRefreshLayout swipeContainer;
     private RecyclerView container_content;
 
     public ListFragment() {
@@ -94,6 +101,17 @@ public class ListFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         container_content = (RecyclerView) view.findViewById(R.id.container_content);
+        swipeContainer = (SwipeRefreshLayout) view.findViewById(R.id.container_swipe_refresh);
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+
+                registerReceiverToLocationService();
+                parentListener.startLocating();
+                ListAdapter adapt = (ListAdapter) container_content.getAdapter();
+                adapt.clear();
+            }
+        });
     }
 
     /**
@@ -177,6 +195,30 @@ public class ListFragment extends Fragment {
         parentListener = null;
     }
 
+    @Override
+    public void onLocationReceived(Location location) {
+
+        unregisterReceiverFromLocationService();
+        parentListener.stopLocating();
+
+        FuelCheckClient client = new FuelCheckClient(getContext());
+
+        client.getFuelPricesWithinRadius(location.getLatitude(), location.getLongitude(), parentListener.getSelectedSortBy(), parentListener.getSelectedFuelType(), new FuelCheckClient.FuelCheckResponse<List<Station>>() {
+            @Override
+            public void onCompletion(List<Station> res) {
+                parentListener.displayListFragment(res);
+            }
+        });
+    }
+
+    private void registerReceiverToLocationService() {
+        newLocationReceiver.register(getActivity());
+    }
+
+    private void unregisterReceiverFromLocationService() {
+        newLocationReceiver.unregister(getActivity());
+    }
+
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -188,6 +230,9 @@ public class ListFragment extends Fragment {
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface Listener {
+        void startLocating();
+        void stopLocating();
+        void displayListFragment(List<Station> list);
         String getSelectedFuelType();
         String getSelectedSortBy();
     }
