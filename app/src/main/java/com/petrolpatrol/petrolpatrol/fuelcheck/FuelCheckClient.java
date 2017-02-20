@@ -98,6 +98,7 @@ public class FuelCheckClient {
 
             @Override
             public void onCompletion(FuelCheckResult res) {
+                LOGI(TAG, "nearby query processing");
                 JSONArray JSONResponse;
                 GsonBuilder gsonBuilder = new GsonBuilder();
                 List<Station> orderedStationList = new ArrayList<>();
@@ -386,6 +387,7 @@ public class FuelCheckClient {
                      */
                     @Override
                     public void onResponse(JSONObject response) {
+                        LOGI(TAG, "requestPOST successful response");
                         // structure the response in a FuelCheckResult
                         FuelCheckResult res = new FuelCheckResult();
 
@@ -404,6 +406,7 @@ public class FuelCheckClient {
              */
             @Override
             public void onErrorResponse(VolleyError error) {
+                LOGI(TAG, "requestPOST bad response");
                 FuelCheckResult res = new FuelCheckResult();
                 res.setSuccess(false);
                 completion.onCompletion(res);

@@ -23,6 +23,9 @@ import com.petrolpatrol.petrolpatrol.service.NewLocationReceiver;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
+import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
+
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
@@ -32,6 +35,8 @@ import java.util.List;
  * create an instance of this fragment.
  */
 public class ListFragment extends Fragment implements NewLocationReceiver.Listener{
+
+    private static final String TAG = makeLogTag(ListFragment.class);
 
     private static final String ARG_LIST = "stations";
     private List<Station> stations;
@@ -64,6 +69,8 @@ public class ListFragment extends Fragment implements NewLocationReceiver.Listen
 
     @Override
     public void onAttach(Context context) {
+        LOGI(TAG, "onAttach");
+
         super.onAttach(context);
         if (context instanceof Listener) {
             parentListener = (Listener) context;
@@ -75,6 +82,8 @@ public class ListFragment extends Fragment implements NewLocationReceiver.Listen
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        LOGI(TAG, "onCreate");
+
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             stations = getArguments().getParcelableArrayList(ARG_LIST);
@@ -105,6 +114,7 @@ public class ListFragment extends Fragment implements NewLocationReceiver.Listen
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
+                LOGI(TAG, "onRefresh");
 
                 registerReceiverToLocationService();
                 parentListener.startLocating();
@@ -151,6 +161,8 @@ public class ListFragment extends Fragment implements NewLocationReceiver.Listen
      */
     @Override
     public void onStart() {
+        LOGI(TAG, "onStart");
+
         super.onStart();
         LayoutManager layoutManager = new LinearLayoutManager(getActivity());
         RecyclerView.Adapter adapter = new ListAdapter(getContext(), stations, parentListener.getSelectedFuelType());
@@ -158,24 +170,15 @@ public class ListFragment extends Fragment implements NewLocationReceiver.Listen
         container_content.setAdapter(adapter);
     }
 
-    /**
-     * Called when the fragment is visible to the user and actively running.
-     * This is generally
-     * tied to {@link Activity#onResume() Activity.onResume} of the containing
-     * Activity's lifecycle.
-     */
     @Override
     public void onResume() {
+        LOGI(TAG, "onResume");
         super.onResume();
     }
 
-    /**
-     * Called when the Fragment is no longer resumed.  This is generally
-     * tied to {@link Activity#onPause() Activity.onPause} of the containing
-     * Activity's lifecycle.
-     */
     @Override
     public void onPause() {
+        LOGI(TAG, "onPause");
         super.onPause();
     }
 
@@ -186,17 +189,25 @@ public class ListFragment extends Fragment implements NewLocationReceiver.Listen
      */
     @Override
     public void onStop() {
+        LOGI(TAG, "onStop");
+
+        // Unregister if fragment closes while still broadcast receiving
+        unregisterReceiverFromLocationService();
         super.onStop();
     }
 
     @Override
     public void onDetach() {
+        LOGI(TAG, "onDetach");
+
         super.onDetach();
         parentListener = null;
     }
 
     @Override
     public void onLocationReceived(Location location) {
+
+        LOGI(TAG, "location received");
 
         unregisterReceiverFromLocationService();
         parentListener.stopLocating();
@@ -212,11 +223,11 @@ public class ListFragment extends Fragment implements NewLocationReceiver.Listen
     }
 
     private void registerReceiverToLocationService() {
-        newLocationReceiver.register(getActivity());
+        newLocationReceiver.register(getContext());
     }
 
     private void unregisterReceiverFromLocationService() {
-        newLocationReceiver.unregister(getActivity());
+        newLocationReceiver.unregister(getContext());
     }
 
     /**

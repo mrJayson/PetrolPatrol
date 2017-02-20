@@ -9,6 +9,7 @@ import android.os.IBinder;
 import java.io.Serializable;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGE;
+import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
 /**
@@ -28,6 +29,8 @@ public class LocationServiceConnection implements ServiceConnection {
 
     @Override
     public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+        LOGI(TAG, "onServiceConnected");
+
         LocationService.LocationServiceBinder binder = (LocationService.LocationServiceBinder) iBinder;
         locationService = binder.getService();
         isBound = true;
@@ -35,8 +38,7 @@ public class LocationServiceConnection implements ServiceConnection {
 
     @Override
     public void onServiceDisconnected(ComponentName componentName) {
-        locationService = null;
-        isBound = false;
+
     }
 
     public void bindService() {
@@ -52,6 +54,10 @@ public class LocationServiceConnection implements ServiceConnection {
         if (isBound()) {
             try {
                 mContext.unbindService(this);
+                LOGI(TAG, "onServiceDisconnected");
+
+                locationService = null;
+                isBound = false;
             } catch (Exception e) {
                 LOGE(TAG, "Service was already unbound when trying to unbind");
             }

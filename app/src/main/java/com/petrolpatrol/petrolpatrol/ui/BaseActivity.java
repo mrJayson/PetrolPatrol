@@ -49,6 +49,8 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        LOGI(TAG, "onCreate");
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_base);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -56,9 +58,7 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
 
         mLocationServiceConnection = new LocationServiceConnection(this);
 
-        if (requestLocationPermissionsIfNecessary()) {
-            bindToLocationService();
-        }
+
 
         selectedFuelType = SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_FUELTYPE);
         selectedSortBy = SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_SORTBY);
@@ -69,14 +69,27 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
 
     @Override
     protected void onStart() {
+        LOGI(TAG, "onStart");
         super.onStart();
+        if (requestLocationPermissionsIfNecessary()) {
+            bindToLocationService();
+        }
     }
 
     @Override
     protected void onStop() {
+        LOGI(TAG, "onStop");
+
         unbindFromLocationService();
         super.onStop();
     }
+
+    @Override
+    protected void onDestroy() {
+        LOGI(TAG, "onDestroy");
+        super.onDestroy();
+    }
+
 
     // Build the Toolbar menu upon first start
     @Override

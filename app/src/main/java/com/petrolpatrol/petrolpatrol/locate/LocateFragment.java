@@ -31,7 +31,9 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
 
     private static final String TAG = makeLogTag(LocateFragment.class);
     private Listener parentListener;
-    private NewLocationReceiver newLocationReceiver = new NewLocationReceiver(this);
+    private NewLocationReceiver newLocationReceiver;
+
+
 
     public static LocateFragment newInstance() {
         // Factory method for creating new fragment instances
@@ -46,6 +48,7 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        LOGI(TAG, "onCreate");
         super.onCreate(savedInstanceState);
 
         if (savedInstanceState == null) {
@@ -53,6 +56,7 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
         } else {
             // previous state contains data needed to recreate fragment to how it was before
         }
+        newLocationReceiver = new NewLocationReceiver(this);
 
     }
 
@@ -75,6 +79,39 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
     }
 
     @Override
+    public void onStart() {
+        LOGI(TAG, "onStart");
+        super.onStart();
+    }
+
+    @Override
+    public void onResume() {
+        LOGI(TAG, "onResume");
+        super.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        LOGI(TAG, "onPause");
+        super.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        LOGI(TAG, "onStop");
+        // Unregister if fragment closes while still broadcast receiving
+        unregisterReceiverFromLocationService();
+
+        super.onStop();
+    }
+
+    @Override
+    public void onDestroy() {
+        LOGI(TAG, "onDestroy");
+        super.onDestroy();
+    }
+
+    @Override
     public void onLocationReceived(Location location) {
 
         unregisterReceiverFromLocationService();
@@ -88,14 +125,15 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
                 parentListener.displayListFragment(res);
             }
         });
+
     }
 
     private void registerReceiverToLocationService() {
-        newLocationReceiver.register(getActivity());
+        newLocationReceiver.register(getContext());
     }
 
     private void unregisterReceiverFromLocationService() {
-        newLocationReceiver.unregister(getActivity());
+        newLocationReceiver.unregister(getContext());
     }
 
     /**
@@ -119,6 +157,7 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
     @Override
     public void onAttach(Context context) {
         // Context is the parent activity
+        LOGI(TAG, "onAttach");
         super.onAttach(context);
 
         // Check to see if the parent activity has implemented the callback
@@ -132,6 +171,7 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
 
     @Override
     public void onDetach() {
+        LOGI(TAG, "onDetach");
         super.onDetach();
         parentListener = null;
     }

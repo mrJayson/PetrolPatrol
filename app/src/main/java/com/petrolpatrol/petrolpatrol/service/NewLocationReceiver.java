@@ -30,6 +30,8 @@ public class NewLocationReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         // Get extra data included in the Intent
+        LOGI(TAG, "onReceive");
+
         mListener.onLocationReceived((Location) intent.getParcelableExtra("location"));
     }
 
