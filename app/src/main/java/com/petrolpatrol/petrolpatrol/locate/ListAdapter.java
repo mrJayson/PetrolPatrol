@@ -99,7 +99,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         }
         holder.name.setText(station.getName());
         holder.address.setText(station.getAddress());
-        holder.distance.setText(String.valueOf(station.getDistance()));
+        holder.distance.setText(context.getString(R.string.content_distance, station.getDistance()));
     }
 
     /**

@@ -1,7 +1,10 @@
 <resources>
     <string name="app_name">PetrolPatrol</string>
 
-    <!--Menu Items-->
+    <!-- Card Content -->
+    <string name="content_distance">%1$.2f km</string>
+
+    <!-- Menu Items -->
     <string name="menu_search">Search</string>
     <string name="menu_fueltype">Fueltype</string>
     <string name="menu_sort">Sort</string>

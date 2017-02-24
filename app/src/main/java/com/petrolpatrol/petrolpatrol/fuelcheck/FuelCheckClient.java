@@ -88,7 +88,7 @@ public class FuelCheckClient {
                     .put("Westside"));
             jsonBody.put("latitude", String.valueOf(latitude));
             jsonBody.put("longitude", String.valueOf(longitude));
-            jsonBody.put("radius", "10");
+            jsonBody.put("radius", "3");
             jsonBody.put("sortby", sortBy);
             jsonBody.put("sortascending", "true");
         } catch (JSONException e) {
