@@ -1,19 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context="com.petrolpatrol.petrolpatrol.ui.BaseActivity">
 
-    <include layout="@layout/toolbar"/>
+<android.support.v4.widget.DrawerLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/drawer_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-    <FrameLayout
-            android:id="@+id/fragment_container"
+    <!-- First child of DrawerLayout must be the primary content as XML ordering implies
+    z-ordering of the elements where the navigation drawer is on top of the primary content -->
+    <LinearLayout
+            xmlns:tools="http://schemas.android.com/tools"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-        <!--Fragment Container, fragments appear here-->
-    </FrameLayout>
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            tools:context="com.petrolpatrol.petrolpatrol.ui.BaseActivity">
 
-</LinearLayout>
+        <include layout="@layout/toolbar"/>
+
+        <FrameLayout
+                android:id="@+id/fragment_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+            <!--Fragment Container, fragments appear here-->
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <android.support.design.widget.NavigationView
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/navigation_view"
+            android:layout_height="match_parent"
+            android:layout_width="wrap_content"
+            android:layout_gravity="start"
+            app:headerLayout="@null"
+            app:menu="@menu/menu_nav"/>
+
+</android.support.v4.widget.DrawerLayout>

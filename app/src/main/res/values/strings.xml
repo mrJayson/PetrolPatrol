@@ -10,7 +10,6 @@
     <string name="menu_sort">Sort</string>
     <string name="menu_sort_price">Price</string>
     <string name="menu_sort_distance">Distance</string>
-    <string name="menu_settings">Settings</string>
 
     <!-- Volley Error Messages -->
     <string name="error_network_timeout">There is a problem with the internet connection</string>
@@ -18,5 +17,7 @@
     <string name="error_server">error server</string>
     <string name="error_network">error network</string>
     <string name="error_parse">error parse</string>
+
+    <string name="nav_settings">Settings</string>
 
 </resources>

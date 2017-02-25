@@ -4,9 +4,12 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -44,6 +47,10 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
 
     private FragmentManager mfragmentManager = getSupportFragmentManager();
 
+    private DrawerLayout mDrawerContainer;
+    private Toolbar mToolbar;
+    private NavigationView mNavigationView;
+
     private String selectedFuelType;
     private String selectedSortBy;
 
@@ -53,12 +60,17 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_base);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        mDrawerContainer = (DrawerLayout) findViewById(R.id.drawer_container);
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
+
+        // Navigation Drawer interaction from the toolbar
+        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_menu_white_24dp);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
 
         mLocationServiceConnection = new LocationServiceConnection(this);
-
-
 
         selectedFuelType = SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_FUELTYPE);
         selectedSortBy = SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_SORTBY);
@@ -183,6 +195,9 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         switch (id) {
+            case android.R.id.home:
+                mDrawerContainer.openDrawer(GravityCompat.START);
+                return true;
             case R.id.id_menu_settings:
                 return true;
             case R.id.id_menu_sort_price:
@@ -195,6 +210,24 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        if (isNavDrawerOpen()) {
+            closeNavDrawer();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    private boolean isNavDrawerOpen() {
+        return mDrawerContainer != null && mDrawerContainer.isDrawerOpen(GravityCompat.START);
+    }
+
+    private void closeNavDrawer() {
+        if (mDrawerContainer != null) {
+            mDrawerContainer.closeDrawer(GravityCompat.START);
+        }
+    }
 
     private void bindToLocationService() {
         mLocationServiceConnection.bindService();
