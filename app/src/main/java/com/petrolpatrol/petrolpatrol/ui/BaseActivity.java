@@ -2,8 +2,6 @@ package com.petrolpatrol.petrolpatrol.ui;
 
 import android.app.ActivityManager;
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
@@ -15,22 +13,15 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.SubMenu;
-import android.widget.FrameLayout;
 import android.widget.Toast;
 import com.petrolpatrol.petrolpatrol.R;
-import com.petrolpatrol.petrolpatrol.datastore.SQLiteClient;
 import com.petrolpatrol.petrolpatrol.datastore.SharedPreferences;
 import com.petrolpatrol.petrolpatrol.locate.ListFragment;
 import com.petrolpatrol.petrolpatrol.locate.LocateFragment;
-import com.petrolpatrol.petrolpatrol.model.FuelType;
-import com.petrolpatrol.petrolpatrol.model.Price;
 import com.petrolpatrol.petrolpatrol.model.Station;
-import com.petrolpatrol.petrolpatrol.service.LocationService;
 import com.petrolpatrol.petrolpatrol.service.LocationServiceConnection;
 import com.petrolpatrol.petrolpatrol.util.Constants;
 
-import java.util.Iterator;
 import java.util.List;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
@@ -107,88 +98,19 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
 
-        // Menu items will be displayed in the order they are declared in code
-        int menuOrdering = 0;
+        getMenuInflater().inflate(R.menu.menu, menu);
 
-        // Placeholders while creating the menu
-        MenuItem menuItem;
-        SubMenu subMenu;
-
-        SQLiteClient sqLiteClient = new SQLiteClient(getApplicationContext());
-
-        /*
-         * Search button
-         */
-
-        menuItem = menu.add(Menu.NONE, R.id.id_menu_search, Menu.FIRST + menuOrdering++, R.string.menu_search);
-        menuItem.setIcon(R.drawable.ic_search_white_24dp);
-        menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-
-        /*
-         * FuelTypes submenu
-         */
-
-        subMenu = menu.addSubMenu(R.id.id_group_fueltype, Menu.NONE, Menu.FIRST + menuOrdering++, R.string.menu_fueltype);
-
-        menuItem = subMenu.getItem();
-        menuItem.setIcon(R.drawable.ic_local_gas_station_white_24dp);
-        menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-
-        // Populate the submenu from database
-        sqLiteClient.open();
-        List<FuelType> fuelTypes =  sqLiteClient.getAllFuelTypes();
-        sqLiteClient.close();
-
-        for (FuelType fuelType : fuelTypes) {
-            menuItem = subMenu.add(
-                    R.id.id_group_fueltype,
-                    Menu.NONE,
-                    Menu.FIRST + menuOrdering++,
-                    fuelType.getCode()).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem menuItem) {
-                    menuItem.setChecked(true);
-                    selectedFuelType = String.valueOf(menuItem.getTitle());
-                    return true;
-                }
-            });
-
-            if (SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_FUELTYPE).equals(fuelType.getCode())) {
-                menuItem.setChecked(true);
-            }
-        }
-        subMenu.setGroupCheckable(R.id.id_group_fueltype, true, true);
-
-        /*
-         * SortBy submenu
-         */
-
-        subMenu = menu.addSubMenu(R.id.id_menu_sort, Menu.NONE, Menu.FIRST + menuOrdering++, R.string.menu_sort);
-
-        menuItem = subMenu.getItem();
-        menuItem.setIcon(R.drawable.ic_sort_white_24dp);
-        menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-
-        menuItem = subMenu.add(R.id.id_menu_sort, R.id.id_menu_sort_price, Menu.FIRST + menuOrdering++, R.string.menu_sort_price);
-        menuItem.setIcon(R.drawable.ic_attach_money_black_24dp);
-        if (SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_SORTBY).equals(getApplicationContext().getString(R.string.menu_sort_price))) {
-            menuItem.setChecked(true);
-        }
-
-        menuItem = subMenu.add(R.id.id_menu_sort, R.id.id_menu_sort_distance, Menu.FIRST + menuOrdering++, R.string.menu_sort_distance);
-        menuItem.setIcon(R.drawable.ic_directions_black_24dp);
-        if (SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_SORTBY).equals(getApplicationContext().getString(R.string.menu_sort_distance))) {
-            menuItem.setChecked(true);
-        }
-
-        subMenu.setGroupCheckable(R.id.id_menu_sort, true, true);
-
-        // Settings menuItem
-//        menuItem = menu.add(Menu.NONE, R.id.id_menu_settings, Menu.FIRST + menuOrdering++, R.string.menu_settings);
-//        menuItem.setIcon(R.drawable.ic_settings_white_24dp);
-//        menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-
+        // Preselect the menu items recorded in SharedPreferences
+        int fuelTypeResID = getResources().getIdentifier(
+                SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_FUELTYPE),"id",getPackageName());
+        int sortByResID = getResources().getIdentifier("sort_" +
+                SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_SORTBY).toLowerCase(),"id",getPackageName());
+        MenuItem fuelType = (MenuItem) menu.findItem(fuelTypeResID);
+        fuelType.setChecked(true);
+        MenuItem sortBy = (MenuItem) menu.findItem(sortByResID);
+        sortBy.setChecked(true);
         return true;
+
     }
 
     @Override
@@ -198,10 +120,25 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
             case android.R.id.home:
                 mDrawerContainer.openDrawer(GravityCompat.START);
                 return true;
-            case R.id.id_menu_settings:
+
+            case R.id.E10:
+            case R.id.U91:
+            case R.id.E85:
+            case R.id.P95:
+            case R.id.P98:
+            case R.id.DL:
+            case R.id.PDL:
+            case R.id.B20:
+            case R.id.LPG:
+            case R.id.CNG:
+            case R.id.LNG:
+            case R.id.EV:
+            case R.id.H2:
+                item.setChecked(true);
+                selectedFuelType = String.valueOf(item.getTitle());
                 return true;
-            case R.id.id_menu_sort_price:
-            case R.id.id_menu_sort_distance:
+            case R.id.sort_price:
+            case R.id.sort_distance:
                 item.setChecked(true);
                 selectedSortBy = String.valueOf(item.getTitle());
                 return true;

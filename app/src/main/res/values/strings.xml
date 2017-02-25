@@ -4,12 +4,32 @@
     <!-- Card Content -->
     <string name="content_distance">%1$.2f km</string>
 
-    <!-- Menu Items -->
+    <!-- Toolbar Menu Items -->
     <string name="menu_search">Search</string>
     <string name="menu_fueltype">Fueltype</string>
     <string name="menu_sort">Sort</string>
     <string name="menu_sort_price">Price</string>
     <string name="menu_sort_distance">Distance</string>
+
+    <!-- Menu FuelType Submenu Items -->
+
+    <string name="fueltype_E10">E10</string>
+    <string name="fueltype_U91">U91</string>
+    <string name="fueltype_E85">E85</string>
+    <string name="fueltype_P95">P95</string>
+    <string name="fueltype_P98">P98</string>
+    <string name="fueltype_DL">DL</string>
+    <string name="fueltype_PDL">PDL</string>
+    <string name="fueltype_B20">B20</string>
+    <string name="fueltype_LPG">LPG</string>
+    <string name="fueltype_CNG">CNG</string>
+    <string name="fueltype_LNG">LNG</string>
+    <string name="fueltype_EV">EV</string>
+    <string name="fueltype_H2">H2</string>
+
+    <!-- Navigation Drawer Menu Items -->
+
+    <string name="nav_settings">Settings</string>
 
     <!-- Volley Error Messages -->
     <string name="error_network_timeout">There is a problem with the internet connection</string>
@@ -17,7 +37,5 @@
     <string name="error_server">error server</string>
     <string name="error_network">error network</string>
     <string name="error_parse">error parse</string>
-
-    <string name="nav_settings">Settings</string>
 
 </resources>

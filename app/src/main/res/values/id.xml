@@ -1,9 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <item type="id" name="id_menu_search"/>
-    <item type="id" name="id_group_fueltype"/>
-    <item type="id" name="id_menu_sort"/>
-    <item type="id" name="id_menu_sort_price"/>
-    <item type="id" name="id_menu_sort_distance"/>
-    <item type="id" name="id_menu_settings"/>
+
+    <!-- Toolbar Menu Identifiers -->
+
+    <item type="id" name="search"/>
+    <item type="id" name="fueltype"/>
+    <item type="id" name="sort"/>
+    <item type="id" name="sort_price"/>
+    <item type="id" name="sort_distance"/>
+    <item type="id" name="settings"/>
+
+    <!-- Fueltype submenu Identifiers -->
+
+    <item type="id" name="E10"/>
+    <item type="id" name="U91"/>
+    <item type="id" name="E85"/>
+    <item type="id" name="P95"/>
+    <item type="id" name="P98"/>
+    <item type="id" name="DL"/>
+    <item type="id" name="PDL"/>
+    <item type="id" name="B20"/>
+    <item type="id" name="LPG"/>
+    <item type="id" name="CNG"/>
+    <item type="id" name="LNG"/>
+    <item type="id" name="EV"/>
+    <item type="id" name="H2"/>
+
 </resources>
