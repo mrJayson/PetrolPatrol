@@ -12,9 +12,9 @@
             android:layout_height="match_parent">
         <!-- default layout direction is ltr -->
         <FrameLayout
-                android:id="@+id/container_price"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
+                android:id="@+id/container_list_price"
+                android:layout_width="@dimen/icon_width"
+                android:layout_height="@dimen/icon_height"
                 android:layout_alignParentStart="true"
                 android:layout_alignParentLeft="true"
                 android:layout_centerVertical="true">
@@ -24,30 +24,30 @@
                     android:src="@drawable/circle"/>
 
             <TextView
-                    android:id="@+id/station_price"
+                    android:id="@+id/item_list_price"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"/>
         </FrameLayout>
 
         <TextView
-                android:id="@+id/station_name"
+                android:id="@+id/item_list_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentTop="true"
-                android:layout_toRightOf="@id/container_price"
-                android:layout_toLeftOf="@+id/container_distance"/>
+                android:layout_toRightOf="@id/container_list_price"
+                android:layout_toLeftOf="@+id/container_list_distance"/>
 
         <TextView
-                android:id="@+id/station_address"
+                android:id="@+id/item_list_address"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/station_name"
-                android:layout_toRightOf="@id/container_price"
-                android:layout_toLeftOf="@id/container_distance"/>
+                android:layout_below="@id/item_list_name"
+                android:layout_toRightOf="@id/container_list_price"
+                android:layout_toLeftOf="@id/container_list_distance"/>
 
         <FrameLayout
-                android:id="@id/container_distance"
+                android:id="@id/container_list_distance"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
@@ -55,7 +55,7 @@
                 android:layout_centerVertical="true">
 
             <TextView
-                    android:id="@+id/station_distance"
+                    android:id="@+id/item_list_distance"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
 

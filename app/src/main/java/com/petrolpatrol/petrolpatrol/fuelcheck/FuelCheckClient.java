@@ -48,6 +48,39 @@ public class FuelCheckClient {
         public void onCompletion(T res);
     }
 
+    public void getFuelPricesForStation(final int stationCode, final FuelCheckResponse<List<Price>> completion) {
+        String url = "https://api.onegov.nsw.gov.au/FuelPriceCheck/v1/fuel/prices/station/";
+
+        // Prepare the header arguments
+        Map<String, String> headerMap = new HashMap<>();
+        headerMap.put("apikey", context.getString(R.string.clientID));
+        headerMap.put("transactionid", IDUtils.UUID());
+        headerMap.put("requesttimestamp", TimeUtils.UTCTimestamp());
+        headerMap.put("Content-type", "application/json; charset=utf-8");
+        headerMap.put("Authorization", "Bearer "+ SharedPreferences.getInstance().getString(SharedPreferences.Key.OAUTH_TOKEN));
+
+        requestGET(url + String.valueOf(stationCode), headerMap, new FuelCheckResponse<FuelCheckResult>() {
+            @Override
+            public void onCompletion(FuelCheckResult res) {
+
+                JSONArray JSONResponse;
+                List<Price> priceList;
+
+                if (res.isSuccess() && res.dataIsObject()) {
+                    try {
+                        if (res.getDataAsObject().get("prices") instanceof JSONArray) {
+                            JSONResponse = res.getDataAsObject().getJSONArray("prices");
+                            completion.onCompletion(toPriceObjects(JSONResponse, stationCode));
+                        }
+                    } catch (JSONException e) {
+                        LOGE(TAG, "Error occurred processing data");
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+    }
+
     public void getFuelPricesWithinRadius(double latitude, double longitude, String sortBy, String fuelType, final FuelCheckResponse<List<Station>> completion) {
         String url = "https://api.onegov.nsw.gov.au/FuelPriceCheck/v1/fuel/prices/nearby";
 
@@ -460,9 +493,40 @@ public class FuelCheckClient {
         VolleyQueue.getInstance().addToRequestQueue(jsonObjectRequest);
     }
 
-    private List<Price> toPriceObjects(JSONArray JSON) {
+    private List<Price> toPriceObjects(JSONArray JSON, final int stationCode) {
         final SQLiteClient sqliteClient = new SQLiteClient(context);
         List<Price> prices = new ArrayList<>();
+
+        JsonDeserializer<Price> deserializer = new JsonDeserializer<Price>() {
+            @Override
+            public Price deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+                JsonObject priceJson = json.getAsJsonObject();
+                sqliteClient.open();
+                FuelType fuelType = sqliteClient.getFuelType(priceJson.get("fueltype").getAsString());
+                sqliteClient.close();
+                Price price = new Price(
+                        stationCode,
+                        fuelType,
+                        priceJson.get("price").getAsDouble(),
+                        priceJson.get("lastupdated").getAsString()
+                );
+                return price;
+            }
+        };
+
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(Price.class, deserializer);
+        Gson customGson = gsonBuilder.create();
+
+        try {
+            for (int i = 0; i < JSON.length(); i++) {
+                prices.add(customGson.fromJson(JSON.get(i).toString(), Price.class));
+            }
+        } catch (JSONException e) {
+            LOGE(TAG, "Error occurred processing JSONPrices");
+            e.printStackTrace();
+        }
+
         return prices;
     }
 

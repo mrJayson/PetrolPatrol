@@ -58,10 +58,12 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
         }
         newLocationReceiver = new NewLocationReceiver(this);
 
+        setHasOptionsMenu(true);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_locate, container, false);
         FloatingActionButton locateFab = (FloatingActionButton) v.findViewById(R.id.locate_fab);
@@ -82,6 +84,7 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
     public void onStart() {
         LOGI(TAG, "onStart");
         super.onStart();
+        getActivity().invalidateOptionsMenu();
     }
 
     @Override
@@ -136,16 +139,6 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
         newLocationReceiver.unregister(getContext());
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
     public interface Listener {
         void startLocating();
         void stopLocating();

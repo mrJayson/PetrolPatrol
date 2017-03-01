@@ -4,7 +4,7 @@
     <!-- Card Content -->
     <string name="content_distance">%1$.2f km</string>
 
-    <!-- Toolbar Menu Items -->
+    <!-- Filter Toolbar Menu Items -->
     <string name="menu_search">Search</string>
     <string name="menu_fueltype">Fueltype</string>
     <string name="menu_sort">Sort</string>
@@ -26,6 +26,10 @@
     <string name="fueltype_LNG">LNG</string>
     <string name="fueltype_EV">EV</string>
     <string name="fueltype_H2">H2</string>
+
+    <!-- Details Toolbar Menu Items -->
+
+    <string name="menu_favourite">Favourite It!</string>
 
     <!-- Navigation Drawer Menu Items -->
 

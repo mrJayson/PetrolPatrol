@@ -1,0 +1,50 @@
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:context=".details.DetailsFragment">
+
+        <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/activity_horizontal_margin"
+                android:paddingEnd="@dimen/activity_horizontal_margin"
+                android:paddingTop="@dimen/activity_vertical_margin"
+                android:paddingBottom="@dimen/activity_vertical_margin">
+
+            <TextView
+                    android:id="@+id/details_name"
+                    android:textSize="@dimen/details_name_fontsize"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"/>
+            <TextView
+                    android:id="@+id/details_address"
+                    android:textSize="@dimen/details_address_fontsize"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_below="@id/details_name"
+                    android:layout_toLeftOf="@+id/details_brand"/>
+            <ImageView
+                    android:id="@id/details_brand"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:src="@mipmap/ic_launcher"/>
+        </RelativeLayout>
+
+    <View style="@style/Divider"/>
+
+    <android.support.v7.widget.RecyclerView
+            android:id="@+id/container_details_list"
+            android:layout_height="match_parent"
+            android:layout_width="match_parent"
+            android:scrollbars="vertical">
+
+    </android.support.v7.widget.RecyclerView>
+
+
+</LinearLayout>

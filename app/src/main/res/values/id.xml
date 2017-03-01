@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Toolbar Menu Identifiers -->
+    <!-- Filter Toolbar Menu Identifiers -->
 
     <item type="id" name="search"/>
     <item type="id" name="fueltype"/>
@@ -25,5 +25,9 @@
     <item type="id" name="LNG"/>
     <item type="id" name="EV"/>
     <item type="id" name="H2"/>
+
+    <!-- Details Toolbar Menu Identifiers -->
+
+    <item type="id" name="favourite"/>
 
 </resources>

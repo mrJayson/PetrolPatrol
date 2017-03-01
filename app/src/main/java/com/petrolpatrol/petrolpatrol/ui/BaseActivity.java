@@ -2,8 +2,9 @@ package com.petrolpatrol.petrolpatrol.ui;
 
 import android.app.ActivityManager;
 import android.content.Context;
-import android.support.design.widget.NavigationView;
+import android.net.Uri;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
@@ -16,6 +17,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.SharedPreferences;
+import com.petrolpatrol.petrolpatrol.details.DetailsFragment;
 import com.petrolpatrol.petrolpatrol.locate.ListFragment;
 import com.petrolpatrol.petrolpatrol.locate.LocateFragment;
 import com.petrolpatrol.petrolpatrol.model.Station;
@@ -30,7 +32,7 @@ import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
-public class BaseActivity extends AppCompatActivity implements LocateFragment.Listener, ListFragment.Listener {
+public class BaseActivity extends AppCompatActivity implements LocateFragment.Listener, ListFragment.Listener, DetailsFragment.OnFragmentInteractionListener {
 
     private static final String TAG = makeLogTag(BaseActivity.class);
 
@@ -40,7 +42,6 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
 
     private DrawerLayout mDrawerContainer;
     private Toolbar mToolbar;
-    private NavigationView mNavigationView;
 
     private String selectedFuelType;
     private String selectedSortBy;
@@ -58,8 +59,6 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
         // Navigation Drawer interaction from the toolbar
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_menu_white_24dp);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
-        mNavigationView = (NavigationView) findViewById(R.id.navigation_view);
 
         mLocationServiceConnection = new LocationServiceConnection(this);
 
@@ -94,13 +93,29 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
     }
 
 
-    // Build the Toolbar menu upon first start
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        Fragment fragment = mfragmentManager.findFragmentById(R.id.fragment_container);
+        LOGI(TAG, "onPrepareOptionsMenu");
+        super.onPrepareOptionsMenu(menu);
+        if (fragment instanceof LocateFragment) {
+            displayMenuFilter(menu);
+        }
+        else if (fragment instanceof ListFragment) {
+            displayMenuFilter(menu);
+        }
+        else if (fragment instanceof DetailsFragment) {
+            displayMenuDetails(menu);
+        } else {
 
-        getMenuInflater().inflate(R.menu.menu, menu);
+        }
+        return true;
+    }
 
-        // Preselect the menu items recorded in SharedPreferences
+    private void displayMenuFilter(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_filter, menu);
+
+        // Preselect the menu_filter items recorded in SharedPreferences
         int fuelTypeResID = getResources().getIdentifier(
                 SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_FUELTYPE),"id",getPackageName());
         int sortByResID = getResources().getIdentifier("sort_" +
@@ -109,8 +124,10 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
         fuelType.setChecked(true);
         MenuItem sortBy = (MenuItem) menu.findItem(sortByResID);
         sortBy.setChecked(true);
-        return true;
+    }
 
+    private void displayMenuDetails(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_details, menu);
     }
 
     @Override
@@ -215,7 +232,7 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
     }
 
     /**
-     * Fragment callback methods
+     * Fragments callback methods
      */
 
     @Override
@@ -244,6 +261,15 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
     }
 
     @Override
+    public void displayDetailsFragment(int stationID) {
+        FragmentTransaction transaction = mfragmentManager.beginTransaction();
+        DetailsFragment detailsFragment = DetailsFragment.newInstance(stationID);
+        transaction.replace(R.id.fragment_container, detailsFragment);
+        transaction.addToBackStack(null);
+        transaction.commit();
+    }
+
+    @Override
     public String getSelectedFuelType() {
         return selectedFuelType;
     }
@@ -253,4 +279,8 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
         return selectedSortBy;
     }
 
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
+    }
 }

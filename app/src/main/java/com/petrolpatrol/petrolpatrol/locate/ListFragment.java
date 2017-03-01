@@ -26,15 +26,7 @@ import java.util.List;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link Listener} interface
- * to handle interaction events.
- * Use the {@link ListFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
-public class ListFragment extends Fragment implements NewLocationReceiver.Listener{
+public class ListFragment extends Fragment implements NewLocationReceiver.Listener, ListAdapter.Listener{
 
     private static final String TAG = makeLogTag(ListFragment.class);
 
@@ -45,20 +37,12 @@ public class ListFragment extends Fragment implements NewLocationReceiver.Listen
 
 
     private SwipeRefreshLayout swipeContainer;
-    private RecyclerView container_content;
+    private RecyclerView containerList;
 
     public ListFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param list The stations to be displayed in the stations fragment.
-     * @return A new instance of fragment ListFragment.
-     */
-    // TODO: Rename and change types and number of parameters
     public static ListFragment newInstance(List<Station> list) {
         ListFragment fragment = new ListFragment();
         Bundle args = new Bundle();
@@ -88,6 +72,7 @@ public class ListFragment extends Fragment implements NewLocationReceiver.Listen
         if (getArguments() != null) {
             stations = getArguments().getParcelableArrayList(ARG_LIST);
         }
+        setHasOptionsMenu(true);
     }
 
     @Override
@@ -96,20 +81,10 @@ public class ListFragment extends Fragment implements NewLocationReceiver.Listen
         return inflater.inflate(R.layout.fragment_list, container, false);
     }
 
-    /**
-     * Called immediately after {@link #onCreateView(LayoutInflater, ViewGroup, Bundle)}
-     * has returned, but before any saved state has been restored in to the view.
-     * This gives subclasses a chance to initialize themselves once
-     * they know their view hierarchy has been completely created.  The fragment's
-     * view hierarchy is not however attached to its parent at this point.
-     *
-     * @param view               The View returned by {@link #onCreateView(LayoutInflater, ViewGroup, Bundle)}.
-     * @param savedInstanceState If non-null, this fragment is being re-constructed
-     */
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        container_content = (RecyclerView) view.findViewById(R.id.container_content);
+        containerList = (RecyclerView) view.findViewById(R.id.container_details_list);
         swipeContainer = (SwipeRefreshLayout) view.findViewById(R.id.container_swipe_refresh);
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -118,56 +93,29 @@ public class ListFragment extends Fragment implements NewLocationReceiver.Listen
 
                 registerReceiverToLocationService();
                 parentListener.startLocating();
-                ListAdapter adapt = (ListAdapter) container_content.getAdapter();
+                ListAdapter adapt = (ListAdapter) containerList.getAdapter();
                 adapt.clear();
             }
         });
     }
 
-    /**
-     * Get the root view for the fragment's layout (the one returned by {@link #onCreateView}),
-     * if provided.
-     *
-     * @return The fragment's root view, or null if it has no layout.
-     */
-    @Nullable
-    @Override
-    public View getView() {
-        return super.getView();
-    }
-
-    /**
-     * Called when the fragment's activity has been created and this
-     * fragment's view hierarchy instantiated.  It can be used to do final
-     * initialization once these pieces are in place, such as retrieving
-     * views or restoring state.  It is also useful for fragments that use
-     * {@link #setRetainInstance(boolean)} to retain their instance,
-     * as this callback tells the fragment when it is fully associated with
-     * the new activity instance.  This is called after {@link #onCreateView}
-     * and before {@link #onViewStateRestored(Bundle)}.
-     *
-     * @param savedInstanceState If the fragment is being re-created from
-     *                           a previous saved state, this is the state.
-     */
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
     }
 
-    /**
-     * Called when the Fragment is visible to the user.  This is generally
-     * tied to {@link Activity#onStart() Activity.onStart} of the containing
-     * Activity's lifecycle.
-     */
     @Override
     public void onStart() {
         LOGI(TAG, "onStart");
 
         super.onStart();
-        LayoutManager layoutManager = new LinearLayoutManager(getActivity());
-        RecyclerView.Adapter adapter = new ListAdapter(getContext(), stations, parentListener.getSelectedFuelType());
-        container_content.setLayoutManager(layoutManager);
-        container_content.setAdapter(adapter);
+
+        getActivity().invalidateOptionsMenu();
+
+        LayoutManager layoutManager = new LinearLayoutManager(getContext());
+        RecyclerView.Adapter adapter = new ListAdapter(getContext(), stations, parentListener.getSelectedFuelType(), this);
+        containerList.setLayoutManager(layoutManager);
+        containerList.setAdapter(adapter);
     }
 
     @Override
@@ -182,11 +130,6 @@ public class ListFragment extends Fragment implements NewLocationReceiver.Listen
         super.onPause();
     }
 
-    /**
-     * Called when the Fragment is no longer started.  This is generally
-     * tied to {@link Activity#onStop() Activity.onStop} of the containing
-     * Activity's lifecycle.
-     */
     @Override
     public void onStop() {
         LOGI(TAG, "onStop");
@@ -230,20 +173,16 @@ public class ListFragment extends Fragment implements NewLocationReceiver.Listen
         newLocationReceiver.unregister(getContext());
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
+    @Override
+    public void displayDetailsFragment(int stationID) {
+        parentListener.displayDetailsFragment(stationID);
+    }
+
     public interface Listener {
         void startLocating();
         void stopLocating();
         void displayListFragment(List<Station> list);
+        void displayDetailsFragment(int stationID);
         String getSelectedFuelType();
         String getSelectedSortBy();
     }
