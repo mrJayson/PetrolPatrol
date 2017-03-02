@@ -5,7 +5,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
 import android.widget.TextView;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.model.Station;
@@ -68,7 +67,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         }
         holder.name.setText(station.getName());
         holder.address.setText(station.getAddress());
-        holder.distance.setText(context.getString(R.string.content_distance, station.getDistance()));
+        holder.distance.setText(context.getString(R.string.item_list_distance, station.getDistance()));
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override

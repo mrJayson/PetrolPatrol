@@ -2,6 +2,7 @@ package com.petrolpatrol.petrolpatrol.details;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,7 +10,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.model.Price;
+import com.petrolpatrol.petrolpatrol.util.TimeUtils;
 
+import java.text.ParseException;
 import java.util.List;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
@@ -61,7 +64,7 @@ public class DetailsAdapter extends RecyclerView.Adapter<DetailsAdapter.ViewHold
         holder.price.setText(String.valueOf(price.getPrice()));
         holder.fuelTypeShort.setText(price.getFuelType().getCode());
         holder.fuelTypeLong.setText(price.getFuelType().getName());
-        holder.lastUpdated.setText(price.getLastUpdated());
+        holder.lastUpdated.setText(context.getString(R.string.item_details_lastupdated, TimeUtils.timeAgo(price.getLastUpdated())));
     }
 
 
