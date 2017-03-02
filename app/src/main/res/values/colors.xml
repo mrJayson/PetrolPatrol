@@ -5,4 +5,14 @@
     <color name="colorAccent">#FF4081</color>
 
     <color name="gray">#444440</color>
+
+    <color name="cinnabar">#E1332F</color>
+    <color name="carrot_orange">#F4921F</color>
+    <color name="yellow_green">#8BC440</color>
+
+    <array name="gradient">
+        <item>@color/cinnabar</item>
+        <item>@color/carrot_orange</item>
+        <item>@color/yellow_green</item>
+    </array>
 </resources>
