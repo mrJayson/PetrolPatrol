@@ -1,26 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.CardView
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:card_view="http://schemas.android.com/apk/res-auto"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        card_view:cardUseCompatPadding="true"
-        card_view:cardCornerRadius="1dp"
-        android:theme="@style/AppTheme">
     <RelativeLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:card_view="http://schemas.android.com/apk/res-auto"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="@dimen/list_item_height">
         <!-- default layout direction is ltr -->
         <FrameLayout
                 android:id="@+id/container_list_price"
-                android:layout_width="@dimen/icon_width"
-                android:layout_height="@dimen/icon_height"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
                 android:layout_alignParentLeft="true"
-                android:layout_centerVertical="true">
+                android:layout_centerVertical="true"
+                android:paddingStart="@dimen/activity_horizontal_margin"
+                android:paddingEnd="@dimen/activity_horizontal_margin"
+                android:paddingTop="@dimen/activity_vertical_margin"
+                android:paddingBottom="@dimen/activity_vertical_margin">
             <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_width="@dimen/icon_width"
+                    android:layout_height="@dimen/icon_height"
                     android:src="@drawable/circle"/>
 
             <TextView
@@ -36,7 +34,8 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentTop="true"
                 android:layout_toRightOf="@id/container_list_price"
-                android:layout_toLeftOf="@+id/container_list_distance"/>
+                android:layout_toLeftOf="@+id/container_list_distance"
+                android:paddingTop="@dimen/activity_vertical_margin"/>
 
         <TextView
                 android:id="@+id/item_list_address"
@@ -44,7 +43,8 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@id/item_list_name"
                 android:layout_toRightOf="@id/container_list_price"
-                android:layout_toLeftOf="@id/container_list_distance"/>
+                android:layout_toLeftOf="@id/container_list_distance"
+                android:paddingBottom="@dimen/activity_vertical_margin"/>
 
         <FrameLayout
                 android:id="@id/container_list_distance"
@@ -52,7 +52,9 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentRight="true"
-                android:layout_centerVertical="true">
+                android:layout_centerVertical="true"
+                android:paddingStart="@dimen/activity_horizontal_margin"
+                android:paddingEnd="@dimen/activity_horizontal_margin">
 
             <TextView
                     android:id="@+id/item_list_distance"
@@ -62,4 +64,3 @@
         </FrameLayout>
 
     </RelativeLayout>
-</android.support.v7.widget.CardView>

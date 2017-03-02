@@ -3,6 +3,8 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
 
+    <dimen name="list_item_height">72dp</dimen>
+
     <dimen name="details_name_fontsize">20sp</dimen>
     <dimen name="details_address_fontsize">16sp</dimen>
     <dimen name="content_margin">16dp</dimen>
