@@ -3,16 +3,16 @@ package com.petrolpatrol.petrolpatrol.fuelcheck;
 import android.content.Context;
 import android.widget.Toast;
 import com.android.volley.*;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.SQLiteClient;
 import com.petrolpatrol.petrolpatrol.datastore.SharedPreferences;
-import com.petrolpatrol.petrolpatrol.model.Brand;
-import com.petrolpatrol.petrolpatrol.model.FuelType;
-import com.petrolpatrol.petrolpatrol.model.Price;
-import com.petrolpatrol.petrolpatrol.model.Station;
+import com.petrolpatrol.petrolpatrol.model.*;
+import com.petrolpatrol.petrolpatrol.trend.TodayPrice;
+import com.petrolpatrol.petrolpatrol.trend.TrendData;
 import com.petrolpatrol.petrolpatrol.util.IDUtils;
 import com.petrolpatrol.petrolpatrol.util.TimeUtils;
 import org.json.JSONArray;
@@ -20,10 +20,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGE;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
@@ -48,6 +45,46 @@ public class FuelCheckClient {
         public void onCompletion(T res);
     }
 
+    public void getTrend(String fuelType, final FuelCheckResponse<List<TrendData>> completion) {
+        String url = "http://api.onegov.nsw.gov.au/FuelCheckApp/v1/fuel/prices/trends/";
+
+        JSONObjectRequestGET(url + fuelType, new FuelCheckResponse<FuelCheckResult>() {
+            @Override
+            public void onCompletion(FuelCheckResult res) {
+                JSONArray JSONResponse;
+                Gson gson = new Gson();
+                if (res.isSuccess() && res.dataIsObject()) {
+                    try {
+                        if (res.getDataAsObject().get("AveragePrices") instanceof JSONArray) {
+                            JSONResponse = res.getDataAsObject().getJSONArray("AveragePrices");
+
+
+                            completion.onCompletion(toTrendDataObjects(JSONResponse));
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+    }
+
+    public void getTodayPrices(final FuelCheckResponse<List<TodayPrice>> completion) {
+        String url = "http://api.onegov.nsw.gov.au/FuelCheckApp/v1/fuel/prices/currenttrend";
+        JSONArrayRequestGET(url, new FuelCheckResponse<FuelCheckResult>() {
+            @Override
+            public void onCompletion(FuelCheckResult res) {
+
+                Gson gson = new Gson();
+
+                if (res.isSuccess() && res.dataIsArray()) {
+                    JSONArray JSONResponse = res.getDataAsArray();
+                    completion.onCompletion(toTodayPriceObjects(JSONResponse));
+                }
+            }
+        });
+    }
+
     public void getFuelPricesForStation(final int stationCode, final FuelCheckResponse<List<Price>> completion) {
         String url = "https://api.onegov.nsw.gov.au/FuelPriceCheck/v1/fuel/prices/station/";
 
@@ -59,12 +96,11 @@ public class FuelCheckClient {
         headerMap.put("Content-type", "application/json; charset=utf-8");
         headerMap.put("Authorization", "Bearer "+ SharedPreferences.getInstance().getString(SharedPreferences.Key.OAUTH_TOKEN));
 
-        requestGET(url + String.valueOf(stationCode), headerMap, new FuelCheckResponse<FuelCheckResult>() {
+        JSONObjectRequestGET(url + String.valueOf(stationCode), headerMap, new FuelCheckResponse<FuelCheckResult>() {
             @Override
             public void onCompletion(FuelCheckResult res) {
 
                 JSONArray JSONResponse;
-                List<Price> priceList;
 
                 if (res.isSuccess() && res.dataIsObject()) {
                     try {
@@ -213,7 +249,7 @@ public class FuelCheckClient {
         headerMap.put("Content-Type", "application/json; charset=utf-8");
         headerMap.put("Authorization", "Bearer "+ authToken);
 
-        requestGET(url, headerMap, new FuelCheckResponse<FuelCheckResult>() {
+        JSONObjectRequestGET(url, headerMap, new FuelCheckResponse<FuelCheckResult>() {
             @Override
             public void onCompletion(FuelCheckResult res) {
                 if (res.isSuccess()) {
@@ -305,7 +341,7 @@ public class FuelCheckClient {
         Map<String, String> headerMap = new HashMap<>();
         headerMap.put("Authorization", "Basic " + context.getString(R.string.base64Encode));
         headerMap.put("dataType", "json");
-        requestGET(url, headerMap, new FuelCheckResponse<FuelCheckResult>() {
+        JSONObjectRequestGET(url, headerMap, new FuelCheckResponse<FuelCheckResult>() {
             @Override
             public void onCompletion(FuelCheckResult res) {
                 try {
@@ -325,18 +361,17 @@ public class FuelCheckClient {
         });
     }
 
-    private void requestGET(final String url, final Map<String, String> headerMap, final FuelCheckResponse<FuelCheckResult> completion) {
+    private void JSONArrayRequestGET(String url, FuelCheckResponse <FuelCheckResult> completion) {
+        JSONArrayRequestGET(url, Collections.<String, String> emptyMap(), completion);
+    }
 
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
-                new Response.Listener<JSONObject>() {
+    private void JSONArrayRequestGET(final String url, final Map<String, String> headerMap, final FuelCheckResponse<FuelCheckResult> completion) {
 
-                    /**
-                     * Called when a response is received.
-                     *
-                     * @param response The volley response
-                     */
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONArray>() {
+
                     @Override
-                    public void onResponse(JSONObject response) {
+                    public void onResponse(JSONArray response) {
                         // structure the response in a FuelCheckResult
                         FuelCheckResult res = new FuelCheckResult();
 
@@ -346,13 +381,6 @@ public class FuelCheckClient {
                         completion.onCompletion(res);
                     }
                 }, new Response.ErrorListener() {
-
-            /**
-             * Callback method that an error has been occurred with the
-             * provided error code and optional user-readable message.
-             *
-             * @param error The error response
-             */
             @Override
             public void onErrorResponse(VolleyError error) {
                 FuelCheckResult res = new FuelCheckResult();
@@ -372,7 +400,7 @@ public class FuelCheckClient {
                         public void onCompletion(FuelCheckResult res) {
                             String authToken = SharedPreferences.getInstance().getString(SharedPreferences.Key.OAUTH_TOKEN);
                             headerMap.put("Authorization", "Bearer "+ authToken);
-                            requestGET(url, headerMap, completion);
+                            JSONObjectRequestGET(url, headerMap, completion);
                         }
                     });
 
@@ -391,13 +419,74 @@ public class FuelCheckClient {
                 }
             }
         }) {
-            /**
-             * Returns a list of extra HTTP headers to go along with this request. Can
-             * throw {@link AuthFailureError} as authentication may be required to
-             * provide these values.
-             *
-             * @throws AuthFailureError In the event of auth failure
-             */
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                return headerMap;
+            }
+        };
+
+        // Hand the request over to the request queue
+        VolleyQueue.getInstance().addToRequestQueue(jsonArrayRequest);
+    }
+
+    private void JSONObjectRequestGET(String url, FuelCheckResponse<FuelCheckResult> completion) {
+        JSONObjectRequestGET(url, Collections.<String, String> emptyMap(), completion);
+    }
+
+    private void JSONObjectRequestGET(final String url, final Map<String, String> headerMap, final FuelCheckResponse<FuelCheckResult> completion) {
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONObject>() {
+
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        // structure the response in a FuelCheckResult
+                        FuelCheckResult res = new FuelCheckResult();
+
+                        res.setSuccess(true);
+                        // Embed response as is, the callback will handle the deserialization
+                        res.setData(response);
+                        completion.onCompletion(res);
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                FuelCheckResult res = new FuelCheckResult();
+                res.setSuccess(false);
+                completion.onCompletion(res);
+
+                // Error Handling
+                Context context = VolleyQueue.getInstance().getContext();
+                if (error instanceof TimeoutError || error instanceof NoConnectionError) {
+                    Toast.makeText(context,
+                            context.getString(R.string.error_network_timeout),
+                            Toast.LENGTH_LONG).show();
+                } else if (error instanceof AuthFailureError) {
+                    // Auth token is invalid, attempt to get a new one
+                    authToken(new FuelCheckResponse<FuelCheckResult>() {
+                        @Override
+                        public void onCompletion(FuelCheckResult res) {
+                            String authToken = SharedPreferences.getInstance().getString(SharedPreferences.Key.OAUTH_TOKEN);
+                            headerMap.put("Authorization", "Bearer "+ authToken);
+                            JSONObjectRequestGET(url, headerMap, completion);
+                        }
+                    });
+
+                } else if (error instanceof ServerError) {
+                    Toast.makeText(context,
+                            context.getString(R.string.error_server),
+                            Toast.LENGTH_LONG).show();
+                } else if (error instanceof NetworkError) {
+                    Toast.makeText(context,
+                            context.getString(R.string.error_network),
+                            Toast.LENGTH_LONG).show();
+                } else if (error instanceof ParseError) {
+                    Toast.makeText(context,
+                            context.getString(R.string.error_parse),
+                            Toast.LENGTH_LONG).show();
+                }
+            }
+        }) {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 return headerMap;
@@ -413,11 +502,6 @@ public class FuelCheckClient {
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, jsonBody,
                 new Response.Listener<JSONObject>() {
 
-                    /**
-                     * Called when a response is received.
-                     *
-                     * @param response The volley response
-                     */
                     @Override
                     public void onResponse(JSONObject response) {
                         LOGI(TAG, "requestPOST successful response");
@@ -431,12 +515,6 @@ public class FuelCheckClient {
                     }
                 }, new Response.ErrorListener() {
 
-            /**
-             * Callback method that an error has been occurred with the
-             * provided error code and optional user-readable message.
-             *
-             * @param error The error response
-             */
             @Override
             public void onErrorResponse(VolleyError error) {
                 LOGI(TAG, "requestPOST bad response");
@@ -476,13 +554,6 @@ public class FuelCheckClient {
                 }
             }
         }) {
-            /**
-             * Returns a list of extra HTTP headers to go along with this request. Can
-             * throw {@link AuthFailureError} as authentication may be required to
-             * provide these values.
-             *
-             * @throws AuthFailureError In the event of auth failure
-             */
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 return headerMap;
@@ -573,5 +644,71 @@ public class FuelCheckClient {
             e.printStackTrace();
         }
         return stations;
+    }
+
+    private List<TodayPrice> toTodayPriceObjects(JSONArray JSON) {
+
+        final SQLiteClient sqliteClient = new SQLiteClient(context);
+        List<TodayPrice> todayPrices = new ArrayList<TodayPrice>();
+
+        JsonDeserializer<TodayPrice> deserializer = new JsonDeserializer<TodayPrice>() {
+
+            @Override
+            public TodayPrice deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+                JsonObject todayPriceJson = json.getAsJsonObject();
+                sqliteClient.open();
+                FuelType fuelType = sqliteClient.getFuelType(todayPriceJson.get("Code").getAsString());
+                sqliteClient.close();
+
+                return new TodayPrice(
+                        fuelType,
+                        todayPriceJson.get("Price").getAsDouble(),
+                        todayPriceJson.get("Variance").getAsDouble());
+            }
+        };
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(TodayPrice.class, deserializer);
+        Gson customGson = gsonBuilder.create();
+        try {
+            for (int i = 0; i < JSON.length(); i++) {
+                todayPrices.add(customGson.fromJson(JSON.get(i).toString(), TodayPrice.class));
+            }
+        } catch (JSONException e) {
+            LOGE(TAG, "Error occurred processing JSONTodayPrices");
+            e.printStackTrace();
+        }
+        return todayPrices;
+        }
+
+    private List<TrendData> toTrendDataObjects(JSONArray JSON) {
+
+        final List<TrendData> trendData = new ArrayList<TrendData>();
+
+        JsonDeserializer<TrendData> deserializer = new JsonDeserializer<TrendData>() {
+            @Override
+            public TrendData deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+                JsonObject trendDataJson = json.getAsJsonObject();
+                return new TrendData(
+                        trendDataJson.get("Period").getAsString(),
+                        trendDataJson.get("Captured").getAsString(),
+                        trendDataJson.get("Price").getAsDouble()
+                );
+
+            }
+        };
+
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(TrendData.class, deserializer);
+        Gson customGson = gsonBuilder.create();
+        try {
+            for (int i = 0; i < JSON.length(); i++) {
+                trendData.add(customGson.fromJson(JSON.get(i).toString(), TrendData.class));
+            }
+        } catch (JSONException e) {
+            LOGE(TAG, "Error occurred processing JSONTrendData");
+            e.printStackTrace();
+        }
+
+        return trendData;
     }
 }

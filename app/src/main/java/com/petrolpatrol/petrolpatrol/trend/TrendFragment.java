@@ -1,24 +1,29 @@
-package com.petrolpatrol.petrolpatrol.locate;
+package com.petrolpatrol.petrolpatrol.trend;
 
 
 import android.content.Context;
 import android.location.Location;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.github.mikephil.charting.charts.Chart;
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.Description;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
 import com.petrolpatrol.petrolpatrol.R;
-import com.petrolpatrol.petrolpatrol.datastore.SQLiteClient;
-import com.petrolpatrol.petrolpatrol.datastore.SharedPreferences;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
-import com.petrolpatrol.petrolpatrol.model.Price;
 import com.petrolpatrol.petrolpatrol.model.Station;
 import com.petrolpatrol.petrolpatrol.service.NewLocationReceiver;
-import com.petrolpatrol.petrolpatrol.util.TimeUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
@@ -27,18 +32,18 @@ import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class LocateFragment extends Fragment implements NewLocationReceiver.Listener {
+public class TrendFragment extends Fragment implements NewLocationReceiver.Listener {
 
-    private static final String TAG = makeLogTag(LocateFragment.class);
+    private static final String TAG = makeLogTag(TrendFragment.class);
     private Listener parentListener;
     private NewLocationReceiver newLocationReceiver;
 
+    private LineChart chart;
 
-
-    public static LocateFragment newInstance() {
+    public static TrendFragment newInstance() {
         // Factory method for creating new fragment instances
         // automatically takes parameters and stores in a bundle for later use in onCreate
-        LocateFragment fragment = new LocateFragment();
+        TrendFragment fragment = new TrendFragment();
         Bundle bundle = new Bundle();
         //TODO change to parcelable if there are any args at all
         fragment.setArguments(bundle);
@@ -63,10 +68,18 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_trend, container, false);
+    }
 
-        // Inflate the layout for this fragment
-        View v = inflater.inflate(R.layout.fragment_locate, container, false);
-        FloatingActionButton locateFab = (FloatingActionButton) v.findViewById(R.id.locate_fab);
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        chart = (LineChart) view.findViewById(R.id.chart);
+
+        displayTrend("E10");
+
+        FloatingActionButton locateFab = (FloatingActionButton) view.findViewById(R.id.locate_fab);
 
         locateFab.setOnClickListener(new View.OnClickListener() {
 
@@ -76,8 +89,6 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
                 parentListener.startLocating();
             }
         });
-
-        return v;
     }
 
     @Override
@@ -129,6 +140,48 @@ public class LocateFragment extends Fragment implements NewLocationReceiver.List
             }
         });
 
+    }
+
+    private void displayTrend(String fuelType) {
+        FuelCheckClient client = new FuelCheckClient(getContext());
+        client.getTrend(fuelType, new FuelCheckClient.FuelCheckResponse<List<TrendData>>() {
+            @Override
+            public void onCompletion(List<TrendData> res) {
+                List<Entry> data = new ArrayList<Entry>();
+                int d = 0;
+                for (TrendData trendData : res) {
+                    if (trendData.getPeriod().equals("Week")) {
+                        data.add(new Entry(d++, (float) trendData.getPrice()));
+                    }
+                }
+                LineDataSet dataSet = new LineDataSet(data, "Label");
+                LineData lineData = new LineData(dataSet);
+                chart.setData(lineData);
+                chart.setTouchEnabled(false);
+                chart.getLegend().setEnabled(false);
+
+                // Remove the chart description
+                Description desc = new Description();
+                desc.setText("");
+                chart.setDescription(desc);
+
+                // Remove axis
+                chart.getXAxis().setDrawGridLines(false);
+                chart.getXAxis().setDrawAxisLine(false);
+                chart.getAxisLeft().setDrawGridLines(false);
+                chart.getAxisLeft().setDrawAxisLine(false);
+                chart.getAxisLeft().setDrawLabels(false);
+                chart.getAxisRight().setDrawGridLines(false);
+                chart.getAxisRight().setDrawAxisLine(false);
+                chart.getAxisRight().setDrawLabels(false);
+
+                // Position the X Axis at the bottom of the chart
+                chart.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
+
+                chart.invalidate();
+
+            }
+        });
     }
 
     private void registerReceiverToLocationService() {

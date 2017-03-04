@@ -1,4 +1,4 @@
-package com.petrolpatrol.petrolpatrol.locate;
+package com.petrolpatrol.petrolpatrol.list;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;

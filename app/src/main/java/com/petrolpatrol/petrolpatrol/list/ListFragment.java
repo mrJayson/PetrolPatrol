@@ -1,6 +1,5 @@
-package com.petrolpatrol.petrolpatrol.locate;
+package com.petrolpatrol.petrolpatrol.list;
 
-import android.app.Activity;
 import android.content.Context;
 import android.location.Location;
 import android.os.Bundle;

@@ -40,7 +40,6 @@ public class DetailsFragment extends Fragment {
         // Required empty public constructor
     }
 
-    // TODO: Rename and change types and number of parameters
     public static DetailsFragment newInstance(int stationID) {
         DetailsFragment fragment = new DetailsFragment();
         Bundle args = new Bundle();
@@ -71,14 +70,9 @@ public class DetailsFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_details, container, false);
-
         return view;
-
-
     }
 
     @Override
@@ -102,8 +96,6 @@ public class DetailsFragment extends Fragment {
                 containerDetailsListView.setAdapter(adapter);
             }
         });
-
-
     }
 
     @Override

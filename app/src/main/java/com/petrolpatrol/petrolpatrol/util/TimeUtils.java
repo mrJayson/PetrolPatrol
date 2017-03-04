@@ -24,6 +24,10 @@ public class TimeUtils {
         return new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").parse(timeStamp).getTime();
     }
 
+    public static long dateToMilli(String date) throws ParseException {
+        return new SimpleDateFormat("yyyy-MM-dd").parse(date).getTime();
+    }
+
     public static String timeAgo(String timeStamp) {
 
         String time = null;

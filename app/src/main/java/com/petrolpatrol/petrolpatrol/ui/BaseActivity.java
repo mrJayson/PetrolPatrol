@@ -18,8 +18,8 @@ import android.widget.Toast;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.SharedPreferences;
 import com.petrolpatrol.petrolpatrol.details.DetailsFragment;
-import com.petrolpatrol.petrolpatrol.locate.ListFragment;
-import com.petrolpatrol.petrolpatrol.locate.LocateFragment;
+import com.petrolpatrol.petrolpatrol.list.ListFragment;
+import com.petrolpatrol.petrolpatrol.trend.TrendFragment;
 import com.petrolpatrol.petrolpatrol.model.Station;
 import com.petrolpatrol.petrolpatrol.service.LocationServiceConnection;
 import com.petrolpatrol.petrolpatrol.util.Constants;
@@ -32,7 +32,7 @@ import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
-public class BaseActivity extends AppCompatActivity implements LocateFragment.Listener, ListFragment.Listener, DetailsFragment.OnFragmentInteractionListener {
+public class BaseActivity extends AppCompatActivity implements TrendFragment.Listener, ListFragment.Listener, DetailsFragment.OnFragmentInteractionListener {
 
     private static final String TAG = makeLogTag(BaseActivity.class);
 
@@ -98,7 +98,7 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
         Fragment fragment = mfragmentManager.findFragmentById(R.id.fragment_container);
         LOGI(TAG, "onPrepareOptionsMenu");
         super.onPrepareOptionsMenu(menu);
-        if (fragment instanceof LocateFragment) {
+        if (fragment instanceof TrendFragment) {
             displayMenuFilter(menu);
         }
         else if (fragment instanceof ListFragment) {
@@ -247,8 +247,8 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
 
     private void displayLocateFragment() {
         FragmentTransaction transaction = mfragmentManager.beginTransaction();
-        LocateFragment locateFragment = LocateFragment.newInstance();
-        transaction.replace(R.id.fragment_container, locateFragment);
+        TrendFragment trendFragment = TrendFragment.newInstance();
+        transaction.replace(R.id.fragment_container, trendFragment);
         transaction.commit();
     }
 
@@ -257,6 +257,7 @@ public class BaseActivity extends AppCompatActivity implements LocateFragment.Li
         FragmentTransaction transaction = mfragmentManager.beginTransaction();
         ListFragment listFragment = ListFragment.newInstance(list);
         transaction.replace(R.id.fragment_container, listFragment);
+        transaction.addToBackStack(null);
         transaction.commit();
     }
 

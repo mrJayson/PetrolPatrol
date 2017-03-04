@@ -3,9 +3,14 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context="com.petrolpatrol.petrolpatrol.locate.LocateFragment">
+        tools:context=".trend.TrendFragment">
 
     <!-- TODO: Add Fuel Trends here -->
+    <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/chart"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
     <android.support.design.widget.FloatingActionButton
             android:id="@+id/locate_fab"
             android:layout_width="wrap_content"
