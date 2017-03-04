@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group
+            android:checkableBehavior="single">
+        <item
+                android:id="@id/E10"
+                android:checked="false"
+                android:title="@string/fueltype_E10" />
+        <item
+                android:id="@id/U91"
+                android:checked="false"
+                android:title="@string/fueltype_U91" />
+        <item
+                android:id="@id/P95"
+                android:checked="false"
+                android:title="@string/fueltype_P95" />
+        <item
+                android:id="@id/P98"
+                android:checked="false"
+                android:title="@string/fueltype_P98" />
+        <item
+                android:id="@id/DL"
+                android:checked="false"
+                android:title="@string/fueltype_DL" />
+    </group>
+</menu>

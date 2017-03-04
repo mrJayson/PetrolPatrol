@@ -99,7 +99,7 @@ public class BaseActivity extends AppCompatActivity implements TrendFragment.Lis
         LOGI(TAG, "onPrepareOptionsMenu");
         super.onPrepareOptionsMenu(menu);
         if (fragment instanceof TrendFragment) {
-            displayMenuFilter(menu);
+            displayMenuTrend(menu);
         }
         else if (fragment instanceof ListFragment) {
             displayMenuFilter(menu);
@@ -112,16 +112,31 @@ public class BaseActivity extends AppCompatActivity implements TrendFragment.Lis
         return true;
     }
 
-    private void displayMenuFilter(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_filter, menu);
+    private void displayMenuTrend(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_trend, menu);
+        MenuItem menuItem = menu.findItem(R.id.fueltype);
+        getMenuInflater().inflate(R.menu.submenu_fueltypes, menuItem.getSubMenu());
 
         // Preselect the menu_filter items recorded in SharedPreferences
         int fuelTypeResID = getResources().getIdentifier(
                 SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_FUELTYPE),"id",getPackageName());
-        int sortByResID = getResources().getIdentifier("sort_" +
-                SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_SORTBY).toLowerCase(),"id",getPackageName());
         MenuItem fuelType = (MenuItem) menu.findItem(fuelTypeResID);
         fuelType.setChecked(true);
+    }
+
+    private void displayMenuFilter(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_filter, menu);
+        MenuItem menuItem = menu.findItem(R.id.fueltype);
+        getMenuInflater().inflate(R.menu.submenu_fueltypes, menuItem.getSubMenu());
+
+        // Preselect the menu_filter items recorded in SharedPreferences
+        int fuelTypeResID = getResources().getIdentifier(
+                SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_FUELTYPE),"id",getPackageName());
+        MenuItem fuelType = (MenuItem) menu.findItem(fuelTypeResID);
+        fuelType.setChecked(true);
+
+        int sortByResID = getResources().getIdentifier("sort_" +
+                SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_SORTBY).toLowerCase(),"id",getPackageName());
         MenuItem sortBy = (MenuItem) menu.findItem(sortByResID);
         sortBy.setChecked(true);
     }
