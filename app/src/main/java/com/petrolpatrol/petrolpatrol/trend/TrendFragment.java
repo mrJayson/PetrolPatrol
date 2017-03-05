@@ -11,21 +11,23 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.github.mikephil.charting.charts.Chart;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.model.Station;
 import com.petrolpatrol.petrolpatrol.service.NewLocationReceiver;
+import com.petrolpatrol.petrolpatrol.util.TimeUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGE;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
@@ -77,7 +79,7 @@ public class TrendFragment extends Fragment implements NewLocationReceiver.Liste
 
         chart = (LineChart) view.findViewById(R.id.chart);
 
-        displayTrend("E10");
+        displayTrend("E10", TrendResolution.WEEK);
 
         FloatingActionButton locateFab = (FloatingActionButton) view.findViewById(R.id.locate_fab);
 
@@ -139,22 +141,36 @@ public class TrendFragment extends Fragment implements NewLocationReceiver.Liste
                 parentListener.displayListFragment(res);
             }
         });
-
     }
 
-    private void displayTrend(String fuelType) {
+    private void displayTrend(String fuelType, final TrendResolution resolution) {
         FuelCheckClient client = new FuelCheckClient(getContext());
         client.getTrend(fuelType, new FuelCheckClient.FuelCheckResponse<List<TrendData>>() {
             @Override
             public void onCompletion(List<TrendData> res) {
                 List<Entry> data = new ArrayList<Entry>();
-                int d = 0;
+                List<String> xLabels = new ArrayList<String>();
+                int i = 1;
                 for (TrendData trendData : res) {
-                    if (trendData.getPeriod().equals("Week")) {
-                        data.add(new Entry(d++, (float) trendData.getPrice()));
+                    if (trendData.getPeriod().equals(resolution.getHandle())) {
+                        try {
+                            data.add(
+                                    new Entry((float) i++
+                                            , (float) trendData.getPrice()));
+                            xLabels.add(trendData.getCaptured());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
-                LineDataSet dataSet = new LineDataSet(data, "Label");
+
+                // Format how the chart line looks
+                LineDataSet dataSet = new LineDataSet(data, "Price");
+                dataSet.setValueTextSize(10);
+                dataSet.setCircleRadius(6);
+                dataSet.setDrawCircleHole(false);
+                dataSet.setLineWidth(2);
+
                 LineData lineData = new LineData(dataSet);
                 chart.setData(lineData);
                 chart.setTouchEnabled(false);
@@ -165,7 +181,11 @@ public class TrendFragment extends Fragment implements NewLocationReceiver.Liste
                 desc.setText("");
                 chart.setDescription(desc);
 
-                // Remove axis
+                // Add padding inside the chart
+                chart.setExtraLeftOffset(20);
+                chart.setExtraRightOffset(20);
+
+                // Remove axis decorations
                 chart.getXAxis().setDrawGridLines(false);
                 chart.getXAxis().setDrawAxisLine(false);
                 chart.getAxisLeft().setDrawGridLines(false);
@@ -178,8 +198,25 @@ public class TrendFragment extends Fragment implements NewLocationReceiver.Liste
                 // Position the X Axis at the bottom of the chart
                 chart.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
 
-                chart.invalidate();
+                // Format the X axis labels to something more user-friendly
+                IAxisValueFormatter formatter = null;
+                switch (resolution) {
+                    case WEEK:
+                        formatter = new XAxisWeekValueFormatter(xLabels);
+                        break;
+                    case MONTH:
+                        //TODO Month view is still too cluttered, need to fix
+                        formatter = new XAxisMonthValueFormatter(xLabels);
+                        break;
+                    case YEAR:
+                        formatter = new XAxisYearValueFormatter(xLabels);
+                        break;
+                }
+                if (formatter != null) {
+                    chart.getXAxis().setValueFormatter(formatter);
+                }
 
+                chart.invalidate();
             }
         });
     }

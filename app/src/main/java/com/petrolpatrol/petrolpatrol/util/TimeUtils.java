@@ -1,16 +1,19 @@
 package com.petrolpatrol.petrolpatrol.util;
 
-import android.text.format.DateUtils;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
+import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
+
 /**
  * Created by jason on 14/02/17.
  */
 public class TimeUtils {
+
+    private static final String TAG = makeLogTag(TimeUtils.class);
+    private static final String[] dateFormats = {"yyyy-MM-dd", "dd/MM/yyyy", "dd/MM/yyyy hh:mm:ss", "MMMM yyyy"};
 
     public static final String epochTimeZero = "01/01/1970 00:00:00";
 
@@ -21,17 +24,34 @@ public class TimeUtils {
     }
 
     public static long timeStampToMilli(String timeStamp) throws ParseException {
-        return new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").parse(timeStamp).getTime();
+        return parse(timeStamp).getTime();
     }
 
-    public static long dateToMilli(String date) throws ParseException {
-        return new SimpleDateFormat("yyyy-MM-dd").parse(date).getTime();
+    private static String dateToFormat(String dateStamp, String format) throws ParseException {
+        SimpleDateFormat dateFormat =  new SimpleDateFormat(format);
+        Date date = parse(dateStamp);
+        if (date != null) {
+            return dateFormat.format(date);
+        } else {
+            return null;
+        }
+    }
+
+    public static String dateToDayOfWeek(String dateStamp) throws ParseException {
+        return dateToFormat(dateStamp, "EEE");
+    }
+
+    public static String dateToDayOfMonth(String dateStamp) throws ParseException {
+        return dateToFormat(dateStamp, "dd");
+    }
+
+    public static String dateToMonthOfYear(String dateStamp) throws ParseException {
+        return dateToFormat(dateStamp, "MMM");
     }
 
     public static String timeAgo(String timeStamp) {
 
         String time = null;
-
         try {
             long diff = System.currentTimeMillis() - timeStampToMilli(timeStamp);
             long diffSeconds = diff / 1000;
@@ -70,5 +90,19 @@ public class TimeUtils {
             time = "N/A";
         }
         return time;
+    }
+
+    private static Date parse(String time) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat();
+        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        for (String format : dateFormats) {
+            dateFormat.applyPattern(format);
+            try {
+                return dateFormat.parse(time);
+            } catch (ParseException e) {
+                // Do nothing, continue with the rest of the formats
+            }
+        }
+        return null;
     }
 }

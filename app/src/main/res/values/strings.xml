@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">PetrolPatrol</string>
 
-    <!-- Card Content -->
+    <!-- List Content -->
     <string name="item_list_distance">%1$.2f km</string>
 
     <!-- Filter Toolbar Menu Items -->
@@ -44,5 +44,8 @@
     <string name="error_server">error server</string>
     <string name="error_network">error network</string>
     <string name="error_parse">error parse</string>
+
+    <!-- Chart -->
+    <string name="chart_no_data">Chart loading</string>
 
 </resources>
