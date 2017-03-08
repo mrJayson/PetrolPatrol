@@ -18,10 +18,14 @@ import android.widget.FrameLayout;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.DefaultValueFormatter;
 import com.github.mikephil.charting.formatter.IAxisValueFormatter;
+import com.github.mikephil.charting.formatter.IValueFormatter;
+import com.github.mikephil.charting.utils.ViewPortHandler;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.model.Station;
@@ -215,10 +219,15 @@ public class TrendFragment extends Fragment implements NewLocationReceiver.Liste
                             dataYear.add(data);
                     }
                 }
-                chartWeek = drawChart(dataWeek, TrendResolution.WEEK, chartWeek);
-                chartMonth = drawChart(dataMonth, TrendResolution.MONTH, chartMonth);
-                chartYear = drawChart(dataYear, TrendResolution.YEAR, chartYear);
-
+                if (!dataWeek.isEmpty()) {
+                    chartWeek = drawChart(dataWeek, TrendResolution.WEEK, chartWeek);
+                }
+                if (!dataMonth.isEmpty()) {
+                    chartMonth = drawChart(dataMonth, TrendResolution.MONTH, chartMonth);
+                }
+                if (!dataYear.isEmpty()) {
+                    chartYear = drawChart(dataYear, TrendResolution.YEAR, chartYear);
+                }
                 makeChartVisible(selectedResolution);
             }
         });
@@ -285,13 +294,13 @@ public class TrendFragment extends Fragment implements NewLocationReceiver.Liste
         dataSet.setDrawCircleHole(false);
         dataSet.setLineWidth(2);
 
+        // Format data points to display with one decimal place
+        dataSet.setValueFormatter(new DefaultValueFormatter(1));
+
         LineData lineData = new LineData(dataSet);
         chart.setData(lineData);
-        if (resolution != TrendResolution.MONTH) {
-            chart.setTouchEnabled(false);
-            chart.setHorizontalScrollBarEnabled(true);
-        }
         chart.getLegend().setEnabled(false);
+        chart.setTouchEnabled(false);
 
         // Remove the chart description
         Description desc = new Description();
@@ -315,6 +324,16 @@ public class TrendFragment extends Fragment implements NewLocationReceiver.Liste
 
         // Position the X Axis at the bottom of the chart
         chart.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
+
+        // Month view needs different customisations because of there are more data points
+        if (resolution == TrendResolution.MONTH) {
+            chart.setTouchEnabled(true);
+            // Set window the same size as the week window
+            chart.setVisibleXRange(dataWeek.size(), dataWeek.size());
+
+            float yRange = chart.getYChartMax() - chart.getYChartMin();
+            chart.setVisibleYRange(yRange, yRange, YAxis.AxisDependency.LEFT);
+        }
 
         chart.invalidate();
 

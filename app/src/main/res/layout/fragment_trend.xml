@@ -37,9 +37,7 @@
                         android:id="@+id/chart_tab"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/trend_tab_height">
-
                     <!-- Tabs are inserted programmatically here -->
-
                 </android.support.design.widget.TabLayout>
 
             </LinearLayout>

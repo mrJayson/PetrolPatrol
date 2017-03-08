@@ -21,7 +21,32 @@ public class XAxisMonthValueFormatter implements IAxisValueFormatter {
     @Override
     public String getFormattedValue(float value, AxisBase axis) {
         try {
-            return TimeUtils.dateToDayOfMonth(xLabels.get((int) value - 1));
+            String formattedValue = TimeUtils.dateToDayOfMonth(xLabels.get((int) value - 1));
+            String appendix = "th";
+            switch (formattedValue) {
+                case "01":
+                    appendix = "st";
+                    break;
+                case "02":
+                    appendix = "nd";
+                    break;
+                case "03":
+                    appendix = "rd";
+                    break;
+                case "21":
+                    appendix = "st";
+                    break;
+                case "22":
+                    appendix = "nd";
+                    break;
+                case "23":
+                    appendix = "rd";
+                    break;
+                case "31":
+                    appendix = "st";
+                    break;
+            }
+            return formattedValue + appendix;
         } catch (ParseException e) {
             return "";
         }
