@@ -30,4 +30,11 @@
 
     <item type="id" name="favourite"/>
 
+    <!-- Chart Identifiers -->
+
+    <item type="id" name="chart_week"/>
+    <item type="id" name="chart_month"/>
+    <item type="id" name="chart_year"/>
+
+
 </resources>

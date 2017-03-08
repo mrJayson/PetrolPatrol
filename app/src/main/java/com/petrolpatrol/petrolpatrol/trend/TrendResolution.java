@@ -18,4 +18,16 @@ public enum TrendResolution {
     public String getHandle() {
         return handle;
     }
+
+    public static TrendResolution toEnum(String handle) {
+        switch (handle) {
+            case "Week":
+                return WEEK;
+            case "Month":
+                return MONTH;
+            case "Year":
+                return YEAR;
+        }
+        return WEEK;
+    }
 }

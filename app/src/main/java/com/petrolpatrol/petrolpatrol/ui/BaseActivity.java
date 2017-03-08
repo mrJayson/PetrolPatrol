@@ -29,6 +29,7 @@ import java.util.List;
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
+import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGE;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
@@ -147,6 +148,7 @@ public class BaseActivity extends AppCompatActivity implements TrendFragment.Lis
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+
         int id = item.getItemId();
         switch (id) {
             case android.R.id.home:
@@ -168,6 +170,11 @@ public class BaseActivity extends AppCompatActivity implements TrendFragment.Lis
             case R.id.H2:
                 item.setChecked(true);
                 selectedFuelType = String.valueOf(item.getTitle());
+                Fragment fragment = mfragmentManager.findFragmentById(R.id.fragment_container);
+                if (fragment instanceof TrendFragment) {
+                    TrendFragment trendFragment = (TrendFragment) fragment;
+                    trendFragment.retrieveTrendsData(getSelectedFuelType());
+                }
                 return true;
             case R.id.sort_price:
             case R.id.sort_distance:

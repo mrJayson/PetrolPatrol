@@ -19,5 +19,7 @@
 
     <dimen name="fab_margin">16dp</dimen>
 
+    <dimen name="trend_card_height">298dp</dimen> <!-- trend_card_height is the sum of chart and tab heights -->
     <dimen name="trend_chart_height">250dp</dimen>
+    <dimen name="trend_tab_height">48dp</dimen>
 </resources>
