@@ -9,22 +9,23 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.GravityCompat;
-import android.view.LayoutInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 
 import android.widget.FrameLayout;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Description;
+import com.github.mikephil.charting.components.MarkerView;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.DataSet;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.DefaultValueFormatter;
 import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.github.mikephil.charting.formatter.IValueFormatter;
+import com.github.mikephil.charting.listener.ChartTouchListener;
+import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.github.mikephil.charting.utils.ViewPortHandler;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
@@ -255,7 +256,7 @@ public class TrendFragment extends Fragment implements NewLocationReceiver.Liste
 
         List<Entry> data = new ArrayList<Entry>();
         List<String> xLabels = new ArrayList<String>();
-        int i = 1;
+        int i = 1; // Start at 1 so that x axis drawing will not be off
         for (TrendData trendData : dataList) {
             if (trendData.getPeriod().equals(resolution.getHandle())) {
                 try {
@@ -276,7 +277,6 @@ public class TrendFragment extends Fragment implements NewLocationReceiver.Liste
                 formatter = new XAxisWeekValueFormatter(xLabels);
                 break;
             case MONTH:
-                //TODO Month view is still too cluttered, need to fix
                 formatter = new XAxisMonthValueFormatter(xLabels);
                 break;
             case YEAR:
@@ -327,16 +327,74 @@ public class TrendFragment extends Fragment implements NewLocationReceiver.Liste
 
         // Month view needs different customisations because of there are more data points
         if (resolution == TrendResolution.MONTH) {
+            // Month view starts off fully zoomed out
+            chart.getAxisLeft().setDrawLabels(true);
+            chart.getAxisLeft().setDrawGridLines(true);
+            dataSet.setDrawValues(false);
             chart.setTouchEnabled(true);
-            // Set window the same size as the week window
-            chart.setVisibleXRange(dataWeek.size(), dataWeek.size());
+            chart.setDoubleTapToZoomEnabled(false);
 
+            // Set window the same size as the week window
             float yRange = chart.getYChartMax() - chart.getYChartMin();
             chart.setVisibleYRange(yRange, yRange, YAxis.AxisDependency.LEFT);
+            chart.setVisibleXRangeMinimum(dataWeek.size());
+
+            final LineChart finalChart = chart;
+            final DataSet<Entry> finalDataSet = dataSet;
+            chart.setOnChartGestureListener(new OnChartGestureListener() {
+                @Override
+                public void onChartGestureStart(MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
+
+                }
+
+                @Override
+                public void onChartGestureEnd(MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
+
+                }
+
+                @Override
+                public void onChartLongPressed(MotionEvent me) {
+
+                }
+
+                @Override
+                public void onChartDoubleTapped(MotionEvent me) {
+
+                }
+
+                @Override
+                public void onChartSingleTapped(MotionEvent me) {
+
+                }
+
+                @Override
+                public void onChartFling(MotionEvent me1, MotionEvent me2, float velocityX, float velocityY) {
+
+                }
+
+                @Override
+                public void onChartScale(MotionEvent me, float scaleX, float scaleY) {
+                    if (finalChart.getViewPortHandler().getScaleX() <= 2) {
+                        // If the chart is closer to the zoomed out side
+                        finalChart.getAxisLeft().setDrawLabels(true);
+                        finalChart.getAxisLeft().setDrawGridLines(true);
+                        finalDataSet.setDrawValues(false);
+
+                    } else {
+                        // Zoomed in closer than 2x scale
+                        finalChart.getAxisLeft().setDrawLabels(false);
+                        finalChart.getAxisLeft().setDrawGridLines(false);
+                        finalDataSet.setDrawValues(true);
+                    }
+                }
+
+                @Override
+                public void onChartTranslate(MotionEvent me, float dX, float dY) {
+
+                }
+            });
         }
-
         chart.invalidate();
-
         return chart;
     }
 
@@ -364,7 +422,6 @@ public class TrendFragment extends Fragment implements NewLocationReceiver.Liste
         LOGI(TAG, "onStop");
         // Unregister if fragment closes while still broadcast receiving
         unregisterReceiverFromLocationService();
-
         super.onStop();
     }
 

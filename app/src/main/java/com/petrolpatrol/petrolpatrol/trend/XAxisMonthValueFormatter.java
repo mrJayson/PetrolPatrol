@@ -46,6 +46,7 @@ public class XAxisMonthValueFormatter implements IAxisValueFormatter {
                     appendix = "st";
                     break;
             }
+            formattedValue = Integer.valueOf(formattedValue).toString();
             return formattedValue + appendix;
         } catch (ParseException e) {
             return "";
