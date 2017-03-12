@@ -44,8 +44,8 @@ public class BaseActivity extends AppCompatActivity implements TrendFragment.Lis
     private DrawerLayout mDrawerContainer;
     private Toolbar mToolbar;
 
-    private String selectedFuelType;
-    private String selectedSortBy;
+    private String selectedFuelType = null;
+    private String selectedSortBy = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,8 +119,13 @@ public class BaseActivity extends AppCompatActivity implements TrendFragment.Lis
         getMenuInflater().inflate(R.menu.submenu_fueltypes, menuItem.getSubMenu());
 
         // Preselect the menu_filter items recorded in SharedPreferences
-        int fuelTypeResID = getResources().getIdentifier(
-                SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_FUELTYPE),"id",getPackageName());
+        int fuelTypeResID;
+        if (selectedFuelType != null) {
+            fuelTypeResID = getResources().getIdentifier(selectedFuelType ,"id",getPackageName());
+        } else {
+            fuelTypeResID = getResources().getIdentifier(
+                    SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_FUELTYPE), "id", getPackageName());
+        }
         MenuItem fuelType = (MenuItem) menu.findItem(fuelTypeResID);
         fuelType.setChecked(true);
     }
@@ -131,13 +136,24 @@ public class BaseActivity extends AppCompatActivity implements TrendFragment.Lis
         getMenuInflater().inflate(R.menu.submenu_fueltypes, menuItem.getSubMenu());
 
         // Preselect the menu_filter items recorded in SharedPreferences
-        int fuelTypeResID = getResources().getIdentifier(
-                SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_FUELTYPE),"id",getPackageName());
+        int fuelTypeResID;
+        if (selectedFuelType != null) {
+            fuelTypeResID = getResources().getIdentifier(selectedFuelType ,"id",getPackageName());
+        } else {
+            fuelTypeResID = getResources().getIdentifier(
+                    SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_FUELTYPE), "id", getPackageName());
+        }
         MenuItem fuelType = (MenuItem) menu.findItem(fuelTypeResID);
         fuelType.setChecked(true);
 
-        int sortByResID = getResources().getIdentifier("sort_" +
-                SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_SORTBY).toLowerCase(),"id",getPackageName());
+
+        int sortByResID;
+        if (selectedSortBy != null) {
+            sortByResID = getResources().getIdentifier("sort_" + selectedSortBy.toLowerCase(), "id", getPackageName());
+        } else {
+            sortByResID = getResources().getIdentifier("sort_" +
+                    SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_SORTBY).toLowerCase(), "id", getPackageName());
+        }
         MenuItem sortBy = (MenuItem) menu.findItem(sortByResID);
         sortBy.setChecked(true);
     }
