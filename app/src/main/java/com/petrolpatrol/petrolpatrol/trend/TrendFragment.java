@@ -14,7 +14,6 @@ import android.view.*;
 import android.widget.FrameLayout;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Description;
-import com.github.mikephil.charting.components.MarkerView;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.DataSet;
@@ -23,13 +22,12 @@ import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.DefaultValueFormatter;
 import com.github.mikephil.charting.formatter.IAxisValueFormatter;
-import com.github.mikephil.charting.formatter.IValueFormatter;
 import com.github.mikephil.charting.listener.ChartTouchListener;
 import com.github.mikephil.charting.listener.OnChartGestureListener;
-import com.github.mikephil.charting.utils.ViewPortHandler;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.model.Station;
+import com.petrolpatrol.petrolpatrol.service.LocationReceiverFragment;
 import com.petrolpatrol.petrolpatrol.service.NewLocationReceiver;
 
 import java.util.ArrayList;
@@ -42,7 +40,7 @@ import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class TrendFragment extends Fragment implements NewLocationReceiver.Listener {
+public class TrendFragment extends LocationReceiverFragment {
 
     private static final String TAG = makeLogTag(TrendFragment.class);
     private Listener parentListener;
@@ -173,10 +171,44 @@ public class TrendFragment extends Fragment implements NewLocationReceiver.Liste
 
             @Override
             public void onClick(View view) {
-                registerReceiverToLocationService();
-                parentListener.startLocating();
+                //registerReceiverToLocationService();
+                //parentListener.startLocating();
+                parentListener.displayMapFragment();
             }
         });
+    }
+
+    @Override
+    public void onStart() {
+        LOGI(TAG, "onStart");
+        super.onStart();
+        getActivity().invalidateOptionsMenu();
+    }
+
+    @Override
+    public void onResume() {
+        LOGI(TAG, "onResume");
+        super.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        LOGI(TAG, "onPause");
+        super.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        LOGI(TAG, "onStop");
+        // Unregister if fragment closes while still broadcast receiving
+        unregisterReceiverFromLocationService();
+        super.onStop();
+    }
+
+    @Override
+    public void onDestroy() {
+        LOGI(TAG, "onDestroy");
+        super.onDestroy();
     }
 
     private void makeChartVisible(TrendResolution resolution) {
@@ -344,32 +376,30 @@ public class TrendFragment extends Fragment implements NewLocationReceiver.Liste
             chart.setOnChartGestureListener(new OnChartGestureListener() {
                 @Override
                 public void onChartGestureStart(MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
-
                 }
 
                 @Override
                 public void onChartGestureEnd(MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
-
                 }
 
                 @Override
                 public void onChartLongPressed(MotionEvent me) {
-
                 }
 
                 @Override
                 public void onChartDoubleTapped(MotionEvent me) {
-
                 }
 
                 @Override
                 public void onChartSingleTapped(MotionEvent me) {
-
                 }
 
                 @Override
                 public void onChartFling(MotionEvent me1, MotionEvent me2, float velocityX, float velocityY) {
+                }
 
+                @Override
+                public void onChartTranslate(MotionEvent me, float dX, float dY) {
                 }
 
                 @Override
@@ -379,7 +409,6 @@ public class TrendFragment extends Fragment implements NewLocationReceiver.Liste
                         finalChart.getAxisLeft().setDrawLabels(true);
                         finalChart.getAxisLeft().setDrawGridLines(true);
                         finalDataSet.setDrawValues(false);
-
                     } else {
                         // Zoomed in closer than 2x scale
                         finalChart.getAxisLeft().setDrawLabels(false);
@@ -387,48 +416,10 @@ public class TrendFragment extends Fragment implements NewLocationReceiver.Liste
                         finalDataSet.setDrawValues(true);
                     }
                 }
-
-                @Override
-                public void onChartTranslate(MotionEvent me, float dX, float dY) {
-
-                }
             });
         }
         chart.invalidate();
         return chart;
-    }
-
-    @Override
-    public void onStart() {
-        LOGI(TAG, "onStart");
-        super.onStart();
-        getActivity().invalidateOptionsMenu();
-    }
-
-    @Override
-    public void onResume() {
-        LOGI(TAG, "onResume");
-        super.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        LOGI(TAG, "onPause");
-        super.onPause();
-    }
-
-    @Override
-    public void onStop() {
-        LOGI(TAG, "onStop");
-        // Unregister if fragment closes while still broadcast receiving
-        unregisterReceiverFromLocationService();
-        super.onStop();
-    }
-
-    @Override
-    public void onDestroy() {
-        LOGI(TAG, "onDestroy");
-        super.onDestroy();
     }
 
     @Override
@@ -447,18 +438,11 @@ public class TrendFragment extends Fragment implements NewLocationReceiver.Liste
         });
     }
 
-    private void registerReceiverToLocationService() {
-        newLocationReceiver.register(getContext());
-    }
-
-    private void unregisterReceiverFromLocationService() {
-        newLocationReceiver.unregister(getContext());
-    }
-
     public interface Listener {
         void startLocating();
         void stopLocating();
         void displayListFragment(List<Station> list);
+        void displayMapFragment();
         String getSelectedFuelType();
         String getSelectedSortBy();
     }

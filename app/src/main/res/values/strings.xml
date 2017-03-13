@@ -27,6 +27,10 @@
     <string name="fueltype_EV">EV</string>
     <string name="fueltype_H2">H2</string>
 
+    <!-- Maps Toolbar Menu Items -->
+
+    <string name="menu_list">Display in list view</string>
+
     <!-- Details Toolbar Menu Items -->
 
     <string name="menu_favourite">Favourite It!</string>

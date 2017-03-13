@@ -19,6 +19,7 @@ import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.SharedPreferences;
 import com.petrolpatrol.petrolpatrol.details.DetailsFragment;
 import com.petrolpatrol.petrolpatrol.list.ListFragment;
+import com.petrolpatrol.petrolpatrol.map.MapFragment;
 import com.petrolpatrol.petrolpatrol.trend.TrendFragment;
 import com.petrolpatrol.petrolpatrol.model.Station;
 import com.petrolpatrol.petrolpatrol.service.LocationServiceConnection;
@@ -33,7 +34,9 @@ import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGE;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
-public class BaseActivity extends AppCompatActivity implements TrendFragment.Listener, ListFragment.Listener, DetailsFragment.OnFragmentInteractionListener {
+public class BaseActivity extends AppCompatActivity
+        implements TrendFragment.Listener, ListFragment.Listener,
+        DetailsFragment.Listener, MapFragment.Listener {
 
     private static final String TAG = makeLogTag(BaseActivity.class);
 
@@ -67,7 +70,7 @@ public class BaseActivity extends AppCompatActivity implements TrendFragment.Lis
         selectedSortBy = SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_SORTBY);
 
         // Show the locate fragment each time on start up
-        displayLocateFragment();
+        displayTrendFragment();
     }
 
     @Override
@@ -82,7 +85,6 @@ public class BaseActivity extends AppCompatActivity implements TrendFragment.Lis
     @Override
     protected void onStop() {
         LOGI(TAG, "onStop");
-
         unbindFromLocationService();
         super.onStop();
     }
@@ -101,6 +103,9 @@ public class BaseActivity extends AppCompatActivity implements TrendFragment.Lis
         super.onPrepareOptionsMenu(menu);
         if (fragment instanceof TrendFragment) {
             displayMenuTrend(menu);
+        }
+        else if (fragment instanceof MapFragment) {
+            displayMenuMap(menu);
         }
         else if (fragment instanceof ListFragment) {
             displayMenuFilter(menu);
@@ -128,6 +133,10 @@ public class BaseActivity extends AppCompatActivity implements TrendFragment.Lis
         }
         MenuItem fuelType = (MenuItem) menu.findItem(fuelTypeResID);
         fuelType.setChecked(true);
+    }
+
+    private void displayMenuMap(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_map, menu);
     }
 
     private void displayMenuFilter(Menu menu) {
@@ -283,10 +292,19 @@ public class BaseActivity extends AppCompatActivity implements TrendFragment.Lis
         mLocationServiceConnection.stopLocating();
     }
 
-    private void displayLocateFragment() {
+    private void displayTrendFragment() {
         FragmentTransaction transaction = mfragmentManager.beginTransaction();
         TrendFragment trendFragment = TrendFragment.newInstance();
         transaction.replace(R.id.fragment_container, trendFragment);
+        transaction.commit();
+    }
+
+    @Override
+    public void displayMapFragment() {
+        FragmentTransaction transaction = mfragmentManager.beginTransaction();
+        MapFragment mapFragment = MapFragment.newInstance(new Action(Action.FIND_BY_GPS));
+        transaction.replace(R.id.fragment_container, mapFragment);
+        transaction.addToBackStack(null);
         transaction.commit();
     }
 
@@ -318,8 +336,4 @@ public class BaseActivity extends AppCompatActivity implements TrendFragment.Lis
         return selectedSortBy;
     }
 
-    @Override
-    public void onFragmentInteraction(Uri uri) {
-
-    }
 }

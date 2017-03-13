@@ -8,7 +8,6 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -32,7 +31,7 @@ public class DetailsFragment extends Fragment {
 
     private Station station;
 
-    private OnFragmentInteractionListener mListener;
+    private Listener mListener;
 
     private RecyclerView containerDetailsListView;
 
@@ -101,11 +100,11 @@ public class DetailsFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
+        if (context instanceof Listener) {
+            mListener = (Listener) context;
         } else {
             throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
+                    + " must implement Listener");
         }
     }
 
@@ -116,8 +115,6 @@ public class DetailsFragment extends Fragment {
     }
 
 
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+    public interface Listener {
     }
 }

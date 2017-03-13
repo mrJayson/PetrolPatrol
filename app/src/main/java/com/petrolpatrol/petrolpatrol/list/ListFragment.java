@@ -5,7 +5,6 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -17,6 +16,7 @@ import android.view.ViewGroup;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.model.Station;
+import com.petrolpatrol.petrolpatrol.service.LocationReceiverFragment;
 import com.petrolpatrol.petrolpatrol.service.NewLocationReceiver;
 
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ import java.util.List;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
-public class ListFragment extends Fragment implements NewLocationReceiver.Listener, ListAdapter.Listener{
+public class ListFragment extends LocationReceiverFragment implements ListAdapter.Listener{
 
     private static final String TAG = makeLogTag(ListFragment.class);
 
@@ -162,14 +162,6 @@ public class ListFragment extends Fragment implements NewLocationReceiver.Listen
                 parentListener.displayListFragment(res);
             }
         });
-    }
-
-    private void registerReceiverToLocationService() {
-        newLocationReceiver.register(getContext());
-    }
-
-    private void unregisterReceiverFromLocationService() {
-        newLocationReceiver.unregister(getContext());
     }
 
     @Override
