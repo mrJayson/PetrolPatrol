@@ -8,7 +8,6 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.GravityCompat;
 import android.view.*;
 
 import android.widget.FrameLayout;
@@ -25,10 +24,12 @@ import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.github.mikephil.charting.listener.ChartTouchListener;
 import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.petrolpatrol.petrolpatrol.R;
+import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.model.Station;
 import com.petrolpatrol.petrolpatrol.service.LocationReceiverFragment;
 import com.petrolpatrol.petrolpatrol.service.NewLocationReceiver;
+import com.petrolpatrol.petrolpatrol.util.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -96,29 +97,7 @@ public class TrendFragment extends LocationReceiverFragment {
         return inflater.inflate(R.layout.fragment_trend, container, false);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        switch (id) {
-            case R.id.E10:
-            case R.id.U91:
-            case R.id.E85:
-            case R.id.P95:
-            case R.id.P98:
-            case R.id.DL:
-            case R.id.PDL:
-            case R.id.B20:
-            case R.id.LPG:
-            case R.id.CNG:
-            case R.id.LNG:
-            case R.id.EV:
-            case R.id.H2:
-                item.setChecked(true);
-                //selectedFuelType = String.valueOf(item.getTitle());
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
+
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
@@ -141,7 +120,7 @@ public class TrendFragment extends LocationReceiverFragment {
         chartYear.setVisibility(View.GONE);
         chartContainer.addView(chartYear);
 
-        retrieveTrendsData(parentListener.getSelectedFuelType());
+        retrieveTrendsData(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE));
 
         TabLayout tab = (TabLayout) view.findViewById(R.id.chart_tab);
         for (TrendResolution trend : TrendResolution.values()) {
@@ -430,7 +409,13 @@ public class TrendFragment extends LocationReceiverFragment {
 
         FuelCheckClient client = new FuelCheckClient(getContext());
 
-        client.getFuelPricesWithinRadius(location.getLatitude(), location.getLongitude(), parentListener.getSelectedSortBy(), parentListener.getSelectedFuelType(), new FuelCheckClient.FuelCheckResponse<List<Station>>() {
+        Preferences pref = Preferences.getInstance();
+        client.getFuelPricesWithinRadius(
+                location.getLatitude(),
+                location.getLongitude(),
+                pref.getString(Preferences.Key.SELECTED_SORTBY),
+                pref.getString(Preferences.Key.SELECTED_FUELTYPE),
+                new FuelCheckClient.FuelCheckResponse<List<Station>>() {
             @Override
             public void onCompletion(List<Station> res) {
                 parentListener.displayListFragment(res);
@@ -438,13 +423,56 @@ public class TrendFragment extends LocationReceiverFragment {
         });
     }
 
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        LOGE(TAG, "onCreateOptionsMenu");
+        inflater.inflate(R.menu.menu_trend, menu);
+        MenuItem menuItem = menu.findItem(R.id.fueltype);
+        inflater.inflate(R.menu.submenu_fueltypes, menuItem.getSubMenu());
+
+        // Preselect the menu_list items recorded in Preferences
+        int fuelTypeResID = Utils.identify(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE), "id", getContext());
+        //fuelTypeResID = getResources().getIdentifier(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE), "id", getActivity().getPackageName());
+//        if (parentListener.getSelectedFuelType() != null) {
+//            fuelTypeResID = getResources().getIdentifier(parentListener.getSelectedFuelType() ,"id", getActivity().getPackageName());
+//        } else {
+//            fuelTypeResID = getResources().getIdentifier(
+//                    Preferences.getInstance().getString(Preferences.Key.DEFAULT_FUELTYPE), "id", getActivity().getPackageName());
+//        }
+        MenuItem fuelType = (MenuItem) menu.findItem(fuelTypeResID);
+        fuelType.setChecked(true);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(final MenuItem item) {
+        LOGE(TAG, "onOptionsItemSelected");
+        int id = item.getItemId();
+        try {
+            return Utils.fuelTypeSwitch(id, new Utils.Callback() {
+                @Override
+                public void execute() {
+                    item.setChecked(true);
+                    Preferences.getInstance().put(Preferences.Key.SELECTED_FUELTYPE, String.valueOf(item.getTitle()));
+                    retrieveTrendsData(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE));
+//                selectedFuelType = String.valueOf(item.getTitle());
+//                Fragment fragment = mfragmentManager.findFragmentById(R.id.fragment_container);
+//                if (fragment instanceof TrendFragment) {
+//                    TrendFragment trendFragment = (TrendFragment) fragment;
+//                    trendFragment.retrieveTrendsData(getSelectedFuelType());
+//                }
+                }
+            });
+        } catch (NoSuchFieldException nsfe) {
+            return super.onOptionsItemSelected(item);
+        }
+    }
+
     public interface Listener {
         void startLocating();
         void stopLocating();
         void displayListFragment(List<Station> list);
         void displayMapFragment();
-        String getSelectedFuelType();
-        String getSelectedSortBy();
     }
 
     @Override

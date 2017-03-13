@@ -3,7 +3,7 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-            android:id="@id/favourite"
+            android:id="@id/list"
             app:showAsAction="always"
             android:icon="@drawable/ic_list_white_24dp"
             android:title="@string/menu_list">

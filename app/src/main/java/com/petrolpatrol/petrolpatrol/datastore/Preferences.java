@@ -5,13 +5,13 @@ import com.petrolpatrol.petrolpatrol.R;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
-public class SharedPreferences {
+public class Preferences {
 
-    private static final String TAG = makeLogTag(SharedPreferences.class);
+    private static final String TAG = makeLogTag(Preferences.class);
 
-    private static final String PREFERENCES_NAME = SharedPreferences.class.getSimpleName();
+    private static final String PREFERENCES_NAME = Preferences.class.getSimpleName();
 
-    private static SharedPreferences instance;
+    private static Preferences instance;
     private android.content.SharedPreferences sharedPreferences;
     private android.content.SharedPreferences.Editor editor;
     private Context context;
@@ -27,23 +27,25 @@ public class SharedPreferences {
         */
         OAUTH_TOKEN,
         DEFAULT_FUELTYPE,
-        DEFAULT_SORTBY
+        DEFAULT_SORTBY,
+        SELECTED_FUELTYPE,
+        SELECTED_SORTBY
     }
 
-    private SharedPreferences(Context context) {
+    private Preferences(Context context) {
         this.context = context;
         sharedPreferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE);
         editor = sharedPreferences.edit();
     }
 
-    public static synchronized SharedPreferences getInstance(Context context) {
+    public static synchronized Preferences getInstance(Context context) {
         if (instance == null) {
-            instance = new SharedPreferences(context);
+            instance = new Preferences(context);
         }
         return instance;
     }
 
-    public static synchronized SharedPreferences getInstance() {
+    public static synchronized Preferences getInstance() {
         if (instance == null) {
             throw new IllegalStateException("Need to initialize the singleton with Context first");
         }
@@ -52,15 +54,17 @@ public class SharedPreferences {
 
     public void initialize() {
 
-        // If there is no entry for fuelType, set it to the default
+        // The user specified default to use on app launch. If there is no entry, set it to the system default,
         if (getString(Key.DEFAULT_FUELTYPE) == null) {
             put(Key.DEFAULT_FUELTYPE, context.getString(R.string.default_fueltype));
         }
-
-        // If there is no entry for sortBy, set it to the default
         if (getString(Key.DEFAULT_SORTBY) == null) {
             put(Key.DEFAULT_SORTBY, context.getString(R.string.default_sortby));
         }
+
+        // Assign preferences based on the defaults
+        put(Key.SELECTED_FUELTYPE, getString(Key.DEFAULT_FUELTYPE));
+        put(Key.SELECTED_SORTBY, getString(Key.DEFAULT_SORTBY));
     }
 
     // getters
@@ -144,7 +148,7 @@ public class SharedPreferences {
         editor.commit();
     }
 
-    // remove all keys from SharedPreferences
+    // remove all keys from Preferences
     public void clear() {
         editor.clear();
         editor.commit();

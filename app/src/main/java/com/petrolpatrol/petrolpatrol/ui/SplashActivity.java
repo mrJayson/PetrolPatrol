@@ -4,7 +4,7 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import com.petrolpatrol.petrolpatrol.R;
-import com.petrolpatrol.petrolpatrol.datastore.SharedPreferences;
+import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.fuelcheck.VolleyQueue;
 
@@ -20,8 +20,8 @@ public class SplashActivity extends AppCompatActivity {
         setContentView(R.layout.activity_splash);
 
         // Between setContentView and Intent, perform any app initialization during splash screen
-        SharedPreferences.getInstance(getApplicationContext()); // Initialize sharedPreferences singleton
-        SharedPreferences.getInstance().initialize(); // Populate entries in SharedPreferences if necessary
+        Preferences.getInstance(getApplicationContext()); // Initialize sharedPreferences singleton
+        Preferences.getInstance().initialize(); // Populate entries in Preferences if necessary
         VolleyQueue.getInstance(getApplicationContext()); // Initialize volley singleton
 
         // Perform a reference data check upon start up

@@ -2,7 +2,6 @@ package com.petrolpatrol.petrolpatrol.ui;
 
 import android.app.ActivityManager;
 import android.content.Context;
-import android.net.Uri;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -16,7 +15,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 import com.petrolpatrol.petrolpatrol.R;
-import com.petrolpatrol.petrolpatrol.datastore.SharedPreferences;
+import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.details.DetailsFragment;
 import com.petrolpatrol.petrolpatrol.list.ListFragment;
 import com.petrolpatrol.petrolpatrol.map.MapFragment;
@@ -47,9 +46,6 @@ public class BaseActivity extends AppCompatActivity
     private DrawerLayout mDrawerContainer;
     private Toolbar mToolbar;
 
-    private String selectedFuelType = null;
-    private String selectedSortBy = null;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         LOGI(TAG, "onCreate");
@@ -65,9 +61,6 @@ public class BaseActivity extends AppCompatActivity
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mLocationServiceConnection = new LocationServiceConnection(this);
-
-        selectedFuelType = SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_FUELTYPE);
-        selectedSortBy = SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_SORTBY);
 
         // Show the locate fragment each time on start up
         displayTrendFragment();
@@ -95,121 +88,21 @@ public class BaseActivity extends AppCompatActivity
         super.onDestroy();
     }
 
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        Fragment fragment = mfragmentManager.findFragmentById(R.id.fragment_container);
-        LOGI(TAG, "onPrepareOptionsMenu");
-        super.onPrepareOptionsMenu(menu);
-        if (fragment instanceof TrendFragment) {
-            displayMenuTrend(menu);
-        }
-        else if (fragment instanceof MapFragment) {
-            displayMenuMap(menu);
-        }
-        else if (fragment instanceof ListFragment) {
-            displayMenuFilter(menu);
-        }
-        else if (fragment instanceof DetailsFragment) {
-            displayMenuDetails(menu);
-        } else {
-
-        }
-        return true;
-    }
-
-    private void displayMenuTrend(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_trend, menu);
-        MenuItem menuItem = menu.findItem(R.id.fueltype);
-        getMenuInflater().inflate(R.menu.submenu_fueltypes, menuItem.getSubMenu());
-
-        // Preselect the menu_filter items recorded in SharedPreferences
-        int fuelTypeResID;
-        if (selectedFuelType != null) {
-            fuelTypeResID = getResources().getIdentifier(selectedFuelType ,"id",getPackageName());
-        } else {
-            fuelTypeResID = getResources().getIdentifier(
-                    SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_FUELTYPE), "id", getPackageName());
-        }
-        MenuItem fuelType = (MenuItem) menu.findItem(fuelTypeResID);
-        fuelType.setChecked(true);
-    }
-
-    private void displayMenuMap(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_map, menu);
-    }
-
-    private void displayMenuFilter(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_filter, menu);
-        MenuItem menuItem = menu.findItem(R.id.fueltype);
-        getMenuInflater().inflate(R.menu.submenu_fueltypes, menuItem.getSubMenu());
-
-        // Preselect the menu_filter items recorded in SharedPreferences
-        int fuelTypeResID;
-        if (selectedFuelType != null) {
-            fuelTypeResID = getResources().getIdentifier(selectedFuelType ,"id",getPackageName());
-        } else {
-            fuelTypeResID = getResources().getIdentifier(
-                    SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_FUELTYPE), "id", getPackageName());
-        }
-        MenuItem fuelType = (MenuItem) menu.findItem(fuelTypeResID);
-        fuelType.setChecked(true);
-
-
-        int sortByResID;
-        if (selectedSortBy != null) {
-            sortByResID = getResources().getIdentifier("sort_" + selectedSortBy.toLowerCase(), "id", getPackageName());
-        } else {
-            sortByResID = getResources().getIdentifier("sort_" +
-                    SharedPreferences.getInstance().getString(SharedPreferences.Key.DEFAULT_SORTBY).toLowerCase(), "id", getPackageName());
-        }
-        MenuItem sortBy = (MenuItem) menu.findItem(sortByResID);
-        sortBy.setChecked(true);
-    }
-
-    private void displayMenuDetails(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_details, menu);
-    }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        LOGE(TAG, "onOptionsItemSelected");
 
         int id = item.getItemId();
         switch (id) {
             case android.R.id.home:
                 mDrawerContainer.openDrawer(GravityCompat.START);
                 return true;
-
-            case R.id.E10:
-            case R.id.U91:
-            case R.id.E85:
-            case R.id.P95:
-            case R.id.P98:
-            case R.id.DL:
-            case R.id.PDL:
-            case R.id.B20:
-            case R.id.LPG:
-            case R.id.CNG:
-            case R.id.LNG:
-            case R.id.EV:
-            case R.id.H2:
-                item.setChecked(true);
-                selectedFuelType = String.valueOf(item.getTitle());
-                Fragment fragment = mfragmentManager.findFragmentById(R.id.fragment_container);
-                if (fragment instanceof TrendFragment) {
-                    TrendFragment trendFragment = (TrendFragment) fragment;
-                    trendFragment.retrieveTrendsData(getSelectedFuelType());
-                }
-                return true;
-            case R.id.sort_price:
-            case R.id.sort_distance:
-                item.setChecked(true);
-                selectedSortBy = String.valueOf(item.getTitle());
-                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
+
+
 
     @Override
     public void onBackPressed() {
@@ -324,16 +217,6 @@ public class BaseActivity extends AppCompatActivity
         transaction.replace(R.id.fragment_container, detailsFragment);
         transaction.addToBackStack(null);
         transaction.commit();
-    }
-
-    @Override
-    public String getSelectedFuelType() {
-        return selectedFuelType;
-    }
-
-    @Override
-    public String getSelectedSortBy() {
-        return selectedSortBy;
     }
 
 }

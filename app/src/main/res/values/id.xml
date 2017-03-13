@@ -26,6 +26,10 @@
     <item type="id" name="EV"/>
     <item type="id" name="H2"/>
 
+    <!-- Map Toolbar Menu Identifiers -->
+
+    <item type="id" name="list"/>
+
     <!-- Details Toolbar Menu Identifiers -->
 
     <item type="id" name="favourite"/>

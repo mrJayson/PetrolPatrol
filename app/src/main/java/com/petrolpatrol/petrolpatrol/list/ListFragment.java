@@ -9,15 +9,15 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.LayoutManager;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 
 import com.petrolpatrol.petrolpatrol.R;
+import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.model.Station;
 import com.petrolpatrol.petrolpatrol.service.LocationReceiverFragment;
 import com.petrolpatrol.petrolpatrol.service.NewLocationReceiver;
+import com.petrolpatrol.petrolpatrol.util.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,8 +29,8 @@ public class ListFragment extends LocationReceiverFragment implements ListAdapte
 
     private static final String TAG = makeLogTag(ListFragment.class);
 
-    private static final String ARG_LIST = "stations";
-    private List<Station> stations;
+    private static final String ARG_LIST = "stationsData";
+    private List<Station> stationsData;
     private Listener parentListener;
     private NewLocationReceiver newLocationReceiver = new NewLocationReceiver(this);
 
@@ -69,7 +69,7 @@ public class ListFragment extends LocationReceiverFragment implements ListAdapte
 
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            stations = getArguments().getParcelableArrayList(ARG_LIST);
+            stationsData = getArguments().getParcelableArrayList(ARG_LIST);
         }
         setHasOptionsMenu(true);
     }
@@ -108,11 +108,12 @@ public class ListFragment extends LocationReceiverFragment implements ListAdapte
         LOGI(TAG, "onStart");
 
         super.onStart();
+        Preferences pref = Preferences.getInstance();
 
         getActivity().invalidateOptionsMenu();
 
         LayoutManager layoutManager = new LinearLayoutManager(getContext());
-        RecyclerView.Adapter adapter = new ListAdapter(getContext(), stations, parentListener.getSelectedFuelType(), this);
+        RecyclerView.Adapter adapter = new ListAdapter(getContext(), stationsData, pref.getString(Preferences.Key.SELECTED_FUELTYPE), this);
         containerList.setLayoutManager(layoutManager);
         containerList.setAdapter(adapter);
     }
@@ -155,13 +156,62 @@ public class ListFragment extends LocationReceiverFragment implements ListAdapte
         parentListener.stopLocating();
 
         FuelCheckClient client = new FuelCheckClient(getContext());
+        Preferences pref = Preferences.getInstance();
 
-        client.getFuelPricesWithinRadius(location.getLatitude(), location.getLongitude(), parentListener.getSelectedSortBy(), parentListener.getSelectedFuelType(), new FuelCheckClient.FuelCheckResponse<List<Station>>() {
+        client.getFuelPricesWithinRadius(
+                location.getLatitude(),
+                location.getLongitude(),
+                pref.getString(Preferences.Key.SELECTED_SORTBY),
+                pref.getString(Preferences.Key.SELECTED_FUELTYPE),
+                new FuelCheckClient.FuelCheckResponse<List<Station>>() {
             @Override
             public void onCompletion(List<Station> res) {
                 parentListener.displayListFragment(res);
             }
         });
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.menu_list, menu);
+        MenuItem menuItem = menu.findItem(R.id.fueltype);
+        inflater.inflate(R.menu.submenu_fueltypes, menuItem.getSubMenu());
+
+        Preferences pref = Preferences.getInstance();
+        // Preselect the menu_list items recorded in Preferences
+        int fuelTypeResID = Utils.identify(pref.getString(Preferences.Key.SELECTED_FUELTYPE), "id", getContext());
+        MenuItem fuelType = (MenuItem) menu.findItem(fuelTypeResID);
+        fuelType.setChecked(true);
+
+        int sortByResID = Utils.identify("sort_" + pref.getString(Preferences.Key.SELECTED_SORTBY).toLowerCase(), "id", getContext());
+        MenuItem sortBy = (MenuItem) menu.findItem(sortByResID);
+        sortBy.setChecked(true);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(final MenuItem item) {
+
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.sort_price:
+            case R.id.sort_distance:
+                item.setChecked(true);
+                Preferences.getInstance().put(Preferences.Key.SELECTED_SORTBY, String.valueOf(item.getTitle()));
+                return true;
+            default:
+                try {
+                    return Utils.fuelTypeSwitch(id, new Utils.Callback() {
+                        @Override
+                        public void execute() {
+                            item.setChecked(true);
+                            Preferences.getInstance().put(Preferences.Key.SELECTED_FUELTYPE, String.valueOf(item.getTitle()));
+                        }
+                    });
+                } catch (NoSuchFieldException e) {
+                    return super.onOptionsItemSelected(item);
+                }
+        }
     }
 
     @Override
@@ -174,7 +224,5 @@ public class ListFragment extends LocationReceiverFragment implements ListAdapte
         void stopLocating();
         void displayListFragment(List<Station> list);
         void displayDetailsFragment(int stationID);
-        String getSelectedFuelType();
-        String getSelectedSortBy();
     }
 }

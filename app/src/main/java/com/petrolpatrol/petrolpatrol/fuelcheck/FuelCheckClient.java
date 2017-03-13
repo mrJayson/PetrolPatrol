@@ -8,8 +8,8 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.petrolpatrol.petrolpatrol.R;
+import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.datastore.SQLiteClient;
-import com.petrolpatrol.petrolpatrol.datastore.SharedPreferences;
 import com.petrolpatrol.petrolpatrol.model.*;
 import com.petrolpatrol.petrolpatrol.trend.TodayPrice;
 import com.petrolpatrol.petrolpatrol.trend.TrendData;
@@ -91,7 +91,7 @@ public class FuelCheckClient {
         headerMap.put("transactionid", IDUtils.UUID());
         headerMap.put("requesttimestamp", TimeUtils.UTCTimestamp());
         headerMap.put("Content-type", "application/json; charset=utf-8");
-        headerMap.put("Authorization", "Bearer "+ SharedPreferences.getInstance().getString(SharedPreferences.Key.OAUTH_TOKEN));
+        headerMap.put("Authorization", "Bearer "+ Preferences.getInstance().getString(Preferences.Key.OAUTH_TOKEN));
 
         JSONObjectRequestGET(url + String.valueOf(stationCode), headerMap, new FuelCheckResponse<FuelCheckResult>() {
             @Override
@@ -124,7 +124,7 @@ public class FuelCheckClient {
         headerMap.put("requesttimestamp", TimeUtils.UTCTimestamp());
         // Content-type header is apparently already inserted
         //params.put("Content-type", "application/json; charset=utf-8");
-        headerMap.put("Authorization", "Bearer "+ SharedPreferences.getInstance().getString(SharedPreferences.Key.OAUTH_TOKEN));
+        headerMap.put("Authorization", "Bearer "+ Preferences.getInstance().getString(Preferences.Key.OAUTH_TOKEN));
 
         // Prepare the jsonbody of the request
         JSONObject jsonBody = new JSONObject();
@@ -235,7 +235,7 @@ public class FuelCheckClient {
         if (ifModifiedSince == null) {
             ifModifiedSince = TimeUtils.epochTimeZero;
         }
-        String authToken = SharedPreferences.getInstance().getString(SharedPreferences.Key.OAUTH_TOKEN);
+        String authToken = Preferences.getInstance().getString(Preferences.Key.OAUTH_TOKEN);
 
         // Prepare the header arguments
         Map<String, String> headerMap = new HashMap<>();
@@ -345,7 +345,7 @@ public class FuelCheckClient {
                     if (res.isSuccess() && res.dataIsObject()) {
                         JSONObject jsonObject = res.getDataAsObject();
                         String authToken = jsonObject.getString("access_token");
-                        SharedPreferences.getInstance().put(SharedPreferences.Key.OAUTH_TOKEN, authToken);
+                        Preferences.getInstance().put(Preferences.Key.OAUTH_TOKEN, authToken);
                         if (completion != null) {
                             completion.onCompletion(res);
                         }
@@ -395,7 +395,7 @@ public class FuelCheckClient {
                     authToken(new FuelCheckResponse<FuelCheckResult>() {
                         @Override
                         public void onCompletion(FuelCheckResult res) {
-                            String authToken = SharedPreferences.getInstance().getString(SharedPreferences.Key.OAUTH_TOKEN);
+                            String authToken = Preferences.getInstance().getString(Preferences.Key.OAUTH_TOKEN);
                             headerMap.put("Authorization", "Bearer "+ authToken);
                             JSONObjectRequestGET(url, headerMap, completion);
                         }
@@ -463,7 +463,7 @@ public class FuelCheckClient {
                     authToken(new FuelCheckResponse<FuelCheckResult>() {
                         @Override
                         public void onCompletion(FuelCheckResult res) {
-                            String authToken = SharedPreferences.getInstance().getString(SharedPreferences.Key.OAUTH_TOKEN);
+                            String authToken = Preferences.getInstance().getString(Preferences.Key.OAUTH_TOKEN);
                             headerMap.put("Authorization", "Bearer "+ authToken);
                             JSONObjectRequestGET(url, headerMap, completion);
                         }
@@ -530,7 +530,7 @@ public class FuelCheckClient {
                     authToken(new FuelCheckResponse<FuelCheckResult>() {
                         @Override
                         public void onCompletion(FuelCheckResult res) {
-                            String authToken = SharedPreferences.getInstance().getString(SharedPreferences.Key.OAUTH_TOKEN);
+                            String authToken = Preferences.getInstance().getString(Preferences.Key.OAUTH_TOKEN);
                             headerMap.put("Authorization", "Bearer "+ authToken);
                             requestPOST(url, headerMap, jsonBody, completion);
                         }
