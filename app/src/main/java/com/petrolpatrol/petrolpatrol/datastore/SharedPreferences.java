@@ -5,9 +5,6 @@ import com.petrolpatrol.petrolpatrol.R;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
-/**
- * Created by jason on 16/02/17.
- */
 public class SharedPreferences {
 
     private static final String TAG = makeLogTag(SharedPreferences.class);

@@ -11,9 +11,6 @@ import com.petrolpatrol.petrolpatrol.util.Constants;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
-/**
- * Created by jason on 16/02/17.
- */
 public class NewLocationReceiver extends BroadcastReceiver {
 
     private static final String TAG = makeLogTag(NewLocationReceiver.class);

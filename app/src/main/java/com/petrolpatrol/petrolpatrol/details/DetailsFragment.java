@@ -1,7 +1,6 @@
 package com.petrolpatrol.petrolpatrol.details;
 
 import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -31,7 +30,7 @@ public class DetailsFragment extends Fragment {
 
     private Station station;
 
-    private Listener mListener;
+    private Listener parentListener;
 
     private RecyclerView containerDetailsListView;
 
@@ -101,7 +100,7 @@ public class DetailsFragment extends Fragment {
     public void onAttach(Context context) {
         super.onAttach(context);
         if (context instanceof Listener) {
-            mListener = (Listener) context;
+            parentListener = (Listener) context;
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement Listener");
@@ -111,7 +110,7 @@ public class DetailsFragment extends Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
+        parentListener = null;
     }
 
 

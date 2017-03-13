@@ -3,9 +3,6 @@ package com.petrolpatrol.petrolpatrol.trend;
 import com.google.gson.annotations.SerializedName;
 import com.petrolpatrol.petrolpatrol.model.FuelType;
 
-/**
- * Created by jason on 3/03/17.
- */
 public class TodayPrice {
 
     private final FuelType fuelType;

@@ -1,8 +1,5 @@
 package com.petrolpatrol.petrolpatrol.trend;
 
-/**
- * Created by jason on 5/03/17.
- */
 public enum TrendResolution {
 
     WEEK("Week"),

@@ -3,9 +3,6 @@ package com.petrolpatrol.petrolpatrol.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-/**
- * Created by jason on 17/02/17.
- */
 public class Price implements Parcelable {
 
     private final int stationID;

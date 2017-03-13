@@ -26,9 +26,6 @@ import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGE;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
-/**
- * Created by jason on 16/02/17.
- */
 public class FuelCheckClient {
 
     private static final String TAG = makeLogTag(FuelCheckClient.class);

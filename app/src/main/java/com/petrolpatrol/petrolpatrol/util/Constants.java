@@ -1,8 +1,5 @@
 package com.petrolpatrol.petrolpatrol.util;
 
-/**
- * Created by jason on 14/02/17.
- */
 public class Constants {
 
     // Unique app wide IDs to identify a permission request

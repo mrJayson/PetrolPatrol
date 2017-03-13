@@ -18,9 +18,6 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
 
     private static final String TAG = makeLogTag(ListAdapter.class);
 
-    /**
-     * Created by jason on 19/02/17.
-     */
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView price;
         TextView name;

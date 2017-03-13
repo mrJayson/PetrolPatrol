@@ -2,9 +2,6 @@ package com.petrolpatrol.petrolpatrol.util;
 
 import android.util.Log;
 
-/**
- * Created by jason on 14/02/17.
- */
 public class LogUtils {
 
     private static final String LOG_PREFIX = "petrolpatrol_";

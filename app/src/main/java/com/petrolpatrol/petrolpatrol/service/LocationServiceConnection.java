@@ -12,9 +12,6 @@ import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGE;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
-/**
- * Created by jason on 15/02/17.
- */
 public class LocationServiceConnection implements ServiceConnection {
     private static final String TAG = makeLogTag(LocationServiceConnection.class);
 

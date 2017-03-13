@@ -3,9 +3,6 @@ package com.petrolpatrol.petrolpatrol.fuelcheck;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-/**
- * Created by jason on 16/02/17.
- */
 public class FuelCheckResult {
 
     private boolean success;

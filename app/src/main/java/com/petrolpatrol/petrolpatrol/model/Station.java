@@ -6,9 +6,6 @@ import android.os.Parcelable;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by jason on 17/02/17.
- */
 public class Station implements Parcelable {
 
     public static final int NO_ID = -1;

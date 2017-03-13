@@ -1,8 +1,5 @@
 package com.petrolpatrol.petrolpatrol.trend;
 
-/**
- * Created by jason on 3/03/17.
- */
 public class TrendData {
     private String period;
     private String captured;

@@ -7,9 +7,6 @@ import java.util.TimeZone;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
-/**
- * Created by jason on 14/02/17.
- */
 public class TimeUtils {
 
     private static final String TAG = makeLogTag(TimeUtils.class);

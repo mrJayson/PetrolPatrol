@@ -15,9 +15,6 @@ import java.util.List;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
-/**
- * Created by jason on 17/02/17.
- */
 public class SQLiteClient extends SQLiteOpenHelper {
 
     private static final String TAG = makeLogTag(SQLiteClient.class);

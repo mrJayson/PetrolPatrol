@@ -8,7 +8,6 @@ import com.android.volley.toolbox.Volley;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
 /**
- * Created by jason on 16/02/17.
  * Volley works by adding requests to a {@link RequestQueue}, the requestQueue manages all the requests asynchronously,
  * It is optimal to work with only one requestQueue so the management of all pending requests can occur efficiently.
  */

@@ -17,9 +17,6 @@ import java.util.List;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
-/**
- * Created by jason on 1/03/17.
- */
 public class DetailsAdapter extends RecyclerView.Adapter<DetailsAdapter.ViewHolder> {
 
     private static final String TAG = makeLogTag(DetailsAdapter.class);

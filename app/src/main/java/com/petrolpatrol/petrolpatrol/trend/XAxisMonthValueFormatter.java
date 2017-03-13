@@ -7,9 +7,6 @@ import com.petrolpatrol.petrolpatrol.util.TimeUtils;
 import java.text.ParseException;
 import java.util.List;
 
-/**
- * Created by jason on 4/03/17.
- */
 public class XAxisMonthValueFormatter implements IAxisValueFormatter {
 
     private List<String> xLabels;
