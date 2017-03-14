@@ -1,12 +1,9 @@
 package com.petrolpatrol.petrolpatrol.map;
 
-import android.Manifest;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.view.*;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -20,6 +17,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
+import com.petrolpatrol.petrolpatrol.fuelcheck.RequestTag;
 import com.petrolpatrol.petrolpatrol.model.Station;
 import com.petrolpatrol.petrolpatrol.service.LocationReceiverFragment;
 import com.petrolpatrol.petrolpatrol.ui.Action;
@@ -36,7 +34,7 @@ public class MapFragment extends LocationReceiverFragment implements OnMapReadyC
 
     private Listener parentListener;
 
-    private static final String ARG_ACTION = "action";
+    private static final String ARG_ACTION = "tag";
 
     private String action = null;
 
@@ -93,6 +91,7 @@ public class MapFragment extends LocationReceiverFragment implements OnMapReadyC
         this.map = googleMap;
         map.getUiSettings().setZoomControlsEnabled(true);
         map.getUiSettings().setCompassEnabled(true);
+        map.setMinZoomPreference(Constants.MIN_ZOOM);
         map.setMaxZoomPreference(Constants.MAX_ZOOM);
 
         // Ensure that the map stays within NSW
@@ -104,9 +103,9 @@ public class MapFragment extends LocationReceiverFragment implements OnMapReadyC
             if (action.equals(Action.FIND_BY_GPS)) {
                 registerReceiverToLocationService();
                 parentListener.startLocating();
-                action = null; // clear the action to prevent it from activating again
+                action = null; // clear the tag to prevent it from activating again
             } else if (action.equals(Action.FIND_BY_LOCATION)) {
-                action = null; // clear the action to prevent it from activating again
+                action = null; // clear the tag to prevent it from activating again
             }
         } else {
             if (cameraPosition != null) {
@@ -123,7 +122,30 @@ public class MapFragment extends LocationReceiverFragment implements OnMapReadyC
         map.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
             @Override
             public void onCameraIdle() {
-                //LOGE(TAG, String.valueOf(Utils.zoomToRadius(map.getCameraPosition().zoom)));
+
+                FuelCheckClient client = new FuelCheckClient(getContext());
+                client.cancelRequests(new RequestTag(RequestTag.GET_FUELPRICES_WITHIN_RADIUS));
+                Preferences pref = Preferences.getInstance();
+                double latitude = map.getCameraPosition().target.latitude;
+                double longitude = map.getCameraPosition().target.longitude;
+                int radius = (int) Utils.zoomToRadius(map.getCameraPosition().zoom);
+                client.getFuelPricesWithinRadius(
+                        latitude,
+                        longitude,
+                        radius,
+                        getString(R.string.menu_sort_price),
+                        pref.getString(Preferences.Key.SELECTED_FUELTYPE),
+                        new RequestTag(RequestTag.GET_FUELPRICES_WITHIN_RADIUS),
+                        new FuelCheckClient.FuelCheckResponse<List<Station>>() {
+                    @Override
+                    public void onCompletion(List<Station> res) {
+                        stationsData = res;
+                        map.clear();
+                        for (Station station : res) {
+                            map.addMarker(new MarkerOptions().position(new LatLng(station.getLatitude(), station.getLongitude())));
+                        }
+                    }
+                });
             }
         });
     }
@@ -144,16 +166,18 @@ public class MapFragment extends LocationReceiverFragment implements OnMapReadyC
         // Get fuel data with current location
         FuelCheckClient client = new FuelCheckClient(getContext());
         Preferences pref = Preferences.getInstance();
+        // Map view uses only price sorted list
         client.getFuelPricesWithinRadius(
                 latitude,
                 longitude,
-                pref.getString(Preferences.Key.SELECTED_SORTBY),
+                getString(R.string.menu_sort_price),
                 pref.getString(Preferences.Key.SELECTED_FUELTYPE),
+                new RequestTag(RequestTag.GET_FUELPRICES_WITHIN_RADIUS),
                 new FuelCheckClient.FuelCheckResponse<List<Station>>() {
             @Override
             public void onCompletion(List<Station> res) {
-
                 stationsData = res;
+                map.clear();
                 for (Station station : res) {
                     map.addMarker(new MarkerOptions().position(new LatLng(station.getLatitude(), station.getLongitude())));
                 }
@@ -203,6 +227,8 @@ public class MapFragment extends LocationReceiverFragment implements OnMapReadyC
     @Override
     public void onStop() {
         mapView.onStop();
+        // Unregister if fragment closes while still broadcast receiving
+        unregisterReceiverFromLocationService();
         super.onStop();
     }
 

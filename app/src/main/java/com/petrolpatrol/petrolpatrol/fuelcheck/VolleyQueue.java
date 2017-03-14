@@ -53,8 +53,8 @@ public class VolleyQueue {
         getRequestQueue().add(request);
     }
 
-    public void cancelRequest() {
-
+    public void cancelRequests(RequestTag tag) {
+        getRequestQueue().cancelAll(tag.getTag());
     }
 
 }

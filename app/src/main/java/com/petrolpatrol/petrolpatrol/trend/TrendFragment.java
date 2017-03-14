@@ -26,26 +26,20 @@ import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
-import com.petrolpatrol.petrolpatrol.model.Station;
-import com.petrolpatrol.petrolpatrol.service.LocationReceiverFragment;
-import com.petrolpatrol.petrolpatrol.service.NewLocationReceiver;
 import com.petrolpatrol.petrolpatrol.util.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGE;
-import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class TrendFragment extends LocationReceiverFragment {
+public class TrendFragment extends Fragment {
 
     private static final String TAG = makeLogTag(TrendFragment.class);
     private Listener parentListener;
-    private NewLocationReceiver newLocationReceiver;
 
     private List<TrendData> dataWeek;
     private List<TrendData> dataMonth;
@@ -80,8 +74,6 @@ public class TrendFragment extends LocationReceiverFragment {
         } else {
             // previous state contains data needed to recreate fragment to how it was before
         }
-        newLocationReceiver = new NewLocationReceiver(this);
-
         setHasOptionsMenu(true);
 
         dataWeek = new ArrayList<TrendData>();
@@ -96,30 +88,27 @@ public class TrendFragment extends LocationReceiverFragment {
         return inflater.inflate(R.layout.fragment_trend, container, false);
     }
 
-
-
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
         chartContainer = (FrameLayout) view.findViewById(R.id.container_trend_chart);
 
-        chartWeek = new LineChart(getContext());
-        chartWeek.setId(R.id.chart_week);
-        chartWeek.setVisibility(View.GONE);
-        chartContainer.addView(chartWeek);
-
-        chartMonth = new LineChart(getContext());
-        chartMonth.setId(R.id.chart_month);
-        chartMonth.setVisibility(View.GONE);
-        chartContainer.addView(chartMonth);
-
-        chartYear = new LineChart(getContext());
-        chartYear.setId(R.id.chart_year);
-        chartYear.setVisibility(View.GONE);
-        chartContainer.addView(chartYear);
-
-        retrieveTrendsData(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE));
+        // If data already exists, no need to refetch
+        if (dataWeek.isEmpty() || dataMonth.isEmpty() || dataYear.isEmpty()) {
+            retrieveTrendsData(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE));
+        } else {
+            if (!dataWeek.isEmpty()) {
+                chartWeek = drawChart(dataWeek, TrendResolution.WEEK, chartWeek);
+            }
+            if (!dataMonth.isEmpty()) {
+                chartMonth = drawChart(dataMonth, TrendResolution.MONTH, chartMonth);
+            }
+            if (!dataYear.isEmpty()) {
+                chartYear = drawChart(dataYear, TrendResolution.YEAR, chartYear);
+            }
+            makeChartVisible(selectedResolution);
+        }
 
         TabLayout tab = (TabLayout) view.findViewById(R.id.chart_tab);
         for (TrendResolution trend : TrendResolution.values()) {
@@ -149,8 +138,6 @@ public class TrendFragment extends LocationReceiverFragment {
 
             @Override
             public void onClick(View view) {
-                //registerReceiverToLocationService();
-                //parentListener.startLocating();
                 parentListener.displayMapFragment();
             }
         });
@@ -173,8 +160,6 @@ public class TrendFragment extends LocationReceiverFragment {
 
     @Override
     public void onStop() {
-        // Unregister if fragment closes while still broadcast receiving
-        unregisterReceiverFromLocationService();
         super.onStop();
     }
 
@@ -395,28 +380,6 @@ public class TrendFragment extends LocationReceiverFragment {
     }
 
     @Override
-    public void onLocationReceived(Location location) {
-
-        unregisterReceiverFromLocationService();
-        parentListener.stopLocating();
-
-        FuelCheckClient client = new FuelCheckClient(getContext());
-
-        Preferences pref = Preferences.getInstance();
-        client.getFuelPricesWithinRadius(
-                location.getLatitude(),
-                location.getLongitude(),
-                pref.getString(Preferences.Key.SELECTED_SORTBY),
-                pref.getString(Preferences.Key.SELECTED_FUELTYPE),
-                new FuelCheckClient.FuelCheckResponse<List<Station>>() {
-            @Override
-            public void onCompletion(List<Station> res) {
-                parentListener.displayListFragment(res);
-            }
-        });
-    }
-
-    @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.menu_trend, menu);
@@ -447,9 +410,6 @@ public class TrendFragment extends LocationReceiverFragment {
     }
 
     public interface Listener {
-        void startLocating();
-        void stopLocating();
-        void displayListFragment(List<Station> list);
         void displayMapFragment();
     }
 

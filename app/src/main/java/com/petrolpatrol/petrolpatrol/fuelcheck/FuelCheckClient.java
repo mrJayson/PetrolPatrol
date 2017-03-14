@@ -115,10 +115,18 @@ public class FuelCheckClient {
     }
 
     public void getFuelPricesWithinRadius(double latitude, double longitude, String sortBy, String fuelType, final FuelCheckResponse<List<Station>> completion) {
-        getFuelPricesWithinRadius(latitude, longitude, null, sortBy, fuelType, completion);
+        getFuelPricesWithinRadius(latitude, longitude, null, sortBy, fuelType, null, completion);
+    }
+
+    public void getFuelPricesWithinRadius(double latitude, double longitude, String sortBy, String fuelType, RequestTag tag, final FuelCheckResponse<List<Station>> completion) {
+        getFuelPricesWithinRadius(latitude, longitude, null, sortBy, fuelType, tag, completion);
     }
 
     public void getFuelPricesWithinRadius(double latitude, double longitude, Integer radiusInKm, String sortBy, String fuelType, final FuelCheckResponse<List<Station>> completion) {
+        getFuelPricesWithinRadius(latitude, longitude, radiusInKm, sortBy, fuelType, null, completion);
+    }
+
+    public void getFuelPricesWithinRadius(double latitude, double longitude, Integer radiusInKm, String sortBy, String fuelType, RequestTag tag, final FuelCheckResponse<List<Station>> completion) {
         String url = "https://api.onegov.nsw.gov.au/FuelPriceCheck/v1/fuel/prices/nearby";
 
         // Prepare the header arguments
@@ -166,7 +174,7 @@ public class FuelCheckClient {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        requestPOST(url, headerMap, jsonBody, new FuelCheckResponse<FuelCheckResult>() {
+        requestPOST(url, headerMap, jsonBody, tag, new FuelCheckResponse<FuelCheckResult>() {
 
             @Override
             public void onCompletion(FuelCheckResult res) {
@@ -500,6 +508,10 @@ public class FuelCheckClient {
     }
 
     private void requestPOST(final String url, final Map<String, String> headerMap, final JSONObject jsonBody, final FuelCheckResponse<FuelCheckResult> completion) {
+        requestPOST(url, headerMap, jsonBody, null, completion);
+    }
+
+    private void requestPOST(final String url, final Map<String, String> headerMap, final JSONObject jsonBody, RequestTag tag, final FuelCheckResponse<FuelCheckResult> completion) {
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, jsonBody,
                 new Response.Listener<JSONObject>() {
@@ -560,6 +572,9 @@ public class FuelCheckClient {
             }
         };
 
+        if (tag != null) {
+            jsonObjectRequest.setTag(tag.getTag());
+        }
         // Hand the request over to the request queue
         VolleyQueue.getInstance().addToRequestQueue(jsonObjectRequest);
     }
@@ -710,5 +725,9 @@ public class FuelCheckClient {
         }
 
         return trendData;
+    }
+
+    public void cancelRequests(RequestTag tag) {
+        VolleyQueue.getInstance().cancelRequests(tag);
     }
 }
