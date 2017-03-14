@@ -48,8 +48,6 @@ public class BaseActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        LOGI(TAG, "onCreate");
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_base);
         mDrawerContainer = (DrawerLayout) findViewById(R.id.drawer_container);
@@ -62,13 +60,12 @@ public class BaseActivity extends AppCompatActivity
 
         mLocationServiceConnection = new LocationServiceConnection(this);
 
-        // Show the locate fragment each time on start up
+        // Show the trend fragment each time on start up
         displayTrendFragment();
     }
 
     @Override
     protected void onStart() {
-        LOGI(TAG, "onStart");
         super.onStart();
         if (requestLocationPermissionsIfNecessary()) {
             bindToLocationService();
@@ -77,21 +74,17 @@ public class BaseActivity extends AppCompatActivity
 
     @Override
     protected void onStop() {
-        LOGI(TAG, "onStop");
         unbindFromLocationService();
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
-        LOGI(TAG, "onDestroy");
         super.onDestroy();
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        LOGE(TAG, "onOptionsItemSelected");
-
         int id = item.getItemId();
         switch (id) {
             case android.R.id.home:
@@ -101,8 +94,6 @@ public class BaseActivity extends AppCompatActivity
                 return super.onOptionsItemSelected(item);
         }
     }
-
-
 
     @Override
     public void onBackPressed() {

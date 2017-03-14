@@ -1,9 +1,12 @@
 package com.petrolpatrol.petrolpatrol.map;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.view.*;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -12,6 +15,7 @@ import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
@@ -19,6 +23,8 @@ import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.model.Station;
 import com.petrolpatrol.petrolpatrol.service.LocationReceiverFragment;
 import com.petrolpatrol.petrolpatrol.ui.Action;
+import com.petrolpatrol.petrolpatrol.util.Constants;
+import com.petrolpatrol.petrolpatrol.util.Utils;
 
 import java.util.List;
 
@@ -44,7 +50,7 @@ public class MapFragment extends LocationReceiverFragment implements OnMapReadyC
         // Required empty public constructor
     }
 
-    public static  MapFragment newInstance(Action action) {
+    public static MapFragment newInstance(Action action) {
         MapFragment fragment = new MapFragment();
         Bundle args = new Bundle();
         if (action != null) {
@@ -54,13 +60,8 @@ public class MapFragment extends LocationReceiverFragment implements OnMapReadyC
         return fragment;
     }
 
-    public static MapFragment newInstance() {
-        return newInstance(null);
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        LOGE(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             action = getArguments().getString(ARG_ACTION);
@@ -69,28 +70,19 @@ public class MapFragment extends LocationReceiverFragment implements OnMapReadyC
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
-        LOGE(TAG, "onSaveInstanceState");
-        super.onSaveInstanceState(outState);
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        LOGE(TAG, "onCreateView");
-        View view =  inflater.inflate(R.layout.fragment_map, container, false);
+        View view = inflater.inflate(R.layout.fragment_map, container, false);
         return view;
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        LOGE(TAG, "onViewCreated");
         super.onViewCreated(view, savedInstanceState);
         mapView = (MapView) view.findViewById(R.id.map);
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        LOGE(TAG, "onActivityCreated");
         super.onActivityCreated(savedInstanceState);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
@@ -98,24 +90,46 @@ public class MapFragment extends LocationReceiverFragment implements OnMapReadyC
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        LOGE(TAG, "onMapReady");
         this.map = googleMap;
+        map.getUiSettings().setZoomControlsEnabled(true);
+        map.getUiSettings().setCompassEnabled(true);
+        map.setMaxZoomPreference(Constants.MAX_ZOOM);
+
+        // Ensure that the map stays within NSW
+        LatLng southWestBound = new LatLng(Constants.SOUTH_BOUND, Constants.WEST_BOUND);
+        LatLng northEastBound = new LatLng(Constants.NORTH_BOUND, Constants.EAST_BOUND);
+        map.setLatLngBoundsForCameraTarget(new LatLngBounds(southWestBound, northEastBound));
+
         if (action != null) {
             if (action.equals(Action.FIND_BY_GPS)) {
                 registerReceiverToLocationService();
                 parentListener.startLocating();
                 action = null; // clear the action to prevent it from activating again
             } else if (action.equals(Action.FIND_BY_LOCATION)) {
-
+                action = null; // clear the action to prevent it from activating again
             }
         } else {
-
+            if (cameraPosition != null) {
+                map.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+            }
+            if (stationsData != null) {
+                for (Station station : stationsData) {
+                    map.addMarker(new MarkerOptions().position(new LatLng(station.getLatitude(), station.getLongitude())));
+                }
+            }
         }
+
+        // Update map data upon new camera position
+        map.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
+            @Override
+            public void onCameraIdle() {
+                //LOGE(TAG, String.valueOf(Utils.zoomToRadius(map.getCameraPosition().zoom)));
+            }
+        });
     }
 
     @Override
     public void onLocationReceived(Location location) {
-
 
         unregisterReceiverFromLocationService();
         parentListener.stopLocating();
@@ -125,26 +139,21 @@ public class MapFragment extends LocationReceiverFragment implements OnMapReadyC
 
         // Move camera to current location
         LatLng current = new LatLng(latitude, longitude);
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(current, 8));
-
-//        LatLng sydney = new LatLng(-34, 151);
-//        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-//        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(current, Utils.radiusToZoom(3)));
 
         // Get fuel data with current location
         FuelCheckClient client = new FuelCheckClient(getContext());
-
         Preferences pref = Preferences.getInstance();
         client.getFuelPricesWithinRadius(
                 latitude,
                 longitude,
                 pref.getString(Preferences.Key.SELECTED_SORTBY),
-                pref.getString(Preferences.Key.SELECTED_FUELTYPE), new FuelCheckClient.FuelCheckResponse<List<Station>>() {
+                pref.getString(Preferences.Key.SELECTED_FUELTYPE),
+                new FuelCheckClient.FuelCheckResponse<List<Station>>() {
             @Override
             public void onCompletion(List<Station> res) {
 
                 stationsData = res;
-
                 for (Station station : res) {
                     map.addMarker(new MarkerOptions().position(new LatLng(station.getLatitude(), station.getLongitude())));
                 }
@@ -154,7 +163,6 @@ public class MapFragment extends LocationReceiverFragment implements OnMapReadyC
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        LOGE(TAG, "onCreateOptionsMenu");
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.menu_map, menu);
     }
@@ -166,44 +174,42 @@ public class MapFragment extends LocationReceiverFragment implements OnMapReadyC
         switch (id) {
             case R.id.list:
                 if (stationsData != null) {
-
                     parentListener.displayListFragment(stationsData);
                 }
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
     public void onStart() {
         super.onStart();
         mapView.onStart();
-        LOGE(TAG, "onStart");
     }
 
     @Override
     public void onResume() {
         super.onResume();
         mapView.onResume();
-        LOGE(TAG, "onResume");
     }
 
     @Override
     public void onPause() {
         mapView.onPause();
         super.onPause();
-        LOGE(TAG, "onPause");
     }
 
     @Override
     public void onStop() {
         mapView.onStop();
         super.onStop();
-        LOGE(TAG, "onStop");
     }
 
     @Override
     public void onDestroyView() {
-        LOGE(TAG, "onDestroyView");
+        // Record current camera position to restore later
+        cameraPosition = map.getCameraPosition();
         super.onDestroyView();
     }
 
@@ -211,7 +217,12 @@ public class MapFragment extends LocationReceiverFragment implements OnMapReadyC
     public void onDestroy() {
         mapView.onDestroy();
         super.onDestroy();
-        LOGE(TAG, "onDestroy");
+    }
+
+    @Override
+    public void onLowMemory() {
+        mapView.onLowMemory();
+        super.onLowMemory();
     }
 
     @Override

@@ -92,7 +92,6 @@ public class LocationService extends Service implements
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        LOGI(TAG, "onConnected");
     }
 
     @Override
@@ -124,7 +123,6 @@ public class LocationService extends Service implements
         // permission granted, request for location updates, when a location is found,
         // the onLocationChanged callback is invoked
         if (mGoogleApiClient.isConnected()) {
-            LOGI(TAG, "Locating");
 
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
             isCurrentlyLocating = true;
@@ -132,7 +130,6 @@ public class LocationService extends Service implements
     }
 
     public void stopLocating() {
-        LOGI(TAG, "onStopLocating");
 
         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         isCurrentlyLocating = false;

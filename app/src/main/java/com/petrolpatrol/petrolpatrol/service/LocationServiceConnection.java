@@ -26,7 +26,6 @@ public class LocationServiceConnection implements ServiceConnection {
 
     @Override
     public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-        LOGI(TAG, "onServiceConnected");
 
         LocationService.LocationServiceBinder binder = (LocationService.LocationServiceBinder) iBinder;
         locationService = binder.getService();
@@ -51,7 +50,6 @@ public class LocationServiceConnection implements ServiceConnection {
         if (isBound()) {
             try {
                 mContext.unbindService(this);
-                LOGI(TAG, "onServiceDisconnected");
 
                 locationService = null;
                 isBound = false;

@@ -115,6 +115,10 @@ public class FuelCheckClient {
     }
 
     public void getFuelPricesWithinRadius(double latitude, double longitude, String sortBy, String fuelType, final FuelCheckResponse<List<Station>> completion) {
+        getFuelPricesWithinRadius(latitude, longitude, null, sortBy, fuelType, completion);
+    }
+
+    public void getFuelPricesWithinRadius(double latitude, double longitude, Integer radiusInKm, String sortBy, String fuelType, final FuelCheckResponse<List<Station>> completion) {
         String url = "https://api.onegov.nsw.gov.au/FuelPriceCheck/v1/fuel/prices/nearby";
 
         // Prepare the header arguments
@@ -154,7 +158,9 @@ public class FuelCheckClient {
                     .put("Westside"));
             jsonBody.put("latitude", String.valueOf(latitude));
             jsonBody.put("longitude", String.valueOf(longitude));
-            jsonBody.put("radius", "3");
+            if (radiusInKm != null) {
+                jsonBody.put("radius", String.valueOf(radiusInKm));
+            }
             jsonBody.put("sortby", sortBy);
             jsonBody.put("sortascending", "true");
         } catch (JSONException e) {
@@ -164,7 +170,6 @@ public class FuelCheckClient {
 
             @Override
             public void onCompletion(FuelCheckResult res) {
-                LOGI(TAG, "nearby query processing");
                 JSONArray JSONResponse;
                 GsonBuilder gsonBuilder = new GsonBuilder();
                 List<Station> orderedStationList = new ArrayList<>();
@@ -501,7 +506,6 @@ public class FuelCheckClient {
 
                     @Override
                     public void onResponse(JSONObject response) {
-                        LOGI(TAG, "requestPOST successful response");
                         // structure the response in a FuelCheckResult
                         FuelCheckResult res = new FuelCheckResult();
 
@@ -514,7 +518,6 @@ public class FuelCheckClient {
 
             @Override
             public void onErrorResponse(VolleyError error) {
-                LOGI(TAG, "requestPOST bad response");
                 FuelCheckResult res = new FuelCheckResult();
                 res.setSuccess(false);
                 completion.onCompletion(res);

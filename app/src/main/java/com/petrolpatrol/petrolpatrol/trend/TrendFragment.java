@@ -73,7 +73,6 @@ public class TrendFragment extends LocationReceiverFragment {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        LOGI(TAG, "onCreate");
         super.onCreate(savedInstanceState);
 
         if (savedInstanceState == null) {
@@ -159,26 +158,21 @@ public class TrendFragment extends LocationReceiverFragment {
 
     @Override
     public void onStart() {
-        LOGI(TAG, "onStart");
         super.onStart();
-        getActivity().invalidateOptionsMenu();
     }
 
     @Override
     public void onResume() {
-        LOGI(TAG, "onResume");
         super.onResume();
     }
 
     @Override
     public void onPause() {
-        LOGI(TAG, "onPause");
         super.onPause();
     }
 
     @Override
     public void onStop() {
-        LOGI(TAG, "onStop");
         // Unregister if fragment closes while still broadcast receiving
         unregisterReceiverFromLocationService();
         super.onStop();
@@ -186,7 +180,6 @@ public class TrendFragment extends LocationReceiverFragment {
 
     @Override
     public void onDestroy() {
-        LOGI(TAG, "onDestroy");
         super.onDestroy();
     }
 
@@ -426,27 +419,18 @@ public class TrendFragment extends LocationReceiverFragment {
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
-        LOGE(TAG, "onCreateOptionsMenu");
         inflater.inflate(R.menu.menu_trend, menu);
         MenuItem menuItem = menu.findItem(R.id.fueltype);
         inflater.inflate(R.menu.submenu_fueltypes, menuItem.getSubMenu());
 
         // Preselect the menu_list items recorded in Preferences
         int fuelTypeResID = Utils.identify(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE), "id", getContext());
-        //fuelTypeResID = getResources().getIdentifier(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE), "id", getActivity().getPackageName());
-//        if (parentListener.getSelectedFuelType() != null) {
-//            fuelTypeResID = getResources().getIdentifier(parentListener.getSelectedFuelType() ,"id", getActivity().getPackageName());
-//        } else {
-//            fuelTypeResID = getResources().getIdentifier(
-//                    Preferences.getInstance().getString(Preferences.Key.DEFAULT_FUELTYPE), "id", getActivity().getPackageName());
-//        }
         MenuItem fuelType = (MenuItem) menu.findItem(fuelTypeResID);
         fuelType.setChecked(true);
     }
 
     @Override
     public boolean onOptionsItemSelected(final MenuItem item) {
-        LOGE(TAG, "onOptionsItemSelected");
         int id = item.getItemId();
         try {
             return Utils.fuelTypeSwitch(id, new Utils.Callback() {
@@ -455,12 +439,6 @@ public class TrendFragment extends LocationReceiverFragment {
                     item.setChecked(true);
                     Preferences.getInstance().put(Preferences.Key.SELECTED_FUELTYPE, String.valueOf(item.getTitle()));
                     retrieveTrendsData(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE));
-//                selectedFuelType = String.valueOf(item.getTitle());
-//                Fragment fragment = mfragmentManager.findFragmentById(R.id.fragment_container);
-//                if (fragment instanceof TrendFragment) {
-//                    TrendFragment trendFragment = (TrendFragment) fragment;
-//                    trendFragment.retrieveTrendsData(getSelectedFuelType());
-//                }
                 }
             });
         } catch (NoSuchFieldException nsfe) {
@@ -478,7 +456,6 @@ public class TrendFragment extends LocationReceiverFragment {
     @Override
     public void onAttach(Context context) {
         // Context is the parent activity
-        LOGI(TAG, "onAttach");
         super.onAttach(context);
 
         // Check to see if the parent activity has implemented the callback
@@ -492,7 +469,6 @@ public class TrendFragment extends LocationReceiverFragment {
 
     @Override
     public void onDetach() {
-        LOGI(TAG, "onDetach");
         super.onDetach();
         parentListener = null;
     }

@@ -1,12 +1,38 @@
 package com.petrolpatrol.petrolpatrol.util;
 
 import android.content.Context;
+import android.content.res.Resources;
+import android.util.DisplayMetrics;
 import com.petrolpatrol.petrolpatrol.R;
 
 /**
  * Created by jason on 13/03/17.
  */
 public class Utils {
+
+    private static final float equatorLengthInKm = 40075;
+
+    public static float radiusToZoom(float radiusInKm) {
+        return (float) (Math.log(equatorLengthInKm/radiusInKm)/Math.log(2));
+    }
+
+    public static float zoomToRadius(float zoom) {
+        return (float) (equatorLengthInKm/(Math.pow(2, zoom)));
+    }
+
+    public static float convertPixelsToDp(float px, Context context){
+        Resources resources = context.getResources();
+        DisplayMetrics metrics = resources.getDisplayMetrics();
+        float dp = px / ((float)metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+        return dp;
+    }
+
+    public static float convertDpToPixel(float dp, Context context){
+        Resources resources = context.getResources();
+        DisplayMetrics metrics = resources.getDisplayMetrics();
+        float px = dp * ((float)metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+        return px;
+    }
 
     public static boolean fuelTypeSwitch(int id, Callback callback) throws NoSuchFieldException {
         switch (id) {

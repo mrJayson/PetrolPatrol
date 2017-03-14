@@ -47,7 +47,6 @@ public class DetailsFragment extends Fragment {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        LOGI(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             SQLiteClient client = new SQLiteClient(getContext());

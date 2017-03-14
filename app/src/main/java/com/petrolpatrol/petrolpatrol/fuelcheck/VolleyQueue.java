@@ -53,4 +53,8 @@ public class VolleyQueue {
         getRequestQueue().add(request);
     }
 
+    public void cancelRequest() {
+
+    }
+
 }

@@ -52,8 +52,6 @@ public class ListFragment extends LocationReceiverFragment implements ListAdapte
 
     @Override
     public void onAttach(Context context) {
-        LOGI(TAG, "onAttach");
-
         super.onAttach(context);
         if (context instanceof Listener) {
             parentListener = (Listener) context;
@@ -65,8 +63,6 @@ public class ListFragment extends LocationReceiverFragment implements ListAdapte
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        LOGI(TAG, "onCreate");
-
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             stationsData = getArguments().getParcelableArrayList(ARG_LIST);
@@ -88,8 +84,6 @@ public class ListFragment extends LocationReceiverFragment implements ListAdapte
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                LOGI(TAG, "onRefresh");
-
                 registerReceiverToLocationService();
                 parentListener.startLocating();
                 ListAdapter adapt = (ListAdapter) containerList.getAdapter();
@@ -105,8 +99,6 @@ public class ListFragment extends LocationReceiverFragment implements ListAdapte
 
     @Override
     public void onStart() {
-        LOGI(TAG, "onStart");
-
         super.onStart();
         Preferences pref = Preferences.getInstance();
 
@@ -120,20 +112,16 @@ public class ListFragment extends LocationReceiverFragment implements ListAdapte
 
     @Override
     public void onResume() {
-        LOGI(TAG, "onResume");
         super.onResume();
     }
 
     @Override
     public void onPause() {
-        LOGI(TAG, "onPause");
         super.onPause();
     }
 
     @Override
     public void onStop() {
-        LOGI(TAG, "onStop");
-
         // Unregister if fragment closes while still broadcast receiving
         unregisterReceiverFromLocationService();
         super.onStop();
@@ -141,17 +129,12 @@ public class ListFragment extends LocationReceiverFragment implements ListAdapte
 
     @Override
     public void onDetach() {
-        LOGI(TAG, "onDetach");
-
         super.onDetach();
         parentListener = null;
     }
 
     @Override
     public void onLocationReceived(Location location) {
-
-        LOGI(TAG, "location received");
-
         unregisterReceiverFromLocationService();
         parentListener.stopLocating();
 
