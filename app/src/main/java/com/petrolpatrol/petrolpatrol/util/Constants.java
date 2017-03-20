@@ -11,6 +11,9 @@ public class Constants {
     // Maximum zoom allowed for map view
     public static final float MAX_ZOOM = 16;
 
+    // Default zoom for map view if none have been specified
+    public static final float DEFAULT_ZOOM = 13;
+
     // Minimum zoom allowed for map view
     public static final float MIN_ZOOM = 8;
 

@@ -3,6 +3,7 @@ package com.petrolpatrol.petrolpatrol.map;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Parcelable;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
 import android.view.Menu;
@@ -154,12 +155,8 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
         newLocationReceiver.unregister(getBaseContext());
         locationServiceConnection.stopLocating();
 
-        double latitude = location.getLatitude();
-        double longitude = location.getLongitude();
-
-        // Move camera to current location
-        LatLng current = new LatLng(latitude, longitude);
-        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, Utils.radiusToZoom(3)));
+        final double latitude = location.getLatitude();
+        final double longitude = location.getLongitude();
 
         // Get fuel data with current location
         FuelCheckClient client = new FuelCheckClient(getBaseContext());
@@ -168,7 +165,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
         client.getFuelPricesWithinRadius(
                 latitude,
                 longitude,
-                getString(R.string.menu_sort_price),
+                pref.getString(Preferences.Key.SELECTED_SORTBY),
                 pref.getString(Preferences.Key.SELECTED_FUELTYPE),
                 new RequestTag(RequestTag.GET_FUELPRICES_WITHIN_RADIUS),
                 new FuelCheckClient.FuelCheckResponse<List<Station>>() {
@@ -176,15 +173,22 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                     public void onCompletion(List<Station> res) {
                         stationList = res;
                         googleMap.clear();
+                        double maxDistance = 0;
                         for (Station station : res) {
-                            googleMap.addMarker(new MarkerOptions().position(new LatLng(station.getLatitude(), station.getLongitude())));
+//                            googleMap.addMarker(new MarkerOptions().position(new LatLng(station.getLatitude(), station.getLongitude())));
+                            if (station.getDistance() > maxDistance) {
+                                maxDistance = station.getDistance();
+                            }
                         }
+
+                        // Move camera to current location
+                        LatLng current = new LatLng(latitude, longitude);
+                        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, (float) (Utils.radiusToZoom(maxDistance * getMapAspectRatio()))));
                     }
                 });
     }
 
     private void initialiseMap() {
-        LOGE(TAG, "initialiseMap");
 
         // Add styling to googleMaps
         googleMap.getUiSettings().setZoomControlsEnabled(true);
@@ -198,24 +202,24 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
         googleMap.setLatLngBoundsForCameraTarget(new LatLngBounds(southWestBound, northEastBound));
 
         // Set default camera position to Sydney
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(Constants.SYDNEY_LAT, Constants.SYDNEY_LONG)));
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(Constants.SYDNEY_LAT, Constants.SYDNEY_LONG), Constants.DEFAULT_ZOOM));
 
         // Update map data upon new camera position
         googleMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
             @Override
             public void onCameraIdle() {
-                LOGE(TAG, String.valueOf(Utils.zoomToRadius(googleMap.getCameraPosition().zoom)));
+
                 FuelCheckClient client = new FuelCheckClient(getBaseContext());
                 client.cancelRequests(new RequestTag(RequestTag.GET_FUELPRICES_WITHIN_RADIUS));
                 Preferences pref = Preferences.getInstance();
                 double latitude = googleMap.getCameraPosition().target.latitude;
                 double longitude = googleMap.getCameraPosition().target.longitude;
-                int radius = (int) Utils.zoomToRadius(googleMap.getCameraPosition().zoom);
+                int radius = (int) (Utils.zoomToRadius(googleMap.getCameraPosition().zoom) / getMapAspectRatio());
                 client.getFuelPricesWithinRadius(
                         latitude,
                         longitude,
                         radius,
-                        getString(R.string.menu_sort_price),
+                        pref.getString(Preferences.Key.SELECTED_SORTBY),
                         pref.getString(Preferences.Key.SELECTED_FUELTYPE),
                         new RequestTag(RequestTag.GET_FUELPRICES_WITHIN_RADIUS),
                         new FuelCheckClient.FuelCheckResponse<List<Station>>() {
@@ -264,5 +268,22 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
             default:
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
+    }
+
+    private double getMapAspectRatio() {
+        int mapWidth = content.getWidth();
+        int mapHeight = content.getHeight();
+        double aspectRatio;
+        if (mapWidth != 0 && mapHeight != 0) {
+            if (mapWidth > mapHeight) {
+                aspectRatio = ((double) mapWidth / (double) mapHeight);
+            } else {
+                aspectRatio = ((double) mapHeight / (double) mapWidth);
+            }
+        } else {
+            // If aspect ratio cannot be determined, then aspect ratio of 1 causes no effect
+            aspectRatio = 1;
+        }
+        return aspectRatio;
     }
 }

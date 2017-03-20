@@ -7,14 +7,14 @@ import com.petrolpatrol.petrolpatrol.R;
 
 public class Utils {
 
-    private static final float equatorLengthInKm = 40075;
+    private static final double equatorLengthInKm = 40075;
 
-    public static float radiusToZoom(float radiusInKm) {
-        return (float) (Math.log(equatorLengthInKm/radiusInKm)/Math.log(2));
+    public static double radiusToZoom(double radiusInKm) {
+        return (Math.log(equatorLengthInKm/radiusInKm)/Math.log(2));
     }
 
-    public static float zoomToRadius(float zoom) {
-        return (float) (equatorLengthInKm/(Math.pow(2, zoom)));
+    public static double zoomToRadius(double zoom) {
+        return (equatorLengthInKm/(Math.pow(2, zoom)));
     }
 
     public static float convertPixelsToDp(float px, Context context){
