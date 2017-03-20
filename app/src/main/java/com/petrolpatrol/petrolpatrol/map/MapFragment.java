@@ -229,13 +229,16 @@ public class MapFragment extends LocationReceiverFragment implements OnMapReadyC
         mapView.onStop();
         // Unregister if fragment closes while still broadcast receiving
         unregisterReceiverFromLocationService();
+        parentListener.stopLocating();
         super.onStop();
     }
 
     @Override
     public void onDestroyView() {
         // Record current camera position to restore later
-        cameraPosition = map.getCameraPosition();
+        if (map != null) {
+            cameraPosition = map.getCameraPosition();
+        }
         super.onDestroyView();
     }
 

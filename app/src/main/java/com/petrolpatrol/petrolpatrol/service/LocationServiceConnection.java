@@ -18,10 +18,12 @@ public class LocationServiceConnection implements ServiceConnection {
     private LocationService locationService;
     private boolean isBound;
     private Context mContext;
+    private boolean pendingRequest;
 
     public LocationServiceConnection(Context context) {
         isBound = false;
         mContext = context;
+        pendingRequest = false;
     }
 
     @Override
@@ -30,6 +32,9 @@ public class LocationServiceConnection implements ServiceConnection {
         LocationService.LocationServiceBinder binder = (LocationService.LocationServiceBinder) iBinder;
         locationService = binder.getService();
         isBound = true;
+        if (pendingRequest) {
+            startLocating();
+        }
     }
 
     @Override
@@ -64,17 +69,17 @@ public class LocationServiceConnection implements ServiceConnection {
             if (!locationService.isCurrentlyLocating()) {
                 //TODO redo, this does not work when location is off and this is called
                 locationService.startLocating();
+                pendingRequest = false; // request has been fulfilled now, remove pending request
             }
         } else {
-            throw new IllegalStateException("Service is not yet bound, cannot invoke any service methods.");
+            pendingRequest = true;
+            //throw new IllegalStateException("Service is not yet bound, cannot invoke any service methods.");
         }
     }
 
     public void stopLocating() throws IllegalStateException {
         if (isBound) {
             locationService.stopLocating();
-        } else {
-            throw new IllegalStateException("Service is not yet bound, cannot invoke any service methods.");
         }
     }
 

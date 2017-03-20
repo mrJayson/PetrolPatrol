@@ -31,6 +31,7 @@ import com.petrolpatrol.petrolpatrol.util.Utils;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGE;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
 /**
