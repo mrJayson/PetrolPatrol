@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
     <RelativeLayout
             xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:card_view="http://schemas.android.com/apk/res-auto"
             android:layout_width="match_parent"
             android:layout_height="@dimen/list_item_height">
         <!-- default layout direction is ltr -->
@@ -10,7 +9,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
-                android:layout_alignParentLeft="true"
                 android:layout_centerVertical="true"
                 android:paddingStart="@dimen/activity_horizontal_margin"
                 android:paddingEnd="@dimen/activity_horizontal_margin"
@@ -19,7 +17,8 @@
             <ImageView
                     android:layout_width="@dimen/icon_width"
                     android:layout_height="@dimen/icon_height"
-                    android:src="@drawable/circle"/>
+                    android:src="@drawable/circle"
+                    android:contentDescription="@string/item_list_icon_circle_content_description"/>
 
             <TextView
                     android:id="@+id/item_list_price"
@@ -33,8 +32,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentTop="true"
-                android:layout_toRightOf="@id/container_list_price"
-                android:layout_toLeftOf="@+id/container_list_distance"
+                android:layout_toEndOf="@id/container_list_price"
+                android:layout_toStartOf="@+id/container_list_distance"
                 android:paddingTop="@dimen/activity_vertical_margin"/>
 
         <TextView
@@ -42,8 +41,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/item_list_name"
-                android:layout_toRightOf="@id/container_list_price"
-                android:layout_toLeftOf="@id/container_list_distance"
+                android:layout_toEndOf="@id/container_list_price"
+                android:layout_toStartOf="@id/container_list_distance"
                 android:paddingBottom="@dimen/activity_vertical_margin"/>
 
         <FrameLayout
@@ -51,7 +50,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
-                android:layout_alignParentRight="true"
                 android:layout_centerVertical="true"
                 android:paddingStart="@dimen/activity_horizontal_margin"
                 android:paddingEnd="@dimen/activity_horizontal_margin">

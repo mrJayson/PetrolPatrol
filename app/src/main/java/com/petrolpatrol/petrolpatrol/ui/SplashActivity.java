@@ -7,6 +7,7 @@ import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.fuelcheck.VolleyQueue;
+import com.petrolpatrol.petrolpatrol.trend.TrendActivity;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
@@ -25,11 +26,11 @@ public class SplashActivity extends AppCompatActivity {
         VolleyQueue.getInstance(getApplicationContext()); // Initialize volley singleton
 
         // Perform a reference data check upon start up
-        new FuelCheckClient(getApplicationContext()).getReferenceData(new FuelCheckClient.FuelCheckResponse() {
+        new FuelCheckClient(getApplicationContext()).getReferenceData(new FuelCheckClient.FuelCheckResponse<Object>() {
             @Override
             public void onCompletion(Object res) {
                 //TODO App currently hangs if there is no internet, add broadcast receiver for network changes to retry
-                Intent intent = new Intent(getApplicationContext(), BaseActivity.class);
+                Intent intent = new Intent(getApplicationContext(), TrendActivity.class);
                 startActivity(intent);
                 finish(); // End this activity, don't want the splash screen to linger in the background
             }

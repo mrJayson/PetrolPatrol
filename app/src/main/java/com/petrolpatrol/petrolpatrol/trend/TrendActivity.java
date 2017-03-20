@@ -1,15 +1,13 @@
 package com.petrolpatrol.petrolpatrol.trend;
 
-
-import android.content.Context;
-import android.location.Location;
-import android.os.Bundle;
-import android.support.annotation.Nullable;
+import android.content.Intent;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.Fragment;
-import android.view.*;
-
+import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.FrameLayout;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Description;
@@ -26,21 +24,19 @@ import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
+import com.petrolpatrol.petrolpatrol.map.MapsActivity;
+import com.petrolpatrol.petrolpatrol.ui.IntentAction;
+import com.petrolpatrol.petrolpatrol.ui.BaseActivity;
 import com.petrolpatrol.petrolpatrol.util.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGE;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
-/**
- * A simple {@link Fragment} subclass.
- */
-public class TrendFragment extends Fragment {
+public class TrendActivity extends BaseActivity {
 
-    private static final String TAG = makeLogTag(TrendFragment.class);
-    private Listener parentListener;
+    private static final String TAG = makeLogTag(TrendActivity.class);
 
     private List<TrendData> dataWeek;
     private List<TrendData> dataMonth;
@@ -53,52 +49,24 @@ public class TrendFragment extends Fragment {
 
     private TrendResolution selectedResolution;
 
-    //private LineChart chart;
-
-    public static TrendFragment newInstance() {
-        // Factory method for creating new fragment instances
-        // automatically takes parameters and stores in a bundle for later use in onCreate
-        TrendFragment fragment = new TrendFragment();
-        Bundle bundle = new Bundle();
-        //TODO change to parcelable if there are any args at all
-        fragment.setArguments(bundle);
-        fragment.setRetainInstance(true);
-        return fragment;
-    }
-
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (savedInstanceState == null) {
-            // No previous state to restore from
-        } else {
-            // previous state contains data needed to recreate fragment to how it was before
-        }
-        setHasOptionsMenu(true);
+        getLayoutInflater().inflate(R.layout.activity_trend, content);
 
-        dataWeek = new ArrayList<TrendData>();
-        dataMonth = new ArrayList<TrendData>();
-        dataYear = new ArrayList<TrendData>();
+        chartContainer = (FrameLayout) findViewById(R.id.container_trend_chart);
 
-        selectedResolution = TrendResolution.WEEK;
-    }
+        selectedResolution = TrendResolution.WEEK; // The week tab is default
+        dataWeek = new ArrayList<>();
+        dataMonth = new ArrayList<>();
+        dataYear = new ArrayList<>();
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_trend, container, false);
-    }
-
-    @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-        chartContainer = (FrameLayout) view.findViewById(R.id.container_trend_chart);
-
-        // If data already exists, no need to refetch
+        // Initialise the line charts
         if (dataWeek.isEmpty() || dataMonth.isEmpty() || dataYear.isEmpty()) {
             retrieveTrendsData(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE));
         } else {
+            // If data already exists, no need to re-fetch
             if (!dataWeek.isEmpty()) {
                 chartWeek = drawChart(dataWeek, TrendResolution.WEEK, chartWeek);
             }
@@ -111,7 +79,8 @@ public class TrendFragment extends Fragment {
             makeChartVisible(selectedResolution);
         }
 
-        TabLayout tab = (TabLayout) view.findViewById(R.id.chart_tab);
+        // Initialise the tab UI functionality of the charts
+        TabLayout tab = (TabLayout) findViewById(R.id.chart_tab);
         for (TrendResolution trend : TrendResolution.values()) {
             tab.addTab(tab.newTab().setText(trend.getHandle()));
         }
@@ -134,63 +103,61 @@ public class TrendFragment extends Fragment {
             }
         });
 
-        FloatingActionButton locateFab = (FloatingActionButton) view.findViewById(R.id.locate_fab);
+        // Initialise the listener of the fab
+        FloatingActionButton locateFab = (FloatingActionButton) findViewById(R.id.locate_fab);
         locateFab.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View view) {
-                parentListener.displayMapFragment();
+                Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
+                Bundle bundle = intent.getExtras();
+                if (bundle == null) {
+                    bundle = new Bundle();
+                }
+                bundle.putParcelable(MapsActivity.ARG_ACTION, new IntentAction(IntentAction.FIND_BY_GPS));
+                intent.putExtras(bundle);
+                startActivity(intent);
             }
         });
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_trend, menu);
+        MenuItem menuItem = menu.findItem(R.id.fueltype);
+        getMenuInflater().inflate(R.menu.submenu_fueltypes, menuItem.getSubMenu());
+
+        // Preselect the menu_list items recorded in Preferences
+        int fuelTypeResID = Utils.identify(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE), "id", getBaseContext());
+        MenuItem fuelType = menu.findItem(fuelTypeResID);
+        fuelType.setChecked(true);
+        return true;
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-    }
-
-    private void makeChartVisible(TrendResolution resolution) {
-        switch (resolution) {
-            case WEEK:
-                chartWeek.setVisibility(View.VISIBLE);
-                chartMonth.setVisibility(View.GONE);
-                chartYear.setVisibility(View.GONE);
-                break;
-            case MONTH:
-                chartWeek.setVisibility(View.GONE);
-                chartMonth.setVisibility(View.VISIBLE);
-                chartYear.setVisibility(View.GONE);
-                break;
-            case YEAR:
-                chartWeek.setVisibility(View.GONE);
-                chartMonth.setVisibility(View.GONE);
-                chartYear.setVisibility(View.VISIBLE);
-                break;
+    public boolean onOptionsItemSelected(final MenuItem item) {
+        int id = item.getItemId();
+        try {
+            return Utils.fuelTypeSwitch(id, new Utils.Callback() {
+                @Override
+                public void execute() {
+                    item.setChecked(true);
+                    Preferences.getInstance().put(Preferences.Key.SELECTED_FUELTYPE, String.valueOf(item.getTitle()));
+                    retrieveTrendsData(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE));
+                }
+            });
+        } catch (NoSuchFieldException e) {
+            return super.onOptionsItemSelected(item);
         }
     }
 
-    public void retrieveTrendsData(String fuelType) {
-        FuelCheckClient client = new FuelCheckClient(getContext());
+    /**
+     * Requests current trend data from the FuelCheck API to display on the UI.
+     * @param fuelType Trend data can only be shown for one fuel type at a time,
+     *                 this parameter selects which fuel type trend data to retrieve.
+     */
+    private void retrieveTrendsData(String fuelType) {
+        FuelCheckClient client = new FuelCheckClient(getBaseContext());
         client.getTrend(fuelType, new FuelCheckClient.FuelCheckResponse<List<TrendData>>() {
             @Override
             public void onCompletion(List<TrendData> res) {
@@ -224,12 +191,19 @@ public class TrendFragment extends Fragment {
         });
     }
 
+    /**
+     * Draws a line chart view to be displayed on the UI.
+     * @param dataList The list of data points to be charted.
+     * @param resolution The resolution of this chart is used to distinguish between other existing charts on display.
+     * @param chart The currently existing line chart so that it may be overridden.
+     * @return The updated line chart
+     */
     private LineChart drawChart(List<TrendData> dataList, TrendResolution resolution, LineChart chart) {
         // Remove existing chart if there is one
         if (chart != null) {
             chartContainer.removeView(chart);
         }
-        chart = new LineChart(getContext());
+        chart = new LineChart(getBaseContext());
         switch (resolution) {
             case WEEK:
                 chart.setId(R.id.chart_week);
@@ -244,8 +218,8 @@ public class TrendFragment extends Fragment {
         chart.setVisibility(View.GONE);
         chartContainer.addView(chart);
 
-        List<Entry> data = new ArrayList<Entry>();
-        List<String> xLabels = new ArrayList<String>();
+        List<Entry> data = new ArrayList<>();
+        List<String> xLabels = new ArrayList<>();
         int i = 1; // Start at 1 so that x axis drawing will not be off
         for (TrendData trendData : dataList) {
             if (trendData.getPeriod().equals(resolution.getHandle())) {
@@ -273,9 +247,7 @@ public class TrendFragment extends Fragment {
                 formatter = new XAxisYearValueFormatter(xLabels);
                 break;
         }
-        if (formatter != null) {
-            chart.getXAxis().setValueFormatter(formatter);
-        }
+        chart.getXAxis().setValueFormatter(formatter);
 
         // Format how the chart line looks
         LineDataSet dataSet = new LineDataSet(data, "Price");
@@ -380,58 +352,27 @@ public class TrendFragment extends Fragment {
         return chart;
     }
 
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.menu_trend, menu);
-        MenuItem menuItem = menu.findItem(R.id.fueltype);
-        inflater.inflate(R.menu.submenu_fueltypes, menuItem.getSubMenu());
-
-        // Preselect the menu_list items recorded in Preferences
-        int fuelTypeResID = Utils.identify(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE), "id", getContext());
-        MenuItem fuelType = (MenuItem) menu.findItem(fuelTypeResID);
-        fuelType.setChecked(true);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(final MenuItem item) {
-        int id = item.getItemId();
-        try {
-            return Utils.fuelTypeSwitch(id, new Utils.Callback() {
-                @Override
-                public void execute() {
-                    item.setChecked(true);
-                    Preferences.getInstance().put(Preferences.Key.SELECTED_FUELTYPE, String.valueOf(item.getTitle()));
-                    retrieveTrendsData(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE));
-                }
-            });
-        } catch (NoSuchFieldException nsfe) {
-            return super.onOptionsItemSelected(item);
+    /**
+     * Changes which chart is displayed to the user.
+     * @param resolution The selected trend resolution to display.
+     */
+    private void makeChartVisible(TrendResolution resolution) {
+        switch (resolution) {
+            case WEEK:
+                chartWeek.setVisibility(View.VISIBLE);
+                chartMonth.setVisibility(View.GONE);
+                chartYear.setVisibility(View.GONE);
+                break;
+            case MONTH:
+                chartWeek.setVisibility(View.GONE);
+                chartMonth.setVisibility(View.VISIBLE);
+                chartYear.setVisibility(View.GONE);
+                break;
+            case YEAR:
+                chartWeek.setVisibility(View.GONE);
+                chartMonth.setVisibility(View.GONE);
+                chartYear.setVisibility(View.VISIBLE);
+                break;
         }
     }
-
-    public interface Listener {
-        void displayMapFragment();
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        // Context is the parent activity
-        super.onAttach(context);
-
-        // Check to see if the parent activity has implemented the callback
-        if (context instanceof Listener) {
-            parentListener = (Listener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement Listener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        parentListener = null;
-    }
-
 }

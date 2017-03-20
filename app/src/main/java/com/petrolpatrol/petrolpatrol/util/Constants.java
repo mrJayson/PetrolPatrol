@@ -19,4 +19,8 @@ public class Constants {
     public static final double NORTH_BOUND = (double) -28.157088;
     public static final double EAST_BOUND = (double) 153.638723;
     public static final double SOUTH_BOUND = (double) -37.505033;
+
+    // Sydney location co-ordinates
+    public static final double SYDNEY_LAT = -33.86882;
+    public static final double SYDNEY_LONG = 151.209296;
 }

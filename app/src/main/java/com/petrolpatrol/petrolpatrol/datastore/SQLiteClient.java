@@ -56,7 +56,7 @@ public class SQLiteClient extends SQLiteOpenHelper {
                 + COLUMN_VALUE + " TEXT, "
                 + "UNIQUE (" + COLUMN_KEY + ")"
                 + ")";
-        sqLiteDatabase.execSQL(CREATE_TABLE_METADATA);;
+        sqLiteDatabase.execSQL(CREATE_TABLE_METADATA);
 
         String CREATE_TABLE_BRANDS = "CREATE TABLE " + TABLE_BRANDS + "("
                 + COLUMN_ID + " INTEGER PRIMARY KEY, "
@@ -121,6 +121,7 @@ public class SQLiteClient extends SQLiteOpenHelper {
         if (cursor.moveToFirst()) {
             metadata = cursor.getString(cursor.getColumnIndex(COLUMN_VALUE));
         }
+        cursor.close();
         return metadata;
     }
 
@@ -155,7 +156,7 @@ public class SQLiteClient extends SQLiteOpenHelper {
     }
 
     public List<Brand> getAllBrands() {
-        List<Brand> allBrands = new ArrayList<Brand>();
+        List<Brand> allBrands = new ArrayList<>();
         Cursor cursor = databaseHandle.query(TABLE_BRANDS, null, null, null, null, null, null);
         Brand brand;
         while (cursor.moveToNext()) {
@@ -203,7 +204,7 @@ public class SQLiteClient extends SQLiteOpenHelper {
     }
 
     public List<FuelType> getAllFuelTypes() {
-        List<FuelType> allFuelTypes = new ArrayList<FuelType>();
+        List<FuelType> allFuelTypes = new ArrayList<>();
         Cursor cursor = databaseHandle.query(TABLE_FUELTYPES, null, null, null, null, null, null);
         FuelType fuelType;
         while (cursor.moveToNext()) {

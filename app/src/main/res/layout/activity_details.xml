@@ -4,7 +4,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        tools:context=".details.DetailsFragment">
+        tools:context=".details.DetailsActivity">
 
         <RelativeLayout
                 android:layout_width="match_parent"
@@ -16,24 +16,25 @@
 
             <TextView
                     android:id="@+id/details_name"
-                    android:textSize="@dimen/details_name_fontsize"
+                    android:textSize="@dimen/details_name_font_size"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"/>
             <TextView
                     android:id="@+id/details_address"
-                    android:textSize="@dimen/details_address_fontsize"
+                    android:textSize="@dimen/details_address_font_size"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:layout_below="@id/details_name"
-                    android:layout_toLeftOf="@+id/details_brand"/>
+                    android:layout_toStartOf="@+id/details_brand"/>
             <ImageView
                     android:id="@id/details_brand"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
-                    android:src="@mipmap/ic_launcher"/>
+                    android:src="@mipmap/ic_launcher"
+                    android:contentDescription="@string/item_details_icon_brand_content_description"/>
         </RelativeLayout>
 
     <View style="@style/Divider"/>

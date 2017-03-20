@@ -21,8 +21,6 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".ui.BaseActivity">
-        </activity>
 
         <service
                 android:name=".service.LocationService"
@@ -33,6 +31,16 @@
                 android:name="com.google.android.geo.API_KEY"
                 android:value="@string/google_maps_key"/>
 
+        <activity android:name=".trend.TrendActivity">
+        </activity>
+        <activity android:name=".ui.BaseActivity">
+        </activity>
+        <activity android:name=".map.MapsActivity">
+        </activity>
+        <activity android:name=".list.ListActivity">
+        </activity>
+        <activity android:name=".details.DetailsActivity">
+        </activity>
     </application>
 
 </manifest>

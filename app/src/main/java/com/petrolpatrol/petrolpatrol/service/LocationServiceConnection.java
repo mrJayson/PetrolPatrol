@@ -6,8 +6,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 
-import java.io.Serializable;
-
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGE;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
@@ -18,12 +16,12 @@ public class LocationServiceConnection implements ServiceConnection {
     private LocationService locationService;
     private boolean isBound;
     private Context mContext;
-    private boolean pendingRequest;
+    private boolean queuedRequest;
 
     public LocationServiceConnection(Context context) {
         isBound = false;
         mContext = context;
-        pendingRequest = false;
+        queuedRequest = false;
     }
 
     @Override
@@ -32,7 +30,8 @@ public class LocationServiceConnection implements ServiceConnection {
         LocationService.LocationServiceBinder binder = (LocationService.LocationServiceBinder) iBinder;
         locationService = binder.getService();
         isBound = true;
-        if (pendingRequest) {
+        if (queuedRequest) {
+            queuedRequest = false;
             startLocating();
         }
     }
@@ -55,7 +54,6 @@ public class LocationServiceConnection implements ServiceConnection {
         if (isBound()) {
             try {
                 mContext.unbindService(this);
-
                 locationService = null;
                 isBound = false;
             } catch (Exception e) {
@@ -69,10 +67,9 @@ public class LocationServiceConnection implements ServiceConnection {
             if (!locationService.isCurrentlyLocating()) {
                 //TODO redo, this does not work when location is off and this is called
                 locationService.startLocating();
-                pendingRequest = false; // request has been fulfilled now, remove pending request
             }
         } else {
-            pendingRequest = true;
+            queuedRequest = true;
             //throw new IllegalStateException("Service is not yet bound, cannot invoke any service methods.");
         }
     }

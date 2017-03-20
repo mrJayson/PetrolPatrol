@@ -39,7 +39,7 @@ public class FuelCheckClient {
     }
 
     public interface FuelCheckResponse<T> {
-        public void onCompletion(T res);
+        void onCompletion(T res);
     }
 
     public void getTrend(String fuelType, final FuelCheckResponse<List<TrendData>> completion) {
@@ -49,7 +49,6 @@ public class FuelCheckClient {
             @Override
             public void onCompletion(FuelCheckResult res) {
                 JSONArray JSONResponse;
-                Gson gson = new Gson();
                 if (res.isSuccess() && res.dataIsObject()) {
                     try {
                         if (res.getDataAsObject().get("AveragePrices") instanceof JSONArray) {
@@ -71,8 +70,6 @@ public class FuelCheckClient {
         JSONArrayRequestGET(url, new FuelCheckResponse<FuelCheckResult>() {
             @Override
             public void onCompletion(FuelCheckResult res) {
-
-                Gson gson = new Gson();
 
                 if (res.isSuccess() && res.dataIsArray()) {
                     JSONArray JSONResponse = res.getDataAsArray();
@@ -198,19 +195,16 @@ public class FuelCheckClient {
                                 @Override
                                 public Price deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
                                     JsonObject priceJson = json.getAsJsonObject();
-                                    Station station = map.get(priceJson.get("stationcode").getAsInt());
                                     sqliteClient.open();
                                     FuelType fuelType = sqliteClient.getFuelType(priceJson.get("fueltype").getAsString());
                                     sqliteClient.close();
 
-                                    Price price = new Price(
+                                    return new Price(
                                             priceJson.get("stationcode").getAsInt(),
                                             fuelType,
                                             priceJson.get("price").getAsDouble(),
                                             priceJson.get("lastupdated").getAsString()
                                             );
-
-                                    return price;
                                 }
                             };
 
@@ -239,7 +233,7 @@ public class FuelCheckClient {
         });
     }
 
-    public void getReferenceData(final FuelCheckResponse completion) {
+    public void getReferenceData(final FuelCheckResponse<Object> completion) {
         String url = "https://api.onegov.nsw.gov.au/FuelCheckRefData/v1/fuel/lovs";
         SQLiteClient sqliteClient = new SQLiteClient(context);
         sqliteClient.open();
@@ -590,13 +584,12 @@ public class FuelCheckClient {
                 sqliteClient.open();
                 FuelType fuelType = sqliteClient.getFuelType(priceJson.get("fueltype").getAsString());
                 sqliteClient.close();
-                Price price = new Price(
+                return new Price(
                         stationCode,
                         fuelType,
                         priceJson.get("price").getAsDouble(),
                         priceJson.get("lastupdated").getAsString()
                 );
-                return price;
             }
         };
 
@@ -664,7 +657,7 @@ public class FuelCheckClient {
     private List<TodayPrice> toTodayPriceObjects(JSONArray JSON) {
 
         final SQLiteClient sqliteClient = new SQLiteClient(context);
-        List<TodayPrice> todayPrices = new ArrayList<TodayPrice>();
+        List<TodayPrice> todayPrices = new ArrayList<>();
 
         JsonDeserializer<TodayPrice> deserializer = new JsonDeserializer<TodayPrice>() {
 
@@ -697,7 +690,7 @@ public class FuelCheckClient {
 
     private List<TrendData> toTrendDataObjects(JSONArray JSON) {
 
-        final List<TrendData> trendData = new ArrayList<TrendData>();
+        final List<TrendData> trendData = new ArrayList<>();
 
         JsonDeserializer<TrendData> deserializer = new JsonDeserializer<TrendData>() {
             @Override

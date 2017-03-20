@@ -37,13 +37,13 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
     private String selectedFuelType;
     private Context context;
 
-    private Listener parentListener;
+    private Listener listener;
 
     public ListAdapter(Context context, List<Station> stations, String selectedFuelType, Listener listener) {
         this.stations = stations;
         this.selectedFuelType = selectedFuelType;
         this.context = context;
-        this.parentListener = listener;
+        this.listener = listener;
     }
 
     @Override
@@ -69,8 +69,8 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(parentListener != null) {
-                    parentListener.displayDetailsFragment(station.getId());
+                if(listener != null) {
+                    listener.displayDetails(station.getId());
                 }
             }
         });
@@ -87,6 +87,6 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
     }
 
     public interface Listener {
-        void displayDetailsFragment(int stationID);
+        void displayDetails(int stationID);
     }
 }

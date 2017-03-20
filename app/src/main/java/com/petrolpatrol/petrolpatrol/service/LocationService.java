@@ -45,6 +45,8 @@ public class LocationService extends Service implements
     public static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
             UPDATE_INTERVAL_IN_MILLISECONDS / 2;
 
+    public static final String intentTag = "location";
+
     // Binder given to clients of this service
     private IBinder binder;
 
@@ -52,6 +54,8 @@ public class LocationService extends Service implements
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
     private boolean isCurrentlyLocating;
+
+    private boolean queuedRequest;
 
 
     private synchronized GoogleApiClient buildGoogleApiClient() {
@@ -77,6 +81,7 @@ public class LocationService extends Service implements
         mGoogleApiClient = buildGoogleApiClient();
         mLocationRequest = buildLocationRequest();
         isCurrentlyLocating = false;
+        queuedRequest = false;
 
         mGoogleApiClient.connect();
     }
@@ -92,6 +97,10 @@ public class LocationService extends Service implements
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
+        if (queuedRequest) {
+            queuedRequest = false;
+            startLocating();
+        }
     }
 
     @Override
@@ -107,7 +116,7 @@ public class LocationService extends Service implements
     @Override
     public void onLocationChanged(Location location) {
         Intent intent = new Intent(Constants.NEW_LOCATION_AVAILABLE);
-        intent.putExtra("location", location);
+        intent.putExtra(intentTag, location);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
@@ -126,6 +135,8 @@ public class LocationService extends Service implements
 
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
             isCurrentlyLocating = true;
+        } else {
+            queuedRequest = true;
         }
     }
 

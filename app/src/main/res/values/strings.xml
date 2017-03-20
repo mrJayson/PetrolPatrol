@@ -30,6 +30,7 @@
     <!-- Maps Toolbar Menu Items -->
 
     <string name="menu_list">Display in list view</string>
+    <string name="item_list_icon_circle_content_description">@string/item_details_icon_circle_content_description</string>
 
     <!-- Details Toolbar Menu Items -->
 
@@ -37,6 +38,8 @@
 
     <!-- Details Item Content -->
     <string name="item_details_lastupdated">Last Updated: %1$s</string>
+    <string name="item_details_icon_brand_content_description">brand logo</string>
+    <string name="item_details_icon_circle_content_description">heat circle</string>
 
     <!-- Navigation Drawer Menu Items -->
 
@@ -51,5 +54,6 @@
 
     <!-- Chart -->
     <string name="chart_no_data">Chart loading</string>
+    <string name="title_activity_maps">Map</string>
 
 </resources>
