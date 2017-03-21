@@ -49,6 +49,8 @@ public class TrendActivity extends BaseActivity {
 
     private TrendResolution selectedResolution;
 
+    private MenuItem fuelTypeMenuItem;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -127,10 +129,14 @@ public class TrendActivity extends BaseActivity {
         MenuItem menuItem = menu.findItem(R.id.fueltype);
         getMenuInflater().inflate(R.menu.submenu_fueltypes, menuItem.getSubMenu());
 
+        fuelTypeMenuItem = menu.findItem(R.id.fueltype);
+
         // Preselect the menu_list items recorded in Preferences
         int fuelTypeResID = Utils.identify(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE), "id", getBaseContext());
         MenuItem fuelType = menu.findItem(fuelTypeResID);
         fuelType.setChecked(true);
+        int iconID = Utils.identify(Utils.fuelTypeToIconName(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
+        fuelTypeMenuItem.setIcon(iconID);
         return true;
     }
 
@@ -143,6 +149,8 @@ public class TrendActivity extends BaseActivity {
                 public void execute() {
                     item.setChecked(true);
                     Preferences.getInstance().put(Preferences.Key.SELECTED_FUELTYPE, String.valueOf(item.getTitle()));
+                    int iconID = Utils.identify(Utils.fuelTypeToIconName(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
+                    fuelTypeMenuItem.setIcon(iconID);
                     retrieveTrendsData(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE));
                 }
             });

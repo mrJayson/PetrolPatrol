@@ -55,6 +55,10 @@ public class Utils {
         return context.getResources().getIdentifier(value, defType, context.getPackageName());
     }
 
+    public static String fuelTypeToIconName(String fuelTypeID) {
+        return "ic_fuel_" + fuelTypeID.toLowerCase();
+    }
+
     public interface Callback {
         void execute();
     }

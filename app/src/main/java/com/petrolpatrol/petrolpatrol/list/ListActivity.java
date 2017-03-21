@@ -24,6 +24,8 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
 
     private RecyclerView containerList;
 
+    private MenuItem fuelTypeMenuItem;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,11 +55,15 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
         MenuItem menuItem = menu.findItem(R.id.fueltype);
         getMenuInflater().inflate(R.menu.submenu_fueltypes, menuItem.getSubMenu());
 
+        fuelTypeMenuItem = menu.findItem(R.id.fueltype);
+
         Preferences pref = Preferences.getInstance();
         // Preselect the menu_list items recorded in Preferences
         int fuelTypeResID = Utils.identify(pref.getString(Preferences.Key.SELECTED_FUELTYPE), "id", getBaseContext());
         MenuItem fuelType = menu.findItem(fuelTypeResID);
         fuelType.setChecked(true);
+        int iconID = Utils.identify(Utils.fuelTypeToIconName(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
+        fuelTypeMenuItem.setIcon(iconID);
 
         int sortByResID = Utils.identify("sort_" + pref.getString(Preferences.Key.SELECTED_SORTBY).toLowerCase(), "id", getBaseContext());
         MenuItem sortBy = menu.findItem(sortByResID);
@@ -82,6 +88,8 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
                         public void execute() {
                             item.setChecked(true);
                             Preferences.getInstance().put(Preferences.Key.SELECTED_FUELTYPE, String.valueOf(item.getTitle()));
+                            int iconID = Utils.identify(Utils.fuelTypeToIconName(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
+                            fuelTypeMenuItem.setIcon(iconID);
                         }
                     });
                 } catch (NoSuchFieldException e) {

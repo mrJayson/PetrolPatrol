@@ -12,7 +12,6 @@
     <item
             android:id="@id/fueltype"
             app:showAsAction="always"
-            android:icon="@drawable/ic_local_gas_station_white_24dp"
             android:title="@string/menu_fueltype">
 
         <menu><!-- include: submenu_fueltypes.xml --></menu>

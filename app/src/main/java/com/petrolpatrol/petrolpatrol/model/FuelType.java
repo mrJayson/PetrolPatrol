@@ -20,7 +20,7 @@ public class FuelType implements Parcelable {
         this.code = code;
         this.name = name;
     }
-
+    
     public int getId() {
         return id;
     }
