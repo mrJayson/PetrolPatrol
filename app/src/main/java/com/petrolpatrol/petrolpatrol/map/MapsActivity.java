@@ -47,6 +47,8 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
 
     private NewLocationReceiver newLocationReceiver;
 
+    private boolean initialZoom;
+
     /**
      * Parent activities can pass in an intent action to the MapsActivity to indicate the purpose of this MapsActivity.
      * The Map Activity will perform different actions based on the intentAction variable.
@@ -62,6 +64,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getLayoutInflater().inflate(R.layout.activity_maps, content);
 
         intentAction = null;
         if (savedInstanceState != null) {
@@ -70,8 +73,6 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
             intentAction = getIntent().getParcelableExtra(ARG_ACTION);
         }
 
-        getLayoutInflater().inflate(R.layout.activity_maps, content);
-
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.container_map);
@@ -79,6 +80,8 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
 
         locationServiceConnection = new LocationServiceConnection(this);
         newLocationReceiver = new NewLocationReceiver(this);
+
+        initialZoom = true;
     }
 
     @Override
@@ -213,29 +216,34 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
             @Override
             public void onCameraIdle() {
 
-                FuelCheckClient client = new FuelCheckClient(getBaseContext());
-                client.cancelRequests(new RequestTag(RequestTag.GET_FUELPRICES_WITHIN_RADIUS));
-                Preferences pref = Preferences.getInstance();
-                double latitude = googleMap.getCameraPosition().target.latitude;
-                double longitude = googleMap.getCameraPosition().target.longitude;
-                int radius = (int) (Utils.zoomToRadius(googleMap.getCameraPosition().zoom) / getMapAspectRatio());
-                client.getFuelPricesWithinRadius(
-                        latitude,
-                        longitude,
-                        radius,
-                        pref.getString(Preferences.Key.SELECTED_SORTBY),
-                        pref.getString(Preferences.Key.SELECTED_FUELTYPE),
-                        new RequestTag(RequestTag.GET_FUELPRICES_WITHIN_RADIUS),
-                        new FuelCheckClient.FuelCheckResponse<List<Station>>() {
-                            @Override
-                            public void onCompletion(List<Station> res) {
-                                stationList = res;
-                                googleMap.clear();
-                                for (Station station : res) {
-                                    googleMap.addMarker(new MarkerOptions().position(new LatLng(station.getLatitude(), station.getLongitude())));
+                if (!initialZoom) {
+                    FuelCheckClient client = new FuelCheckClient(getBaseContext());
+                    client.cancelRequests(new RequestTag(RequestTag.GET_FUELPRICES_WITHIN_RADIUS));
+                    Preferences pref = Preferences.getInstance();
+                    double latitude = googleMap.getCameraPosition().target.latitude;
+                    double longitude = googleMap.getCameraPosition().target.longitude;
+                    int radius = (int) (Utils.zoomToRadius(googleMap.getCameraPosition().zoom) / getMapAspectRatio());
+                    client.getFuelPricesWithinRadius(
+                            latitude,
+                            longitude,
+                            radius,
+                            pref.getString(Preferences.Key.SELECTED_SORTBY),
+                            pref.getString(Preferences.Key.SELECTED_FUELTYPE),
+                            new RequestTag(RequestTag.GET_FUELPRICES_WITHIN_RADIUS),
+                            new FuelCheckClient.FuelCheckResponse<List<Station>>() {
+                                @Override
+                                public void onCompletion(List<Station> res) {
+                                    stationList = res;
+                                    googleMap.clear();
+                                    for (Station station : res) {
+                                        googleMap.addMarker(new MarkerOptions().position(new LatLng(station.getLatitude(), station.getLongitude())));
+                                    }
                                 }
-                            }
-                        });
+                            });
+                } else {
+                    // if it reaches here, then this is the initial zoom
+                    initialZoom = false;
+                }
             }
         });
     }
