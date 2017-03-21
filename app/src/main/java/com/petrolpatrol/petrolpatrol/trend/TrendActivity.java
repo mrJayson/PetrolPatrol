@@ -32,6 +32,7 @@ import com.petrolpatrol.petrolpatrol.util.Utils;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGE;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
 public class TrendActivity extends BaseActivity {
@@ -47,7 +48,9 @@ public class TrendActivity extends BaseActivity {
     private LineChart chartMonth;
     private LineChart chartYear;
 
-    private TrendResolution selectedResolution;
+    private String chartFuelType;
+
+    private TrendResolution chartResolution;
 
     private MenuItem fuelTypeMenuItem;
 
@@ -59,27 +62,10 @@ public class TrendActivity extends BaseActivity {
 
         chartContainer = (FrameLayout) findViewById(R.id.container_chart);
 
-        selectedResolution = TrendResolution.WEEK; // The week tab is default
         dataWeek = new ArrayList<>();
         dataMonth = new ArrayList<>();
         dataYear = new ArrayList<>();
-
-        // Initialise the line charts
-        if (dataWeek.isEmpty() || dataMonth.isEmpty() || dataYear.isEmpty()) {
-            retrieveTrendsData(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE));
-        } else {
-            // If data already exists, no need to re-fetch
-            if (!dataWeek.isEmpty()) {
-                chartWeek = drawChart(dataWeek, TrendResolution.WEEK, chartWeek);
-            }
-            if (!dataMonth.isEmpty()) {
-                chartMonth = drawChart(dataMonth, TrendResolution.MONTH, chartMonth);
-            }
-            if (!dataYear.isEmpty()) {
-                chartYear = drawChart(dataYear, TrendResolution.YEAR, chartYear);
-            }
-            makeChartVisible(selectedResolution);
-        }
+        chartResolution = TrendResolution.WEEK; // The week tab is default
 
         // Initialise the tab UI functionality of the charts
         TabLayout tab = (TabLayout) findViewById(R.id.tab_chart);
@@ -90,8 +76,8 @@ public class TrendActivity extends BaseActivity {
 
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                selectedResolution = TrendResolution.toEnum(String.valueOf(tab.getText()));
-                makeChartVisible(selectedResolution);
+                chartResolution = TrendResolution.toEnum(String.valueOf(tab.getText()));
+                makeChartVisible(chartResolution);
             }
 
             @Override
@@ -131,6 +117,12 @@ public class TrendActivity extends BaseActivity {
 
         fuelTypeMenuItem = menu.findItem(R.id.fueltype);
 
+
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
         // Preselect the menu_list items recorded in Preferences
         int fuelTypeResID = Utils.identify(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE), "id", getBaseContext());
         MenuItem fuelType = menu.findItem(fuelTypeResID);
@@ -138,6 +130,31 @@ public class TrendActivity extends BaseActivity {
         int iconID = Utils.identify(Utils.fuelTypeToIconName(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
         fuelTypeMenuItem.setIcon(iconID);
         return true;
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        invalidateOptionsMenu();
+
+        // Initialise or update the line charts
+        if (!Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE).equals(chartFuelType) ||
+                dataWeek.isEmpty() || dataMonth.isEmpty() || dataYear.isEmpty()) {
+            retrieveTrendsData(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE));
+        } else {
+            // If data already exists, no need to re-fetch
+            if (!dataWeek.isEmpty()) {
+                chartWeek = drawChart(dataWeek, TrendResolution.WEEK, chartWeek);
+            }
+            if (!dataMonth.isEmpty()) {
+                chartMonth = drawChart(dataMonth, TrendResolution.MONTH, chartMonth);
+            }
+            if (!dataYear.isEmpty()) {
+                chartYear = drawChart(dataYear, TrendResolution.YEAR, chartYear);
+            }
+            makeChartVisible(chartResolution);
+        }
     }
 
     @Override
@@ -164,7 +181,7 @@ public class TrendActivity extends BaseActivity {
      * @param fuelType Trend data can only be shown for one fuel type at a time,
      *                 this parameter selects which fuel type trend data to retrieve.
      */
-    private void retrieveTrendsData(String fuelType) {
+    private void retrieveTrendsData(final String fuelType) {
         FuelCheckClient client = new FuelCheckClient(getBaseContext());
         client.getTrend(fuelType, new FuelCheckClient.FuelCheckResponse<List<TrendData>>() {
             @Override
@@ -172,6 +189,7 @@ public class TrendActivity extends BaseActivity {
                 dataWeek.clear();
                 dataMonth.clear();
                 dataYear.clear();
+                chartFuelType = fuelType; // Keep track of which fuel type is currently being displayed
 
                 for (TrendData data : res) {
                     switch (TrendResolution.toEnum(data.getPeriod())) {
@@ -194,7 +212,7 @@ public class TrendActivity extends BaseActivity {
                 if (!dataYear.isEmpty()) {
                     chartYear = drawChart(dataYear, TrendResolution.YEAR, chartYear);
                 }
-                makeChartVisible(selectedResolution);
+                makeChartVisible(chartResolution);
             }
         });
     }

@@ -57,17 +57,25 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
 
         fuelTypeMenuItem = menu.findItem(R.id.fueltype);
 
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+
         Preferences pref = Preferences.getInstance();
         // Preselect the menu_list items recorded in Preferences
         int fuelTypeResID = Utils.identify(pref.getString(Preferences.Key.SELECTED_FUELTYPE), "id", getBaseContext());
         MenuItem fuelType = menu.findItem(fuelTypeResID);
         fuelType.setChecked(true);
+
         int iconID = Utils.identify(Utils.fuelTypeToIconName(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
         fuelTypeMenuItem.setIcon(iconID);
 
         int sortByResID = Utils.identify("sort_" + pref.getString(Preferences.Key.SELECTED_SORTBY).toLowerCase(), "id", getBaseContext());
         MenuItem sortBy = menu.findItem(sortByResID);
         sortBy.setChecked(true);
+
         return true;
     }
 
