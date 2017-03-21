@@ -57,7 +57,7 @@ public class TrendActivity extends BaseActivity {
 
         getLayoutInflater().inflate(R.layout.activity_trend, content);
 
-        chartContainer = (FrameLayout) findViewById(R.id.container_trend_chart);
+        chartContainer = (FrameLayout) findViewById(R.id.container_chart);
 
         selectedResolution = TrendResolution.WEEK; // The week tab is default
         dataWeek = new ArrayList<>();
@@ -82,7 +82,7 @@ public class TrendActivity extends BaseActivity {
         }
 
         // Initialise the tab UI functionality of the charts
-        TabLayout tab = (TabLayout) findViewById(R.id.chart_tab);
+        TabLayout tab = (TabLayout) findViewById(R.id.tab_chart);
         for (TrendResolution trend : TrendResolution.values()) {
             tab.addTab(tab.newTab().setText(trend.getHandle()));
         }
@@ -106,7 +106,7 @@ public class TrendActivity extends BaseActivity {
         });
 
         // Initialise the listener of the fab
-        FloatingActionButton locateFab = (FloatingActionButton) findViewById(R.id.locate_fab);
+        FloatingActionButton locateFab = (FloatingActionButton) findViewById(R.id.fab_gps);
         locateFab.setOnClickListener(new View.OnClickListener() {
 
             @Override

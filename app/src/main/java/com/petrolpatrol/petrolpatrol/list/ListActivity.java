@@ -39,7 +39,7 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
 
         getLayoutInflater().inflate(R.layout.activity_list, content);
 
-        containerList = (RecyclerView) findViewById(R.id.container_details_list);
+        containerList = (RecyclerView) findViewById(R.id.container_list_list);
 
         Preferences pref = Preferences.getInstance();
 

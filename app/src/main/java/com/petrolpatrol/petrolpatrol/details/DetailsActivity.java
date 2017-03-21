@@ -43,7 +43,7 @@ public class DetailsActivity extends BaseActivity {
         getLayoutInflater().inflate(R.layout.activity_details, content);
 
         //TODO set empty adapter here as a placeholder while data is loading
-        containerDetailsListView = (RecyclerView) findViewById(R.id.container_details_list);
+        containerDetailsListView = (RecyclerView) findViewById(R.id.container_list_list);
         TextView name = (TextView) findViewById(R.id.details_name);
         name.setText(station.getName());
         TextView address = (TextView) findViewById(R.id.details_address);

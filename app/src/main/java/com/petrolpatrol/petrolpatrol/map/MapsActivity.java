@@ -3,7 +3,6 @@ package com.petrolpatrol.petrolpatrol.map;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Parcelable;
-import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
 import android.view.Menu;
@@ -75,7 +74,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
+                .findFragmentById(R.id.container_map);
         mapFragment.getMapAsync(this);
 
         locationServiceConnection = new LocationServiceConnection(this);

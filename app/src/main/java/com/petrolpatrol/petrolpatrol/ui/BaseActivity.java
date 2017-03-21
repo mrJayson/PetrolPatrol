@@ -28,16 +28,16 @@ public class BaseActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_base);
 
-        drawer = (DrawerLayout) findViewById(R.id.drawer);
+        drawer = (DrawerLayout) findViewById(R.id.container_drawer);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
 
         setSupportActionBar(toolbar);
 
-        // Navigation Drawer interaction from the toolbar
+        // Navigation Drawer interaction from the container_toolbar
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_menu_white_24dp);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        content = (FrameLayout) findViewById(R.id.fragment_container);
+        content = (FrameLayout) findViewById(R.id.container_content);
 
     }
 
