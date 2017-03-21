@@ -133,7 +133,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
             }
         } else {
             if (intentAction.toString().equals(IntentAction.FIND_BY_GPS)) {
-                if (requestLocationPermissionsIfNecessary()) {
+                if (checkLocationPermission(Constants.PERMISSION_REQUEST_ACCESS_LOCATION)) {
                     newLocationReceiver.register(getBaseContext());
                     if (!locationServiceConnection.isBound()) {
                         locationServiceConnection.bindService();
@@ -141,8 +141,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                     // If service is not yet bound, the location request will be queued up
                     locationServiceConnection.startLocating();
                 }
-            }
-            else if (intentAction.toString().equals(IntentAction.FIND_BY_LOCATION)) {
+            } else if (intentAction.toString().equals(IntentAction.FIND_BY_LOCATION)) {
 
             }
         }
@@ -195,11 +194,19 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                 });
     }
 
+    /**
+     * Initialise the GoogleMap that is returned from {@link SupportMapFragment#getMapAsync}
+     * All static styling added to the map is done here.
+     */
     private void initialiseMap() {
 
         // Add styling to googleMaps
         googleMap.getUiSettings().setZoomControlsEnabled(true);
         googleMap.getUiSettings().setCompassEnabled(true);
+        if (checkLocationPermission(Constants.PERMISSION_REQUEST_ENABLE_MY_LOCATION)) {
+            googleMap.setMyLocationEnabled(true);
+            googleMap.getUiSettings().setMyLocationButtonEnabled(true);
+        }
         googleMap.setMinZoomPreference(Constants.MIN_ZOOM);
         googleMap.setMaxZoomPreference(Constants.MAX_ZOOM);
 
@@ -248,12 +255,12 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
         });
     }
 
-    private boolean requestLocationPermissionsIfNecessary() {
+    private boolean checkLocationPermission(int permissionCode) {
         if (ActivityCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(this, ACCESS_COARSE_LOCATION) != PERMISSION_GRANTED) {
             // not granted, ask the user for permission
             ActivityCompat.requestPermissions( this, new String[] {  ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION  },
-                    Constants.PERMISSION_REQUEST_ACCESS_LOCATION );
+                    permissionCode);
             return false;
         } else {
             return true;
@@ -261,9 +268,10 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
     }
 
     @Override
+    @SuppressWarnings({"MissingPermission"})
     public void onRequestPermissionsResult (int requestCode, String[] permissions, int[] grantResults) {
         switch (requestCode) {
-            case 1:
+            case Constants.PERMISSION_REQUEST_ACCESS_LOCATION:
                 if (grantResults[0] == PERMISSION_GRANTED) {
                     // Permission Granted
                     newLocationReceiver.register(getBaseContext());
@@ -274,14 +282,26 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                     locationServiceConnection.startLocating();
                 } else {
                     // Permission Denied
-                    Toast.makeText(this, "Permission denied, location features not enabled", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.location_permission_denied), Toast.LENGTH_SHORT).show();
                 }
                 break;
+            case Constants.PERMISSION_REQUEST_ENABLE_MY_LOCATION:
+                if (grantResults[0] == PERMISSION_GRANTED) {
+                    googleMap.setMyLocationEnabled(true);
+                    googleMap.getUiSettings().setMyLocationButtonEnabled(true);
+                } else {
+                    // Permission Denied
+                    Toast.makeText(this, getString(R.string.location_permission_denied), Toast.LENGTH_SHORT).show();
+                }
             default:
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
 
+    /**
+     * Computes the aspect ratio of the map view for any given screen.
+     * @return The aspect ratio of the map view.
+     */
     private double getMapAspectRatio() {
         int mapWidth = content.getWidth();
         int mapHeight = content.getHeight();

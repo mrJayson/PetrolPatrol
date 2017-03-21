@@ -56,4 +56,7 @@
     <string name="chart_no_data">Chart loading</string>
     <string name="title_activity_maps">Map</string>
 
+    <!-- Toast Messages -->
+    <string name="location_permission_denied">Permission denied, location features not enabled</string>
+
 </resources>
