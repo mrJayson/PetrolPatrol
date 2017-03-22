@@ -3,6 +3,7 @@ package com.petrolpatrol.petrolpatrol.map;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
 import android.view.Menu;
@@ -12,7 +13,7 @@ import com.google.android.gms.maps.*;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.maps.android.clustering.ClusterManager;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
@@ -47,7 +48,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
 
     private NewLocationReceiver newLocationReceiver;
 
-    private boolean initialZoom;
+    private boolean cancelMarkerUpdate;
 
     /**
      * Parent activities can pass in an intent action to the MapsActivity to indicate the purpose of this MapsActivity.
@@ -60,6 +61,8 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
 
     private List<Station> stationList;
     private CameraPosition cameraPosition;
+
+    private ClusterManager<Marker> clusterManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,7 +84,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
         locationServiceConnection = new LocationServiceConnection(this);
         newLocationReceiver = new NewLocationReceiver(this);
 
-        initialZoom = true;
+        cancelMarkerUpdate = true;
     }
 
     @Override
@@ -128,7 +131,9 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
             }
             if (stationList != null) {
                 for (Station station : stationList) {
-                    googleMap.addMarker(new MarkerOptions().position(new LatLng(station.getLatitude(), station.getLongitude())));
+                    //googleMap.addMarker(new MarkerOptions().position(new LatLng(station.getLatitude(), station.getLongitude())));
+                    Marker marker = new Marker(station.getLatitude(), station.getLongitude());
+                    clusterManager.addItem(marker);
                 }
             }
         } else {
@@ -178,18 +183,22 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                     @Override
                     public void onCompletion(List<Station> res) {
                         stationList = res;
-                        googleMap.clear();
+                        clusterManager.clearItems();
                         double maxDistance = 0;
                         for (Station station : res) {
-//                            googleMap.addMarker(new MarkerOptions().position(new LatLng(station.getLatitude(), station.getLongitude())));
                             if (station.getDistance() > maxDistance) {
                                 maxDistance = station.getDistance();
                             }
+                            Marker marker = new Marker(station.getLatitude(), station.getLongitude());
+                            clusterManager.addItem(marker);
                         }
 
                         // Move camera to current location
                         LatLng current = new LatLng(latitude, longitude);
-                        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, (float) (Utils.radiusToZoom(maxDistance * getMapAspectRatio()))));
+                        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, (float) (Utils.radiusToZoom(maxDistance))));
+                        cancelMarkerUpdate = true; // prevent the resulting onCameraIdle of the camera movement from executing
+
+                        clusterManager.onCameraIdle();
                     }
                 });
     }
@@ -199,6 +208,8 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
      * All static styling added to the map is done here.
      */
     private void initialiseMap() {
+
+        clusterManager = new ClusterManager<>(getBaseContext(), googleMap);
 
         // Add styling to googleMaps
         googleMap.getUiSettings().setZoomControlsEnabled(true);
@@ -218,18 +229,29 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
         // Set default camera position to Sydney
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(Constants.SYDNEY_LAT, Constants.SYDNEY_LONG), Constants.DEFAULT_ZOOM));
 
+        googleMap.setOnMarkerClickListener(clusterManager);
+
         // Update map data upon new camera position
         googleMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
             @Override
             public void onCameraIdle() {
-
-                if (!initialZoom) {
+                if (cancelMarkerUpdate) {
+                    /* If it reaches here, then this might be the initial zoom
+                     * Initial zoom is the camera moving to the default camera position
+                     * Do not want markers being placed on the default position
+                     *
+                     * If it reaches here, then this might be invoked from gps fix
+                     * The markers have already been calculated and do not need to be re-fetched
+                     */
+                    cancelMarkerUpdate = false;
+                }
+                else {
                     FuelCheckClient client = new FuelCheckClient(getBaseContext());
                     client.cancelRequests(new RequestTag(RequestTag.GET_FUELPRICES_WITHIN_RADIUS));
                     Preferences pref = Preferences.getInstance();
                     double latitude = googleMap.getCameraPosition().target.latitude;
                     double longitude = googleMap.getCameraPosition().target.longitude;
-                    int radius = (int) (Utils.zoomToRadius(googleMap.getCameraPosition().zoom) / getMapAspectRatio());
+                    int radius = (int) Utils.zoomToRadius(googleMap.getCameraPosition().zoom);
                     client.getFuelPricesWithinRadius(
                             latitude,
                             longitude,
@@ -241,15 +263,14 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                                 @Override
                                 public void onCompletion(List<Station> res) {
                                     stationList = res;
-                                    googleMap.clear();
+                                    clusterManager.clearItems();
                                     for (Station station : res) {
-                                        googleMap.addMarker(new MarkerOptions().position(new LatLng(station.getLatitude(), station.getLongitude())));
+                                        Marker marker = new Marker(station.getLatitude(), station.getLongitude());
+                                        clusterManager.addItem(marker);
                                     }
+                                    clusterManager.onCameraIdle();
                                 }
                             });
-                } else {
-                    // if it reaches here, then this is the initial zoom
-                    initialZoom = false;
                 }
             }
         });
@@ -269,7 +290,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
 
     @Override
     @SuppressWarnings({"MissingPermission"})
-    public void onRequestPermissionsResult (int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult (int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case Constants.PERMISSION_REQUEST_ACCESS_LOCATION:
                 if (grantResults[0] == PERMISSION_GRANTED) {
