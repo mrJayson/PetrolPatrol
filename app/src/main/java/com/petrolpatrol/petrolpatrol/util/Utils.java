@@ -4,6 +4,9 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.util.DisplayMetrics;
 import com.petrolpatrol.petrolpatrol.R;
+import com.petrolpatrol.petrolpatrol.model.Station;
+
+import java.util.List;
 
 public class Utils {
 
@@ -29,6 +32,10 @@ public class Utils {
         return dp * ((float)metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
     }
 
+    public static String fuelTypeToIconName(String fuelTypeID) {
+        return "ic_fuel_" + fuelTypeID.toLowerCase();
+    }
+
     public static boolean fuelTypeSwitch(int id, Callback callback) throws NoSuchFieldException {
         switch (id) {
             case R.id.E10:
@@ -49,14 +56,6 @@ public class Utils {
                 return true;
         }
         throw new NoSuchFieldException("id does not correspond to a fuel type");
-    }
-
-    public static int identify(String value, String defType, Context context) {
-        return context.getResources().getIdentifier(value, defType, context.getPackageName());
-    }
-
-    public static String fuelTypeToIconName(String fuelTypeID) {
-        return "ic_fuel_" + fuelTypeID.toLowerCase();
     }
 
     public interface Callback {

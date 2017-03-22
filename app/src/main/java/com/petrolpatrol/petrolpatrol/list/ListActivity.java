@@ -11,6 +11,7 @@ import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.details.DetailsActivity;
 import com.petrolpatrol.petrolpatrol.model.Station;
 import com.petrolpatrol.petrolpatrol.ui.BaseActivity;
+import com.petrolpatrol.petrolpatrol.util.IDUtils;
 import com.petrolpatrol.petrolpatrol.util.Utils;
 
 import java.util.List;
@@ -23,6 +24,8 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
     private List<Station> stationList;
 
     private RecyclerView containerList;
+
+    private ListAdapter adapter;
 
     private MenuItem fuelTypeMenuItem;
 
@@ -44,7 +47,8 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
         Preferences pref = Preferences.getInstance();
 
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getBaseContext());
-        RecyclerView.Adapter adapter = new ListAdapter(getBaseContext(), stationList, pref.getString(Preferences.Key.SELECTED_FUELTYPE), this);
+
+        adapter = new ListAdapter(getBaseContext(), stationList, pref.getString(Preferences.Key.SELECTED_FUELTYPE), this);
         containerList.setLayoutManager(layoutManager);
         containerList.setAdapter(adapter);
     }
@@ -65,14 +69,14 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
 
         Preferences pref = Preferences.getInstance();
         // Preselect the menu_list items recorded in Preferences
-        int fuelTypeResID = Utils.identify(pref.getString(Preferences.Key.SELECTED_FUELTYPE), "id", getBaseContext());
+        int fuelTypeResID = IDUtils.identify(pref.getString(Preferences.Key.SELECTED_FUELTYPE), "id", getBaseContext());
         MenuItem fuelType = menu.findItem(fuelTypeResID);
         fuelType.setChecked(true);
 
-        int iconID = Utils.identify(Utils.fuelTypeToIconName(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
+        int iconID = IDUtils.identify(Utils.fuelTypeToIconName(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
         fuelTypeMenuItem.setIcon(iconID);
 
-        int sortByResID = Utils.identify("sort_" + pref.getString(Preferences.Key.SELECTED_SORTBY).toLowerCase(), "id", getBaseContext());
+        int sortByResID = IDUtils.identify("sort_" + pref.getString(Preferences.Key.SELECTED_SORTBY).toLowerCase(), "id", getBaseContext());
         MenuItem sortBy = menu.findItem(sortByResID);
         sortBy.setChecked(true);
 
@@ -88,6 +92,7 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
             case R.id.sort_distance:
                 item.setChecked(true);
                 Preferences.getInstance().put(Preferences.Key.SELECTED_SORTBY, String.valueOf(item.getTitle()));
+                adapter.sort(String.valueOf(item.getTitle()));
                 return true;
             default:
                 try {
@@ -96,7 +101,7 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
                         public void execute() {
                             item.setChecked(true);
                             Preferences.getInstance().put(Preferences.Key.SELECTED_FUELTYPE, String.valueOf(item.getTitle()));
-                            int iconID = Utils.identify(Utils.fuelTypeToIconName(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
+                            int iconID = IDUtils.identify(Utils.fuelTypeToIconName(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
                             fuelTypeMenuItem.setIcon(iconID);
                         }
                     });

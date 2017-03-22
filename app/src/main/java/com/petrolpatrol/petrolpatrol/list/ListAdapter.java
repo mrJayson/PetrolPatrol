@@ -9,22 +9,24 @@ import android.widget.TextView;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.model.Station;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
-public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
+class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
 
     private static final String TAG = makeLogTag(ListAdapter.class);
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    static class ViewHolder extends RecyclerView.ViewHolder {
         TextView price;
         TextView name;
         TextView address;
         TextView distance;
 
-        public ViewHolder(View itemView) {
+        ViewHolder(View itemView) {
             super(itemView);
             price = (TextView) itemView.findViewById(R.id.item_list_price);
             name = (TextView) itemView.findViewById(R.id.item_list_name);
@@ -39,7 +41,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
 
     private Listener listener;
 
-    public ListAdapter(Context context, List<Station> stations, String selectedFuelType, Listener listener) {
+    ListAdapter(Context context, List<Station> stations, String selectedFuelType, Listener listener) {
         this.stations = stations;
         this.selectedFuelType = selectedFuelType;
         this.context = context;
@@ -76,6 +78,27 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         });
     }
 
+    void sort(String order) {
+        if (order.equals(context.getString(R.string.menu_sort_price))) {
+            Collections.sort(stations, new Comparator<Station>() {
+                @Override
+                public int compare(Station station1, Station station2) {
+                    return Double.compare(station1.getPrice(selectedFuelType).getPrice(), station2.getPrice(selectedFuelType).getPrice());
+                }
+            });
+            notifyDataSetChanged();
+        }
+        else if (order.equals(context.getString(R.string.menu_sort_distance))) {
+            Collections.sort(stations, new Comparator<Station>() {
+                @Override
+                public int compare(Station station1, Station station2) {
+                    return Double.compare(station1.getDistance(), station2.getDistance());
+                }
+            });
+            notifyDataSetChanged();
+        }
+    }
+
     @Override
     public int getItemCount() {
         return stations.size();
@@ -86,7 +109,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         notifyDataSetChanged();
     }
 
-    public interface Listener {
+    interface Listener {
         void displayDetails(int stationID);
     }
 }
