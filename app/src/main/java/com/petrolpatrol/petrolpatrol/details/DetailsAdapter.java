@@ -13,23 +13,24 @@ import com.petrolpatrol.petrolpatrol.model.Price;
 import com.petrolpatrol.petrolpatrol.util.TimeUtils;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
-public class DetailsAdapter extends RecyclerView.Adapter<DetailsAdapter.ViewHolder> {
+class DetailsAdapter extends RecyclerView.Adapter<DetailsAdapter.ViewHolder> {
 
     private static final String TAG = makeLogTag(DetailsAdapter.class);
 
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    static class ViewHolder extends RecyclerView.ViewHolder {
 
         TextView price;
         TextView fuelTypeShort;
         TextView fuelTypeLong;
         TextView lastUpdated;
 
-        public ViewHolder(View itemView) {
+        ViewHolder(View itemView) {
             super(itemView);
 
             price = (TextView) itemView.findViewById(R.id.item_details_price);
@@ -42,7 +43,11 @@ public class DetailsAdapter extends RecyclerView.Adapter<DetailsAdapter.ViewHold
     private List<Price> prices;
     private Context context;
 
-    public DetailsAdapter(List<Price> prices, Context context) {
+    DetailsAdapter(Context context) {
+        this(new ArrayList<Price>(), context);
+    }
+
+    DetailsAdapter(List<Price> prices, Context context) {
         this.prices = prices;
         this.context = context;
     }
@@ -51,7 +56,8 @@ public class DetailsAdapter extends RecyclerView.Adapter<DetailsAdapter.ViewHold
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         //create a new view
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_details, parent, false);
-        return new ViewHolder(v);    }
+        return new ViewHolder(v);
+    }
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
@@ -64,6 +70,15 @@ public class DetailsAdapter extends RecyclerView.Adapter<DetailsAdapter.ViewHold
         holder.lastUpdated.setText(context.getString(R.string.item_details_lastupdated, TimeUtils.timeAgo(price.getLastUpdated())));
     }
 
+    void updatePrices(List<Price> prices) {
+        this.prices = prices;
+        notifyDataSetChanged();
+    }
+
+    void clear() {
+        this.prices.clear();
+        notifyDataSetChanged();
+    }
 
     @Override
     public int getItemCount() {

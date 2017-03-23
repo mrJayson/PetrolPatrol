@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">PetrolPatrol</string>
 
+    <string name="not_applicable">N/A</string>
+
     <!-- List Content -->
     <string name="item_list_distance">%1$.2f km</string>
 
@@ -27,12 +29,12 @@
     <string name="fueltype_EV">EV</string>
     <string name="fueltype_H2">H2</string>
 
+    <string name="circle_content_description">heat circle</string>
+
     <!-- Maps Toolbar Menu Items -->
 
     <string name="menu_list">Display in list view</string>
-    <string name="circle_content_description">@string/item_details_icon_circle_content_description</string>
 
-    <string name="not_applicable">N/A</string>
 
     <!-- Details Toolbar Menu Items -->
 
@@ -41,7 +43,7 @@
     <!-- Details Item Content -->
     <string name="item_details_lastupdated">Last Updated: %1$s</string>
     <string name="item_details_icon_brand_content_description">brand logo</string>
-    <string name="item_details_icon_circle_content_description">heat circle</string>
+    <string name="item_details_icon_circle_content_description">@string/circle_content_description</string>
 
     <!-- Navigation Drawer Menu Items -->
 

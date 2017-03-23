@@ -137,6 +137,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                     Marker marker = new Marker(price, station.getLatitude(), station.getLongitude());
                     clusterManager.addItem(marker);
                 }
+                clusterManager.onCameraIdle();
             }
         } else {
             if (intentAction.toString().equals(IntentAction.FIND_BY_GPS)) {
