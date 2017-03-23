@@ -88,7 +88,7 @@ public class DetailsActivity extends BaseActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_search, menu);
         getMenuInflater().inflate(R.menu.menu_details, menu);
-        return true;
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override

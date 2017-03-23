@@ -1,5 +1,6 @@
 package com.petrolpatrol.petrolpatrol.map;
 
+import android.app.SearchManager;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Parcelable;
@@ -23,7 +24,6 @@ import com.petrolpatrol.petrolpatrol.model.Station;
 import com.petrolpatrol.petrolpatrol.service.LocationServiceConnection;
 import com.petrolpatrol.petrolpatrol.service.NewLocationReceiver;
 import com.petrolpatrol.petrolpatrol.ui.BaseActivity;
-import com.petrolpatrol.petrolpatrol.ui.IntentAction;
 import com.petrolpatrol.petrolpatrol.util.Constants;
 import com.petrolpatrol.petrolpatrol.util.IDUtils;
 import com.petrolpatrol.petrolpatrol.util.Utils;
@@ -42,8 +42,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
 
     private static final String TAG = makeLogTag(MapsActivity.class);
 
-    // Keys for bundles and intents
-    public static final String ARG_ACTION = "ARG_ACTION";
+    public static final String ACTION_GPS = "ACTION_GPS";
 
     private LocationServiceConnection locationServiceConnection;
 
@@ -57,7 +56,6 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
      * Parent activities can pass in an intent action to the MapsActivity to indicate the purpose of this MapsActivity.
      * The Map Activity will perform different actions based on the intentAction variable.
      */
-    private IntentAction intentAction;
 
     // Handle to interact with the google Map UI
     private GoogleMap googleMap;
@@ -71,13 +69,6 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getLayoutInflater().inflate(R.layout.activity_maps, content);
-
-        intentAction = null;
-        if (savedInstanceState != null) {
-            intentAction = savedInstanceState.getParcelable(ARG_ACTION);
-        } else {
-            intentAction = getIntent().getParcelableExtra(ARG_ACTION);
-        }
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -98,7 +89,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
         getMenuInflater().inflate(R.menu.submenu_fueltypes, menuItem.getSubMenu());
 
         fuelTypeMenuItem = menu.findItem(R.id.fueltype);
-        return true;
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -139,34 +130,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
         this.googleMap = googleMap;
         initialiseMap();
 
-        if (intentAction == null) {
-            if (cameraPosition != null) {
-                googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-            }
-            if (stationList != null) {
-                Preferences pref = Preferences.getInstance();
-                for (Station station : stationList) {
-                    //googleMap.addMarker(new MarkerOptions().position(new LatLng(station.getLatitude(), station.getLongitude())));
-                    double price = station.getPrice(pref.getString(Preferences.Key.SELECTED_FUELTYPE)).getPrice();
-                    Marker marker = new Marker(price, station.getLatitude(), station.getLongitude());
-                    clusterManager.addItem(marker);
-                }
-                clusterManager.onCameraIdle();
-            }
-        } else {
-            if (intentAction.toString().equals(IntentAction.FIND_BY_GPS)) {
-                if (checkLocationPermission(Constants.PERMISSION_REQUEST_ACCESS_LOCATION)) {
-                    newLocationReceiver.register(getBaseContext());
-                    if (!locationServiceConnection.isBound()) {
-                        locationServiceConnection.bindService();
-                    }
-                    // If service is not yet bound, the location request will be queued up
-                    locationServiceConnection.startLocating();
-                }
-            } else if (intentAction.toString().equals(IntentAction.FIND_BY_LOCATION)) {
-
-            }
-        }
+        handleIntent(getIntent());
     }
 
     @Override
@@ -219,6 +183,44 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                         clusterManager.onCameraIdle();
                     }
                 });
+    }
+
+    private void handleIntent(Intent intent) {
+        if (intent.getAction() == null) {
+            if (cameraPosition != null) {
+                googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+            }
+            if (stationList != null) {
+                Preferences pref = Preferences.getInstance();
+                for (Station station : stationList) {
+                    //googleMap.addMarker(new MarkerOptions().position(new LatLng(station.getLatitude(), station.getLongitude())));
+                    double price = station.getPrice(pref.getString(Preferences.Key.SELECTED_FUELTYPE)).getPrice();
+                    Marker marker = new Marker(price, station.getLatitude(), station.getLongitude());
+                    clusterManager.addItem(marker);
+                }
+                clusterManager.onCameraIdle();
+            }
+        } else {
+            if (intent.getAction().equals(ACTION_GPS)) {
+                if (checkLocationPermission(Constants.PERMISSION_REQUEST_ACCESS_LOCATION)) {
+                    newLocationReceiver.register(getBaseContext());
+                    if (!locationServiceConnection.isBound()) {
+                        locationServiceConnection.bindService();
+                    }
+                    // If service is not yet bound, the location request will be queued up
+                    locationServiceConnection.startLocating();
+                }
+            } else if (intent.getAction().equals(Intent.ACTION_SEARCH)) {
+                String query = intent.getStringExtra(SearchManager.QUERY);
+                LOGE(TAG, "SEARCH");
+            }
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        handleIntent(intent);
     }
 
     /**

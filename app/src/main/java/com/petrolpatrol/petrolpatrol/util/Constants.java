@@ -6,9 +6,6 @@ public class Constants {
     public static final int PERMISSION_REQUEST_ACCESS_LOCATION = 1;
     public static final int PERMISSION_REQUEST_ENABLE_MY_LOCATION = 2;
 
-    // Intent identifiers for broadcast receivers
-    public static final String NEW_LOCATION_AVAILABLE = "new location available";
-
     // Maximum zoom allowed for map view
     public static final float MAX_ZOOM = 16;
 

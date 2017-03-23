@@ -1,9 +1,13 @@
 package com.petrolpatrol.petrolpatrol.trend;
 
+import android.app.SearchManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
 import android.os.Bundle;
+import android.support.v7.widget.SearchView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -25,7 +29,6 @@ import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.map.MapsActivity;
-import com.petrolpatrol.petrolpatrol.ui.IntentAction;
 import com.petrolpatrol.petrolpatrol.ui.BaseActivity;
 import com.petrolpatrol.petrolpatrol.util.IDUtils;
 import com.petrolpatrol.petrolpatrol.util.Utils;
@@ -99,12 +102,7 @@ public class TrendActivity extends BaseActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
-                Bundle bundle = intent.getExtras();
-                if (bundle == null) {
-                    bundle = new Bundle();
-                }
-                bundle.putParcelable(MapsActivity.ARG_ACTION, new IntentAction(IntentAction.FIND_BY_GPS));
-                intent.putExtras(bundle);
+                intent.setAction(MapsActivity.ACTION_GPS);
                 startActivity(intent);
             }
         });
@@ -118,7 +116,7 @@ public class TrendActivity extends BaseActivity {
         getMenuInflater().inflate(R.menu.submenu_fueltypes, menuItem.getSubMenu());
 
         fuelTypeMenuItem = menu.findItem(R.id.fueltype);
-        return true;
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override

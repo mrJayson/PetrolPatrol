@@ -1,15 +1,20 @@
 package com.petrolpatrol.petrolpatrol.ui;
 
 import android.app.ActivityManager;
+import android.app.SearchManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.FrameLayout;
 import com.petrolpatrol.petrolpatrol.R;
+import com.petrolpatrol.petrolpatrol.map.MapsActivity;
 import com.petrolpatrol.petrolpatrol.trend.TrendActivity;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
@@ -39,6 +44,20 @@ public class BaseActivity extends AppCompatActivity {
 
         content = (FrameLayout) findViewById(R.id.container_content);
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        // Associate searchable configuration with the SearchView
+        MenuItem searchMenuItem = menu.findItem(R.id.search);
+        if (searchMenuItem != null) {
+            SearchView searchView = (SearchView) searchMenuItem.getActionView();
+            SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+            searchView.setSearchableInfo(searchManager.getSearchableInfo(new ComponentName(getApplicationContext(), MapsActivity.class)));
+            searchView.setSubmitButtonEnabled(true);
+        }
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override

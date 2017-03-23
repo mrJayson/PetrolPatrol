@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.location.Location;
 import android.support.v4.content.LocalBroadcastManager;
-import com.petrolpatrol.petrolpatrol.util.Constants;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
@@ -27,11 +26,11 @@ public class NewLocationReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         // Get extra data included in the Intent
-        mListener.onLocationReceived((Location) intent.getParcelableExtra(LocationService.intentTag));
+        mListener.onLocationReceived((Location) intent.getParcelableExtra(LocationService.ARG_LOCATION));
     }
 
     public void register(Context context) {
-        LocalBroadcastManager.getInstance(context).registerReceiver(this, new IntentFilter(Constants.NEW_LOCATION_AVAILABLE));
+        LocalBroadcastManager.getInstance(context).registerReceiver(this, new IntentFilter(LocationService.ACTION_NEW_LOCATION));
         isListening = true;
     }
 

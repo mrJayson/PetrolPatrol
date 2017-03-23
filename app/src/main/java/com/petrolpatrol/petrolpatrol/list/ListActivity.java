@@ -62,7 +62,7 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
 
         fuelTypeMenuItem = menu.findItem(R.id.fueltype);
 
-        return true;
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override

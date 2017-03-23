@@ -15,7 +15,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.petrolpatrol.petrolpatrol.util.Constants;
 
 import java.io.Serializable;
 
@@ -31,21 +30,23 @@ public class LocationService extends Service implements
         LocationListener,
         Serializable {
 
-    private static final String TAG = makeLogTag(LocationService.class);
 
+    private static final String TAG = makeLogTag(LocationService.class);
     /**
      * The desired interval for location updates. Inexact. Updates may be more or less frequent.
      */
-    public static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
+    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
 
     /**
      * The fastest rate for active location updates. Exact. Updates will never be more frequent
      * than this value.
      */
-    public static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
+    private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
             UPDATE_INTERVAL_IN_MILLISECONDS / 2;
 
-    public static final String intentTag = "location";
+    static final String ARG_LOCATION = "ARG_LOCATION";
+
+    static final String ACTION_NEW_LOCATION = "ACTION_NEW_LOCATION";
 
     // Binder given to clients of this service
     private IBinder binder;
@@ -115,12 +116,12 @@ public class LocationService extends Service implements
 
     @Override
     public void onLocationChanged(Location location) {
-        Intent intent = new Intent(Constants.NEW_LOCATION_AVAILABLE);
-        intent.putExtra(intentTag, location);
+        Intent intent = new Intent(ACTION_NEW_LOCATION);
+        intent.putExtra(ARG_LOCATION, location);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
-    public void startLocating() {
+    void startLocating() {
         // always check to see if permission is granted first
         if (ActivityCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(this, ACCESS_COARSE_LOCATION) != PERMISSION_GRANTED) {
@@ -140,20 +141,20 @@ public class LocationService extends Service implements
         }
     }
 
-    public void stopLocating() {
+    void stopLocating() {
 
         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         isCurrentlyLocating = false;
     }
 
-    public boolean isCurrentlyLocating() {
+    boolean isCurrentlyLocating() {
         return isCurrentlyLocating;
     }
 
     /**
      * Local Binder class
      */
-    public class LocationServiceBinder extends Binder implements Serializable {
+    class LocationServiceBinder extends Binder implements Serializable {
         public LocationService getService() {
             return LocationService.this;
         }
