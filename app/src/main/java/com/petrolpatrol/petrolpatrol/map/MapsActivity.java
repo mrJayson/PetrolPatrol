@@ -130,9 +130,11 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                 googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
             }
             if (stationList != null) {
+                Preferences pref = Preferences.getInstance();
                 for (Station station : stationList) {
                     //googleMap.addMarker(new MarkerOptions().position(new LatLng(station.getLatitude(), station.getLongitude())));
-                    Marker marker = new Marker(station.getLatitude(), station.getLongitude());
+                    double price = station.getPrice(pref.getString(Preferences.Key.SELECTED_FUELTYPE)).getPrice();
+                    Marker marker = new Marker(price, station.getLatitude(), station.getLongitude());
                     clusterManager.addItem(marker);
                 }
             }
@@ -171,7 +173,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
 
         // Get fuel data with current location
         FuelCheckClient client = new FuelCheckClient(getBaseContext());
-        Preferences pref = Preferences.getInstance();
+        final Preferences pref = Preferences.getInstance();
         // Map view uses only price sorted list
         client.getFuelPricesWithinRadius(
                 latitude,
@@ -189,7 +191,8 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                             if (station.getDistance() > maxDistance) {
                                 maxDistance = station.getDistance();
                             }
-                            Marker marker = new Marker(station.getLatitude(), station.getLongitude());
+                            double price = station.getPrice(pref.getString(Preferences.Key.SELECTED_FUELTYPE)).getPrice();
+                            Marker marker = new Marker(price, station.getLatitude(), station.getLongitude());
                             clusterManager.addItem(marker);
                         }
 
@@ -229,6 +232,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
         // Set default camera position to Sydney
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(Constants.SYDNEY_LAT, Constants.SYDNEY_LONG), Constants.DEFAULT_ZOOM));
 
+        clusterManager.setRenderer(new ClusterRenderer(getBaseContext(), googleMap, clusterManager));
         googleMap.setOnMarkerClickListener(clusterManager);
 
         // Update map data upon new camera position
@@ -248,7 +252,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                 else {
                     FuelCheckClient client = new FuelCheckClient(getBaseContext());
                     client.cancelRequests(new RequestTag(RequestTag.GET_FUELPRICES_WITHIN_RADIUS));
-                    Preferences pref = Preferences.getInstance();
+                    final Preferences pref = Preferences.getInstance();
                     double latitude = googleMap.getCameraPosition().target.latitude;
                     double longitude = googleMap.getCameraPosition().target.longitude;
                     int radius = (int) Utils.zoomToRadius(googleMap.getCameraPosition().zoom);
@@ -265,7 +269,8 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                                     stationList = res;
                                     clusterManager.clearItems();
                                     for (Station station : res) {
-                                        Marker marker = new Marker(station.getLatitude(), station.getLongitude());
+                                        double price = station.getPrice(pref.getString(Preferences.Key.SELECTED_FUELTYPE)).getPrice();
+                                        Marker marker = new Marker(price, station.getLatitude(), station.getLongitude());
                                         clusterManager.addItem(marker);
                                     }
                                     clusterManager.onCameraIdle();

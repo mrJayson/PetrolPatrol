@@ -3,30 +3,34 @@ package com.petrolpatrol.petrolpatrol.map;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.clustering.ClusterItem;
 
-public class Marker implements ClusterItem {
+class Marker implements ClusterItem {
 
     private final LatLng position;
     private final String title;
     private final String snippet;
+    private final double price;
 
-    public Marker(LatLng position) {
-        this(position, null, null);
+    Marker(double price, LatLng position) {
+        this(price, position, null, null);
     }
 
-    public Marker(double latitude, double longitude) {
-        this(latitude, longitude, null, null);
+    Marker(double price, double latitude, double longitude) {
+        this(price, new LatLng(latitude, longitude), null, null);
     }
 
-    public Marker(double latitude, double longitude, String title, String snippet) {
-        this.position = new LatLng(latitude, longitude);
-        this.title = title;
-        this.snippet = snippet;
+    Marker(double price, double latitude, double longitude, String title, String snippet) {
+        this(price, new LatLng(latitude, longitude), title, snippet);
     }
 
-    public Marker(LatLng position, String title, String snippet) {
+    Marker(double price, LatLng position, String title, String snippet) {
+        this.price = price;
         this.position = position;
         this.title = title;
         this.snippet = snippet;
+    }
+
+    public double getPrice() {
+        return price;
     }
 
     @Override

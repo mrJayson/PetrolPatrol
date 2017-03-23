@@ -30,7 +30,9 @@
     <!-- Maps Toolbar Menu Items -->
 
     <string name="menu_list">Display in list view</string>
-    <string name="item_list_icon_circle_content_description">@string/item_details_icon_circle_content_description</string>
+    <string name="circle_content_description">@string/item_details_icon_circle_content_description</string>
+
+    <string name="not_applicable">N/A</string>
 
     <!-- Details Toolbar Menu Items -->
 

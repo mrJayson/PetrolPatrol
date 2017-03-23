@@ -18,7 +18,7 @@
                     android:layout_width="@dimen/icon_width"
                     android:layout_height="@dimen/icon_height"
                     android:src="@drawable/circle"
-                    android:contentDescription="@string/item_list_icon_circle_content_description"/>
+                    android:contentDescription="@string/circle_content_description"/>
 
             <TextView
                     android:id="@+id/item_list_price"
