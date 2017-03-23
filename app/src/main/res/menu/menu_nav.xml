@@ -8,9 +8,9 @@
 
         <item
                 android:id="@+id/inbox"
-                android:checked="false"
+                android:title="@string/nav_settings"
                 android:icon="@drawable/ic_settings_white_24dp"
-                android:title="@string/nav_settings" />
+                android:checked="false"/>
 
     </group>
 </menu>

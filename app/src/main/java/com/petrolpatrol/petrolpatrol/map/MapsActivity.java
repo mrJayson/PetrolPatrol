@@ -25,6 +25,7 @@ import com.petrolpatrol.petrolpatrol.service.NewLocationReceiver;
 import com.petrolpatrol.petrolpatrol.ui.BaseActivity;
 import com.petrolpatrol.petrolpatrol.ui.IntentAction;
 import com.petrolpatrol.petrolpatrol.util.Constants;
+import com.petrolpatrol.petrolpatrol.util.IDUtils;
 import com.petrolpatrol.petrolpatrol.util.Utils;
 
 import java.util.ArrayList;
@@ -47,6 +48,8 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
     private LocationServiceConnection locationServiceConnection;
 
     private NewLocationReceiver newLocationReceiver;
+
+    private MenuItem fuelTypeMenuItem;
 
     private boolean cancelMarkerUpdate;
 
@@ -89,13 +92,24 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_search, menu);
         getMenuInflater().inflate(R.menu.menu_map, menu);
+        MenuItem menuItem = menu.findItem(R.id.fueltype);
+        getMenuInflater().inflate(R.menu.submenu_fueltypes, menuItem.getSubMenu());
+
+        fuelTypeMenuItem = menu.findItem(R.id.fueltype);
         return true;
     }
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        return super.onPrepareOptionsMenu(menu);
+        // Preselect the menu_list items recorded in Preferences
+        int fuelTypeResID = IDUtils.identify(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE), "id", getBaseContext());
+        MenuItem fuelType = menu.findItem(fuelTypeResID);
+        fuelType.setChecked(true);
+        int iconID = IDUtils.identify(Utils.fuelTypeToIconName(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
+        fuelTypeMenuItem.setIcon(iconID);
+        return true;
     }
 
     @Override

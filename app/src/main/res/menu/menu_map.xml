@@ -2,11 +2,20 @@
 <menu
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+            android:id="@id/fueltype"
+            android:title="@string/menu_fueltype"
+            app:showAsAction="ifRoom">
+
+        <menu><!-- include: submenu_fueltypes.xml --></menu>
+    </item>
+
     <item
             android:id="@id/list"
-            app:showAsAction="always"
+            android:title="@string/menu_list"
             android:icon="@drawable/ic_list_white_24dp"
-            android:title="@string/menu_list">
+            app:showAsAction="ifRoom">
     </item>
 
 </menu>

@@ -4,23 +4,23 @@
             android:checkableBehavior="single">
         <item
                 android:id="@id/E10"
-                android:checked="false"
-                android:title="@string/fueltype_E10" />
+                android:title="@string/fueltype_E10"
+                android:checked="false"/>
         <item
                 android:id="@id/U91"
-                android:checked="false"
-                android:title="@string/fueltype_U91" />
+                android:title="@string/fueltype_U91"
+                android:checked="false"/>
         <item
                 android:id="@id/P95"
-                android:checked="false"
-                android:title="@string/fueltype_P95" />
+                android:title="@string/fueltype_P95"
+                android:checked="false"/>
         <item
                 android:id="@id/P98"
-                android:checked="false"
-                android:title="@string/fueltype_P98" />
+                android:title="@string/fueltype_P98"
+                android:checked="false"/>
         <item
                 android:id="@id/DL"
-                android:checked="false"
-                android:title="@string/fueltype_DL" />
+                android:title="@string/fueltype_DL"
+                android:checked="false"/>
     </group>
 </menu>

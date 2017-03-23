@@ -6,8 +6,10 @@
     <!-- List Content -->
     <string name="item_list_distance">%1$.2f km</string>
 
+    <!-- Search Bar -->
+    <string name="menu_search">Suburb or Postcode</string>
+
     <!-- Filter Toolbar Menu Items -->
-    <string name="menu_search">Search</string>
     <string name="menu_fueltype">Fueltype</string>
     <string name="menu_sort">Sort</string>
     <string name="menu_sort_price">Price</string>

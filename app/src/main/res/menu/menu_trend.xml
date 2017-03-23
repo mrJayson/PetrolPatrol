@@ -3,16 +3,9 @@
       xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-            android:id="@id/search"
-            app:showAsAction="always"
-            android:icon="@drawable/ic_search_white_24dp"
-            android:title="@string/menu_search">
-    </item>
-
-    <item
             android:id="@id/fueltype"
-            app:showAsAction="always"
-            android:title="@string/menu_fueltype">
+            android:title="@string/menu_fueltype"
+            app:showAsAction="always">
 
         <menu><!-- include: submenu_fueltypes.xml --></menu>
     </item>

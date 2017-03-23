@@ -55,6 +55,7 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_search, menu);
         getMenuInflater().inflate(R.menu.menu_list, menu);
         MenuItem menuItem = menu.findItem(R.id.fueltype);
         getMenuInflater().inflate(R.menu.submenu_fueltypes, menuItem.getSubMenu());

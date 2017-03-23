@@ -4,9 +4,9 @@
         xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
             android:id="@id/favourite"
-            app:showAsAction="always"
+            android:title="@string/menu_favourite"
             android:icon="@drawable/ic_favorite_white_24dp"
-            android:title="@string/menu_favourite">
+            app:showAsAction="always">
     </item>
 
 </menu>
