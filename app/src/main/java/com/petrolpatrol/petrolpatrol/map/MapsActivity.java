@@ -52,11 +52,6 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
 
     private boolean cancelMarkerUpdate;
 
-    /**
-     * Parent activities can pass in an intent action to the MapsActivity to indicate the purpose of this MapsActivity.
-     * The Map Activity will perform different actions based on the intentAction variable.
-     */
-
     // Handle to interact with the google Map UI
     private GoogleMap googleMap;
 
@@ -118,7 +113,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(final MenuItem item) {
 
         int id = item.getItemId();
         switch (id) {
@@ -135,7 +130,19 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                 }
                 return true;
             default:
-                return super.onOptionsItemSelected(item);
+                try {
+                    return Utils.fuelTypeSwitch(id, new Utils.Callback() {
+                        @Override
+                        public void execute() {
+                            item.setChecked(true);
+                            Preferences.getInstance().put(Preferences.Key.SELECTED_FUELTYPE, String.valueOf(item.getTitle()));
+                            int iconID = IDUtils.identify(Utils.fuelTypeToIconName(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
+                            fuelTypeMenuItem.setIcon(iconID);
+                        }
+                    });
+                } catch (NoSuchFieldException e) {
+                    return super.onOptionsItemSelected(item);
+                }
         }
     }
 
@@ -181,7 +188,6 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
             if (stationList != null) {
                 Preferences pref = Preferences.getInstance();
                 for (Station station : stationList) {
-                    //googleMap.addMarker(new MarkerOptions().position(new LatLng(station.getLatitude(), station.getLongitude())));
                     double price = station.getPrice(pref.getString(Preferences.Key.SELECTED_FUELTYPE)).getPrice();
                     Marker marker = new Marker(price, station.getLatitude(), station.getLongitude());
                     clusterManager.addItem(marker);

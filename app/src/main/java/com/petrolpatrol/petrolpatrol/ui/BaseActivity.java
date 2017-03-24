@@ -27,7 +27,6 @@ public class BaseActivity extends AppCompatActivity {
     private Toolbar toolbar;
     protected FrameLayout content;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,9 +40,9 @@ public class BaseActivity extends AppCompatActivity {
         // Navigation Drawer interaction from the container_toolbar
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_menu_white_24dp);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         content = (FrameLayout) findViewById(R.id.container_content);
-
     }
 
     @Override
