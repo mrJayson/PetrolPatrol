@@ -24,4 +24,9 @@ public class Constants {
     // Sydney location co-ordinates
     public static final double SYDNEY_LAT = -33.86882;
     public static final double SYDNEY_LONG = 151.209296;
+
+    public static final double MIN_LATITUDE = 0;
+    public static final double MAX_LATITUDE = 90;
+    public static final double MIN_LONGITUDE = -180;
+    public static final double MAX_LONGITUDE = 180;
 }

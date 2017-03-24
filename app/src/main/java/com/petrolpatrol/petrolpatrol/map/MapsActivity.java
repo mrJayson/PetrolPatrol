@@ -82,6 +82,20 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
     }
 
     @Override
+    protected void onStop() {
+        newLocationReceiver.unregister(getBaseContext());
+        locationServiceConnection.stopLocating();
+        locationServiceConnection.unbindService();
+        super.onStop();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        handleIntent(intent);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_search, menu);
         getMenuInflater().inflate(R.menu.menu_map, menu);
@@ -129,16 +143,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
     public void onMapReady(GoogleMap googleMap) {
         this.googleMap = googleMap;
         initialiseMap();
-
         handleIntent(getIntent());
-    }
-
-    @Override
-    protected void onStop() {
-        newLocationReceiver.unregister(getBaseContext());
-        locationServiceConnection.stopLocating();
-        locationServiceConnection.unbindService();
-        super.onStop();
     }
 
     @Override
@@ -163,29 +168,12 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                 new FuelCheckClient.FuelCheckResponse<List<Station>>() {
                     @Override
                     public void onCompletion(List<Station> res) {
-                        stationList = res;
-                        clusterManager.clearItems();
-                        double maxDistance = 0;
-                        for (Station station : res) {
-                            if (station.getDistance() > maxDistance) {
-                                maxDistance = station.getDistance();
-                            }
-                            double price = station.getPrice(pref.getString(Preferences.Key.SELECTED_FUELTYPE)).getPrice();
-                            Marker marker = new Marker(price, station.getLatitude(), station.getLongitude());
-                            clusterManager.addItem(marker);
-                        }
-
-                        // Move camera to current location
-                        LatLng current = new LatLng(latitude, longitude);
-                        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, (float) (Utils.radiusToZoom(maxDistance))));
-                        cancelMarkerUpdate = true; // prevent the resulting onCameraIdle of the camera movement from executing
-
-                        clusterManager.onCameraIdle();
+                        updateMarkersAndMoveCamera(res, getIntent().getAction());
                     }
                 });
     }
 
-    private void handleIntent(Intent intent) {
+    private void handleIntent(final Intent intent) {
         if (intent.getAction() == null) {
             if (cameraPosition != null) {
                 googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
@@ -212,15 +200,60 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                 }
             } else if (intent.getAction().equals(Intent.ACTION_SEARCH)) {
                 String query = intent.getStringExtra(SearchManager.QUERY);
-                LOGE(TAG, "SEARCH");
+
+                final Preferences pref = Preferences.getInstance();
+                FuelCheckClient client = new FuelCheckClient(getBaseContext());
+                client.getFuelPricesForLocation(
+                        query,
+                        pref.getString(Preferences.Key.SELECTED_SORTBY),
+                        pref.getString(Preferences.Key.SELECTED_FUELTYPE),
+                        new FuelCheckClient.FuelCheckResponse<List<Station>>() {
+                            @Override
+                            public void onCompletion(List<Station> res) {
+                                updateMarkersAndMoveCamera(res, intent.getAction());
+                            }
+                        });
             }
         }
     }
 
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        handleIntent(intent);
+    /**
+     * To be called when there is a new list of stations that needs to be displayed on the map
+     * Old markers will be cleared and new markers will be placed and the camera will move to the new markers.
+     *
+     * @param res The new list of stations.
+     * @param intentAction Indicate the context under which this method is called.
+     */
+    private void updateMarkersAndMoveCamera(List<Station> res, String intentAction) {
+        stationList = res;
+        clusterManager.clearItems();
+        // NSW is in the Southern Hemisphere, so latitudes are flipped
+        double northBound = -Constants.MAX_LATITUDE;
+        double southBound = Constants.MIN_LATITUDE;
+        double eastBound = Constants.MIN_LONGITUDE;
+        double westBound = Constants.MAX_LONGITUDE;
+        for (Station station : res) {
+            northBound = Math.max(northBound, station.getLatitude());
+            southBound = Math.min(southBound, station.getLatitude());
+            eastBound = Math.max(eastBound, station.getLongitude());
+            westBound = Math.min(westBound, station.getLongitude());
+            double price = station.getPrice(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)).getPrice();
+            Marker marker = new Marker(price, station.getLatitude(), station.getLongitude());
+            clusterManager.addItem(marker);
+        }
+
+        // Move camera to location
+        try {
+            LatLngBounds bounds = new LatLngBounds(new LatLng(southBound, westBound), new LatLng(northBound, eastBound));
+            int padding = 50; // amount of padding in px to apply to the map edges
+            googleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
+            cancelMarkerUpdate = true; // prevent the resulting onCameraIdle of the camera movement from executing
+            clusterManager.onCameraIdle();
+        } catch (IllegalArgumentException iae) {
+            if (intentAction.equals(Intent.ACTION_SEARCH)) {
+                Toast.makeText(getBaseContext(), getString(R.string.search_invalid), Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     /**

@@ -8,7 +8,8 @@
 
     <!-- Search Bar -->
     <string name="menu_search_">Search</string>
-    <string name="search_hint">Search Suburb or Postcode</string>
+    <string name="search_hint">Suburb or Postcode</string>
+    <string name="search_invalid">Search returned nothing, please check that your query is correct</string>
 
     <!-- Filter Toolbar Menu Items -->
     <string name="menu_fueltype">Fueltype</string>
@@ -37,7 +38,6 @@
     <!-- Maps Toolbar Menu Items -->
 
     <string name="menu_list">Display in list view</string>
-
 
     <!-- Details Toolbar Menu Items -->
 

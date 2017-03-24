@@ -233,6 +233,114 @@ public class FuelCheckClient {
         });
     }
 
+    public void getFuelPricesForLocation(String query, String sortBy, String fuelType, final FuelCheckResponse<List<Station>> completion) {
+
+        String url = "https://api.onegov.nsw.gov.au/FuelPriceCheck/v1/fuel/prices/location";
+
+        // Prepare the header arguments
+        Map<String, String> headerMap = new HashMap<>();
+        headerMap.put("apikey", context.getString(R.string.clientID));
+        headerMap.put("transactionid", IDUtils.UUID());
+        headerMap.put("requesttimestamp", TimeUtils.UTCTimestamp());
+        // Content-type header is apparently already inserted
+        //params.put("Content-type", "application/json; charset=utf-8");
+        headerMap.put("Authorization", "Bearer "+ Preferences.getInstance().getString(Preferences.Key.OAUTH_TOKEN));
+
+        // Prepare the jsonbody of the request
+        JSONObject jsonBody = new JSONObject();
+        try {
+            jsonBody.put("fueltype", fuelType);
+            jsonBody.put("brand", new JSONArray()
+                    .put("7-Eleven")
+                    .put("BP")
+                    .put("Budget")
+                    .put("Caltex")
+                    .put("Caltex Woolworths")
+                    .put("Coles Express")
+                    .put("Costco")
+                    .put("Enhance")
+                    .put("Independent")
+                    .put("Liberty")
+                    .put("Lowes")
+                    .put("Matilda")
+                    .put("Metro Fuel")
+                    .put("Mobil")
+                    .put("Prime Petroleum")
+                    .put("Puma Energy")
+                    .put("Shell")
+                    .put("Speedway")
+                    .put("Tesla")
+                    .put("United")
+                    .put("Westside"));
+            jsonBody.put("namedlocation", query);
+            jsonBody.put("sortby", sortBy);
+            jsonBody.put("sortascending", "true");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        requestPOST(url, headerMap, jsonBody, new FuelCheckResponse<FuelCheckResult>() {
+
+            @Override
+            public void onCompletion(FuelCheckResult res) {
+                JSONArray JSONResponse;
+                GsonBuilder gsonBuilder = new GsonBuilder();
+                List<Station> orderedStationList = new ArrayList<>();
+                final SQLiteClient sqliteClient = new SQLiteClient(context);
+
+                try {
+                    if (res.isSuccess() && res.dataIsObject()) {
+                        if (res.getDataAsObject().get("stations") instanceof JSONArray && res.getDataAsObject().get("prices") instanceof JSONArray) {
+                            JSONResponse = res.getDataAsObject().getJSONArray("stations");
+
+                            final Map<Integer, Station> map = new HashMap<>();
+                            for (Station station : toStationObjects(JSONResponse)) {
+                                map.put(station.getId(), station);
+                            }
+
+                            // Custom deserializer needed to deal with non-primitive types in the Price class
+                            JsonDeserializer<Price> deserializer = new JsonDeserializer<Price>() {
+                                @Override
+                                public Price deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+                                    JsonObject priceJson = json.getAsJsonObject();
+                                    sqliteClient.open();
+                                    FuelType fuelType = sqliteClient.getFuelType(priceJson.get("fueltype").getAsString());
+                                    sqliteClient.close();
+
+                                    return new Price(
+                                            priceJson.get("stationcode").getAsInt(),
+                                            fuelType,
+                                            priceJson.get("price").getAsDouble(),
+                                            priceJson.get("lastupdated").getAsString()
+                                    );
+                                }
+                            };
+
+                            JSONResponse = res.getDataAsObject().getJSONArray("prices");
+
+                            gsonBuilder.registerTypeAdapter(Price.class, deserializer);
+                            Gson gson = gsonBuilder.create();
+
+                            for (int i = 0; i < JSONResponse.length(); i++) {
+                                Price price = gson.fromJson(JSONResponse.get(i).toString(),Price.class);
+                                Station station = (map.get(price.getStationID()));
+                                station.setPrice(price);
+                                orderedStationList.add(station);
+                            }
+
+                        } else {
+                            throw new JSONException("Invalid JSON");
+                        }
+                    }
+                } catch (Exception e) {
+                    LOGE(TAG, "Error occurred processing data");
+                    e.printStackTrace();
+                }
+                completion.onCompletion(orderedStationList);
+            }
+        });
+    }
+
     public void getReferenceData(final FuelCheckResponse<Object> completion) {
         String url = "https://api.onegov.nsw.gov.au/FuelCheckRefData/v1/fuel/lovs";
         SQLiteClient sqliteClient = new SQLiteClient(context);
