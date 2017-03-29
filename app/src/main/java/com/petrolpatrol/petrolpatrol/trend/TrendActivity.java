@@ -4,11 +4,13 @@ import android.content.Intent;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.TextView;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.components.XAxis;
@@ -30,7 +32,9 @@ import com.petrolpatrol.petrolpatrol.util.IDUtils;
 import com.petrolpatrol.petrolpatrol.util.Utils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGE;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
@@ -38,6 +42,8 @@ import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 public class TrendActivity extends BaseActivity {
 
     private static final String TAG = makeLogTag(TrendActivity.class);
+
+    private Map<String, TodayPrice> dataTodayPrices;
 
     private List<TrendData> dataWeek;
     private List<TrendData> dataMonth;
@@ -52,7 +58,9 @@ public class TrendActivity extends BaseActivity {
 
     private TrendResolution chartResolution;
 
+
     private MenuItem fuelTypeMenuItem;
+    private TextView todayPrice;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,8 +68,11 @@ public class TrendActivity extends BaseActivity {
 
         getLayoutInflater().inflate(R.layout.activity_trend, content);
 
+        todayPrice = (TextView) findViewById(R.id.today_price);
+
         chartContainer = (FrameLayout) findViewById(R.id.container_chart);
 
+        dataTodayPrices = new HashMap<>();
         dataWeek = new ArrayList<>();
         dataMonth = new ArrayList<>();
         dataYear = new ArrayList<>();
@@ -77,7 +88,7 @@ public class TrendActivity extends BaseActivity {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 chartResolution = TrendResolution.toEnum(String.valueOf(tab.getText()));
-                makeChartVisible(chartResolution);
+                updateVisibility(chartResolution);
             }
 
             @Override
@@ -102,6 +113,16 @@ public class TrendActivity extends BaseActivity {
                 startActivity(intent);
             }
         });
+
+        if (dataTodayPrices.isEmpty()) {
+            FuelCheckClient client = new FuelCheckClient(getBaseContext());
+            client.getTodayPrices(new FuelCheckClient.FuelCheckResponse<Map<String, TodayPrice>>() {
+                @Override
+                public void onCompletion(Map<String, TodayPrice> res) {
+                    dataTodayPrices = res;
+                }
+            });
+        }
     }
 
     @Override
@@ -147,7 +168,7 @@ public class TrendActivity extends BaseActivity {
             if (!dataYear.isEmpty()) {
                 chartYear = drawChart(dataYear, TrendResolution.YEAR, chartYear);
             }
-            makeChartVisible(chartResolution);
+            updateVisibility(chartResolution);
         }
     }
 
@@ -206,7 +227,12 @@ public class TrendActivity extends BaseActivity {
                 if (!dataYear.isEmpty()) {
                     chartYear = drawChart(dataYear, TrendResolution.YEAR, chartYear);
                 }
-                makeChartVisible(chartResolution);
+                updateVisibility(chartResolution);
+
+                if (!dataTodayPrices.isEmpty()) {
+                    TodayPrice tp = dataTodayPrices.get(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE));
+                    todayPrice.setText(String.valueOf(tp.getPrice()));
+                }
             }
         });
     }
@@ -275,6 +301,8 @@ public class TrendActivity extends BaseActivity {
         dataSet.setCircleRadius(6);
         dataSet.setDrawCircleHole(false);
         dataSet.setLineWidth(2);
+        dataSet.setColor(ContextCompat.getColor(getBaseContext(), R.color.colorPrimary));
+        dataSet.setCircleColor(ContextCompat.getColor(getBaseContext(), R.color.colorPrimaryDark));
 
         // Format data points to display with one decimal place
         dataSet.setValueFormatter(new DefaultValueFormatter(1));
@@ -376,7 +404,7 @@ public class TrendActivity extends BaseActivity {
      * Changes which chart is displayed to the user.
      * @param resolution The selected trend resolution to display.
      */
-    private void makeChartVisible(TrendResolution resolution) {
+    private void updateVisibility(TrendResolution resolution) {
         switch (resolution) {
             case WEEK:
                 chartWeek.setVisibility(View.VISIBLE);

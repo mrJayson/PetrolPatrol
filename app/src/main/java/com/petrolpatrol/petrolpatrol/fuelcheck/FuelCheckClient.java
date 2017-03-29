@@ -65,7 +65,7 @@ public class FuelCheckClient {
         });
     }
 
-    public void getTodayPrices(final FuelCheckResponse<List<TodayPrice>> completion) {
+    public void getTodayPrices(final FuelCheckResponse<Map<String, TodayPrice>> completion) {
         String url = "http://api.onegov.nsw.gov.au/FuelCheckApp/v1/fuel/prices/currenttrend";
         JSONArrayRequestGET(url, new FuelCheckResponse<FuelCheckResult>() {
             @Override
@@ -762,10 +762,10 @@ public class FuelCheckClient {
         return stations;
     }
 
-    private List<TodayPrice> toTodayPriceObjects(JSONArray JSON) {
+    private Map<String, TodayPrice> toTodayPriceObjects(JSONArray JSON) {
 
         final SQLiteClient sqliteClient = new SQLiteClient(context);
-        List<TodayPrice> todayPrices = new ArrayList<>();
+        Map<String, TodayPrice> todayPrices = new HashMap<>();
 
         JsonDeserializer<TodayPrice> deserializer = new JsonDeserializer<TodayPrice>() {
 
@@ -787,7 +787,8 @@ public class FuelCheckClient {
         Gson customGson = gsonBuilder.create();
         try {
             for (int i = 0; i < JSON.length(); i++) {
-                todayPrices.add(customGson.fromJson(JSON.get(i).toString(), TodayPrice.class));
+                TodayPrice todayPrice = customGson.fromJson(JSON.get(i).toString(), TodayPrice.class);
+                todayPrices.put(todayPrice.getFuelType().getCode(), todayPrice);
             }
         } catch (JSONException e) {
             LOGE(TAG, "Error occurred processing JSONTodayPrices");

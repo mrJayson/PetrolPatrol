@@ -37,6 +37,7 @@ class ClusterRenderer extends DefaultClusterRenderer {
         markerOptions.icon(BitmapDescriptorFactory.fromBitmap(getMarkerBitmapFromView(priceOutput)));
     }
 
+
     private Bitmap getMarkerBitmapFromView(String price) {
 
         View markerView = inflater.inflate(R.layout.marker_map, null);
