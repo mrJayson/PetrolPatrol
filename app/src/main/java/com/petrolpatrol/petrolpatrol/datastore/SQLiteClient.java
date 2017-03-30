@@ -28,6 +28,7 @@ public class SQLiteClient extends SQLiteOpenHelper {
     private static final String TABLE_BRANDS = "brands";
     private static final String TABLE_FUELTYPES = "fueltypes";
     private static final String TABLE_STATIONS = "stations";
+    private static final String TABLE_PRICES = "prices";
     private static final String INDEX_STATIONS = "stations_index";
 
     private static final String COLUMN_ID = "id";
@@ -37,6 +38,10 @@ public class SQLiteClient extends SQLiteOpenHelper {
     private static final String COLUMN_LATITUDE = "latitude";
     private static final String COLUMN_LONGITUDE = "longitude";
     private static final String COLUMN_CODE = "code";
+    private static final String COLUMN_STATION_ID = "stationID";
+    private static final String COLUMN_FUELTYPE_ID = "fuelTypeID";
+    private static final String COLUMN_PRICE = "price";
+    private static final String COLUMN_LAST_UPDATED = "last_updated";
     private static final String COLUMN_KEY = "key";
     private static final String COLUMN_VALUE = "value";
 
@@ -84,6 +89,18 @@ public class SQLiteClient extends SQLiteOpenHelper {
                 + ")";
         sqLiteDatabase.execSQL(CREATE_TABLE_STATIONS);
 
+        String CREATE_TABLE_PRICES = "CREATE TABLE " + TABLE_PRICES + " ("
+                + COLUMN_ID + " INTEGER PRIMARY KEY, "
+                + COLUMN_STATION_ID + " INTEGER, "
+                + COLUMN_FUELTYPE_ID + " INTEGER, "
+                + COLUMN_PRICE + " REAL NOT NULL, "
+                + COLUMN_LAST_UPDATED + " TEXT NOT NULL, "
+                + "FOREIGN KEY(" + COLUMN_STATION_ID + ") REFERENCES " + TABLE_STATIONS + "(" + COLUMN_ID + "),"
+                + "FOREIGN KEY(" + COLUMN_FUELTYPE_ID + ") REFERENCES " + TABLE_FUELTYPES + "(" + COLUMN_ID + "),"
+                + "UNIQUE (" + COLUMN_STATION_ID + ", " + COLUMN_FUELTYPE_ID + ")"
+                + ")";
+        sqLiteDatabase.execSQL(CREATE_TABLE_PRICES);
+
         String CREATE_INDEX_STATIONS = "CREATE INDEX " + INDEX_STATIONS + " ON " + TABLE_STATIONS + "(" + COLUMN_ID + ")";
         sqLiteDatabase.execSQL(CREATE_INDEX_STATIONS);
     }
@@ -92,6 +109,8 @@ public class SQLiteClient extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
         LOGI(TAG, "Upgrading databaseHandle from version " + oldVersion + " to " + newVersion + ", current data will be wiped.");
 
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_METADATA);
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_PRICES);
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_STATIONS);
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_BRANDS);
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_FUELTYPES);
@@ -226,7 +245,7 @@ public class SQLiteClient extends SQLiteOpenHelper {
     }
 
     /*
-     * FuelType
+     * Station
      */
 
     public Station getStation(int id) {
