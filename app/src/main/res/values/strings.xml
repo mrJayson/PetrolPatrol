@@ -41,7 +41,7 @@
 
     <!-- Details Toolbar Menu Items -->
 
-    <string name="menu_favourite">Favourite It!</string>
+    <string name="menu_favourite">Add to favourites</string>
 
     <!-- Details Item Content -->
     <string name="item_details_lastupdated">Last Updated: %1$s</string>

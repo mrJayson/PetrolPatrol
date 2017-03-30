@@ -2,7 +2,14 @@ package com.petrolpatrol.petrolpatrol.datastore;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import com.google.gson.Gson;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.reflect.TypeToken;
 import com.petrolpatrol.petrolpatrol.R;
+
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
@@ -30,7 +37,8 @@ public class Preferences {
         DEFAULT_FUELTYPE,
         DEFAULT_SORTBY,
         SELECTED_FUELTYPE,
-        SELECTED_SORTBY
+        SELECTED_SORTBY,
+        FAVOURITE_STATIONS
     }
 
     private Preferences(Context context) {
@@ -122,7 +130,27 @@ public class Preferences {
         return sharedPreferences.getBoolean(key.name(), false);
     }
 
+    public List<Integer> getFavourites() {
+        String stringList = getString(Key.FAVOURITE_STATIONS);
+        List<Integer> favourites;
+        if (stringList == null) {
+            favourites = new ArrayList<>();
+        } else {
+            Gson gson = new Gson();
+            Type listType = new TypeToken<ArrayList<Integer>>(){}.getType(); // Specify that it is an Integer list, not Double list
+            favourites = gson.fromJson(stringList, listType);
+        }
+        return favourites;
+    }
+
     // setters
+
+    public void putFavourites(List<Integer> val) {
+        Gson gson = new Gson();
+        String stringList = gson.toJson(val);
+        editor.putString(Key.FAVOURITE_STATIONS.name(),stringList);
+        editor.commit();
+    }
 
     public void put(Key key, boolean val) {
         editor.putBoolean(key.name(), val);

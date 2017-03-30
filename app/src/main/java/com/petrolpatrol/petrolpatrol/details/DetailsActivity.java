@@ -8,6 +8,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 import com.petrolpatrol.petrolpatrol.R;
+import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.datastore.SQLiteClient;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.model.Price;
@@ -16,7 +17,12 @@ import com.petrolpatrol.petrolpatrol.ui.BaseActivity;
 
 import java.util.List;
 
+import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGE;
+import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
+
 public class DetailsActivity extends BaseActivity {
+
+    private static final String TAG = makeLogTag(DetailsActivity.class);
 
     public static final String ARG_STATION_ID = "ARG_STATION_ID";
 
@@ -26,6 +32,8 @@ public class DetailsActivity extends BaseActivity {
     private RecyclerView containerDetailsListView;
 
     private DetailsAdapter adapter;
+
+    private MenuItem favouritesMenuItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,11 +96,56 @@ public class DetailsActivity extends BaseActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_search, menu);
         getMenuInflater().inflate(R.menu.menu_details, menu);
+        favouritesMenuItem = menu.findItem(R.id.favourite);
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        return super.onOptionsItemSelected(item);
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        Preferences pref = Preferences.getInstance();
+        List<Integer> favourites = pref.getFavourites();
+        if (favourites.contains(station.getId())) {
+            favouritesMenuItem.setIcon(R.drawable.ic_favorite_enabled_24dp);
+        }
+        return super.onPrepareOptionsMenu(menu);
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.favourite:
+                if (station != null) {
+                    boolean toggled = toggleFavourites(station.getId());
+                    if (toggled) {
+                        // set into enabled state
+                        item.setIcon(R.drawable.ic_favorite_enabled_24dp);
+                    } else {
+                        // set into un-enabled state
+                        item.setIcon(R.drawable.ic_favorite_unenabled_24dp);
+                    }
+                }
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private boolean toggleFavourites(int stationID) {
+        Preferences pref = Preferences.getInstance();
+        List<Integer> favourites = pref.getFavourites();
+        boolean toggleStatus;
+        if (favourites.contains(stationID)) {
+            // if it already contains, then remove
+            favourites.remove(Integer.valueOf(stationID)); // need to be explicit since it might remove by index instead
+            toggleStatus = false;
+        } else {
+            favourites.add(stationID);
+            toggleStatus = true;
+        }
+        pref.putFavourites(favourites);
+        return toggleStatus;
+    }
+
+
 }
