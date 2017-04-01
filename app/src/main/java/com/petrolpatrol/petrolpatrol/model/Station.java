@@ -3,79 +3,26 @@ package com.petrolpatrol.petrolpatrol.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Station implements Parcelable {
 
-    public static final int NO_ID = -1;
-    public static final int NO_DISTANCE = 0;
+    // Distance is only given if there is a location to measure, not all use cases give a location
+    public static final int NO_DISTANCE = -1;
 
     private final Brand brand;
     private final int id;
     private final String name;
     private final String address;
-    private final Location location;
     private Map<String, Price> prices;
-
-
-    public static class Location implements Parcelable {
-        private final double latitude;
-        private final double longitude;
-        private final double distance;
-
-        public Location(double latitude, double longitude, double distance) {
-            this.latitude = latitude;
-            this.longitude = longitude;
-            this.distance = distance;
-        }
-
-        public Location(double latitude, double longitude) {
-            this(latitude,longitude, NO_DISTANCE);
-        }
-
-        protected Location(Parcel in) {
-            latitude = in.readDouble();
-            longitude = in.readDouble();
-            distance = in.readDouble();
-        }
-
-        @Override
-        public int describeContents() {
-            return 0;
-        }
-
-        @Override
-        public void writeToParcel(Parcel dest, int flags) {
-            dest.writeDouble(latitude);
-            dest.writeDouble(longitude);
-            dest.writeDouble(distance);
-        }
-
-        @SuppressWarnings("unused")
-        public static final Parcelable.Creator<Location> CREATOR = new Parcelable.Creator<Location>() {
-            @Override
-            public Location createFromParcel(Parcel in) {
-                return new Location(in);
-            }
-
-            @Override
-            public Location[] newArray(int size) {
-                return new Location[size];
-            }
-        };
-    }
-
-    public Station(Brand brand, String name, String address, double latitude, double longitude) {
-        this(brand, NO_ID, name, address, latitude, longitude, NO_DISTANCE);
-    }
+    private final double latitude;
+    private final double longitude;
+    private final double distance;
 
     public Station(Brand brand, int id, String name, String address, double latitude, double longitude) {
         this(brand, id, name, address, latitude, longitude, NO_DISTANCE);
-    }
-
-    public Station(Brand brand, String name, String address, double latitude, double longitude, double distance) {
-        this(brand, NO_ID, name, address, latitude, longitude, distance);
     }
 
     public Station(Brand brand, int id, String name, String address, double latitude, double longitude, double distance) {
@@ -83,8 +30,10 @@ public class Station implements Parcelable {
         this.name = name;
         this.address = address;
         this.brand = brand;
-        this.location = new Location(latitude, longitude, distance);
-        this.prices = new HashMap<String, Price>();
+        this.prices = new HashMap<>();
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.distance = distance;
     }
 
     public int getId() {
@@ -104,15 +53,15 @@ public class Station implements Parcelable {
     }
 
     public double getLatitude() {
-        return location.latitude;
+        return latitude;
     }
 
     public double getLongitude() {
-        return location.longitude;
+        return longitude;
     }
 
     public double getDistance() {
-        return location.distance;
+        return distance;
     }
 
     public Price getPrice(String code) {
@@ -121,6 +70,10 @@ public class Station implements Parcelable {
         } else {
             return null;
         }
+    }
+
+    public Collection<Price> getAllPrices() {
+        return prices.values();
     }
 
     public void setPrice(Price price) {
@@ -134,12 +87,9 @@ public class Station implements Parcelable {
         id = in.readInt();
         name = in.readString();
         address = in.readString();
-        location = (Location) in.readValue(Location.class.getClassLoader());
-        prices = new HashMap<>();
-        int size = in.readInt();
-        for (int i = 0; i < size; i++) {
-            prices.put(in.readString(), (Price) in.readValue(Price.class.getClassLoader()));
-        }
+        latitude = in.readDouble();
+        longitude = in.readDouble();
+        distance = in.readDouble();
     }
 
     @Override
@@ -153,12 +103,9 @@ public class Station implements Parcelable {
         dest.writeInt(id);
         dest.writeString(name);
         dest.writeString(address);
-        dest.writeValue(location);
-        dest.writeInt(prices.size());
-        for(Map.Entry<String, Price> entry : prices.entrySet()) {
-            dest.writeString(entry.getKey());
-            dest.writeValue(entry.getValue());
-        }
+        dest.writeDouble(latitude);
+        dest.writeDouble(longitude);
+        dest.writeDouble(distance);
     }
 
     @SuppressWarnings("unused")

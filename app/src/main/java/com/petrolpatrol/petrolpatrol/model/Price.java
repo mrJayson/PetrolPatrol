@@ -5,16 +5,28 @@ import android.os.Parcelable;
 
 public class Price implements Parcelable {
 
+    public static final int NO_ID = -1;
+
+    private final int id;
+
     private final int stationID;
     private final FuelType fuelType;
     private final double price;
     private final String lastUpdated;
-
     public Price(int stationID, FuelType fuelType, double price, String lastUpdated) {
+        this(NO_ID, stationID, fuelType, price, lastUpdated);
+    }
+
+    public Price(int id, int stationID, FuelType fuelType, double price, String lastUpdated) {
+        this.id = id;
         this.stationID = stationID;
         this.fuelType = fuelType;
         this.price = price;
         this.lastUpdated = lastUpdated;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public int getStationID() {
@@ -35,6 +47,7 @@ public class Price implements Parcelable {
 
 
     protected Price(Parcel in) {
+        id = in.readInt();
         stationID = in.readInt();
         fuelType = (FuelType) in.readValue(FuelType.class.getClassLoader());
         price = in.readDouble();
@@ -48,6 +61,7 @@ public class Price implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(id);
         dest.writeInt(stationID);
         dest.writeValue(fuelType);
         dest.writeDouble(price);

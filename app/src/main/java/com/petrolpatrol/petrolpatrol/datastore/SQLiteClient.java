@@ -3,10 +3,12 @@ package com.petrolpatrol.petrolpatrol.datastore;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import com.petrolpatrol.petrolpatrol.model.Brand;
 import com.petrolpatrol.petrolpatrol.model.FuelType;
+import com.petrolpatrol.petrolpatrol.model.Price;
 import com.petrolpatrol.petrolpatrol.model.Station;
 
 import java.util.ArrayList;
@@ -45,7 +47,7 @@ public class SQLiteClient extends SQLiteOpenHelper {
     private static final String COLUMN_KEY = "key";
     private static final String COLUMN_VALUE = "value";
 
-    public SQLiteClient(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
+    private SQLiteClient(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
     }
 
@@ -109,12 +111,23 @@ public class SQLiteClient extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
         LOGI(TAG, "Upgrading databaseHandle from version " + oldVersion + " to " + newVersion + ", current data will be wiped.");
 
+        clearDb(sqLiteDatabase);
+        onCreate(sqLiteDatabase);
+    }
+
+    private void clearDb(SQLiteDatabase sqLiteDatabase) {
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_METADATA);
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_PRICES);
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_STATIONS);
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_BRANDS);
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + TABLE_FUELTYPES);
-        onCreate(sqLiteDatabase);
+    }
+
+    public void resetDatabase() {
+        open();
+        clearDb(databaseHandle);
+        onCreate(databaseHandle);
+        close();
     }
 
     public void open() {
@@ -188,6 +201,9 @@ public class SQLiteClient extends SQLiteOpenHelper {
 
     public void insertBrand(Brand brand) {
         ContentValues contentValues = new ContentValues();
+        if (brand.getId() != Brand.NO_ID) {
+            contentValues.put(COLUMN_ID, brand.getId());
+        }
         contentValues.put(COLUMN_NAME, brand.getName());
         databaseHandle.insertWithOnConflict(TABLE_BRANDS, null, contentValues, SQLiteDatabase.CONFLICT_REPLACE);
     }
@@ -230,7 +246,8 @@ public class SQLiteClient extends SQLiteOpenHelper {
             fuelType = new FuelType(cursor.getInt(
                     cursor.getColumnIndex(COLUMN_ID)),
                     cursor.getString(cursor.getColumnIndex(COLUMN_CODE)),
-                    cursor.getString(cursor.getColumnIndex(COLUMN_NAME)));
+                    cursor.getString(cursor.getColumnIndex(COLUMN_NAME))
+            );
             allFuelTypes.add(fuelType);
         }
         cursor.close();
@@ -239,6 +256,9 @@ public class SQLiteClient extends SQLiteOpenHelper {
 
     public void insertFuelType(FuelType fuelType) {
         ContentValues contentValues = new ContentValues();
+        if (fuelType.getId() != FuelType.NO_ID) {
+            contentValues.put(COLUMN_ID, fuelType.getId());
+        }
         contentValues.put(COLUMN_CODE, fuelType.getCode());
         contentValues.put(COLUMN_NAME, fuelType.getName());
         databaseHandle.insertWithOnConflict(TABLE_FUELTYPES, null, contentValues, SQLiteDatabase.CONFLICT_REPLACE);
@@ -256,9 +276,12 @@ public class SQLiteClient extends SQLiteOpenHelper {
                     getBrand(cursor.getInt(cursor.getColumnIndex(COLUMN_BRAND))), cursor.getInt(cursor.getColumnIndex(COLUMN_ID)),
                     cursor.getString(cursor.getColumnIndex(COLUMN_NAME)),
                     cursor.getString(cursor.getColumnIndex(COLUMN_ADDRESS)),
-                    cursor.getColumnIndex(COLUMN_LATITUDE),
+                    cursor.getDouble(cursor.getColumnIndex(COLUMN_LATITUDE)),
                     cursor.getDouble(cursor.getColumnIndex(COLUMN_LONGITUDE))
             );
+            for (Price price : getPricesByStation(station.getId())) {
+                station.setPrice(price);
+            }
         }
         cursor.close();
         return station;
@@ -273,5 +296,80 @@ public class SQLiteClient extends SQLiteOpenHelper {
         contentValues.put(COLUMN_LATITUDE, station.getLatitude());
         contentValues.put(COLUMN_LONGITUDE, station.getLongitude());
         databaseHandle.insertWithOnConflict(TABLE_STATIONS, null, contentValues, SQLiteDatabase.CONFLICT_REPLACE);
+
+        for (Price price : station.getAllPrices()) {
+            insertPrice(price);
+        }
+    }
+
+    public List<Station> getAllStations() {
+        List<Station> allStations = new ArrayList<>();
+        Cursor cursor = databaseHandle.query(TABLE_STATIONS, null, null, null, null, null, null);
+        Station station;
+        while (cursor.moveToNext()) {
+            station = new Station(
+                    getBrand(cursor.getInt(cursor.getColumnIndex(COLUMN_BRAND))), cursor.getInt(cursor.getColumnIndex(COLUMN_ID)),
+                    cursor.getString(cursor.getColumnIndex(COLUMN_NAME)),
+                    cursor.getString(cursor.getColumnIndex(COLUMN_ADDRESS)),
+                    cursor.getDouble(cursor.getColumnIndex(COLUMN_LATITUDE)),
+                    cursor.getDouble(cursor.getColumnIndex(COLUMN_LONGITUDE))
+            );
+            for (Price price : getPricesByStation(station.getId())) {
+                station.setPrice(price);
+            }
+            allStations.add(station);
+        }
+        cursor.close();
+        return allStations;
+    }
+
+    /*
+     * Price
+     */
+
+    public void insertPrice(Price price) {
+        ContentValues contentValues = new ContentValues();
+        if (price.getId() != Price.NO_ID) {
+            contentValues.put(COLUMN_ID, price.getId());
+        }
+        contentValues.put(COLUMN_STATION_ID, price.getStationID());
+        contentValues.put(COLUMN_FUELTYPE_ID, price.getFuelType().getId());
+        contentValues.put(COLUMN_PRICE, price.getPrice());
+        contentValues.put(COLUMN_LAST_UPDATED, price.getLastUpdated());
+        databaseHandle.insertWithOnConflict(TABLE_PRICES, null, contentValues, SQLiteDatabase.CONFLICT_REPLACE);
+    }
+
+    public List<Price> getPricesByStation(int stationID) {
+        List<Price> prices = new ArrayList<>();
+        Cursor cursor = databaseHandle.query(TABLE_PRICES, null, COLUMN_STATION_ID + " = \"" + stationID + "\"", null, null, null, null);
+        Price price;
+        while (cursor.moveToNext()) {
+            price = new Price(
+                    cursor.getInt(cursor.getColumnIndex(COLUMN_ID)),
+                    cursor.getInt(cursor.getColumnIndex(COLUMN_STATION_ID)),
+                    getFuelType(cursor.getInt(cursor.getColumnIndex(COLUMN_FUELTYPE_ID))),
+                    cursor.getDouble(cursor.getColumnIndex(COLUMN_PRICE)),
+                    cursor.getString(cursor.getColumnIndex(COLUMN_LAST_UPDATED))
+            );
+            prices.add(price);
+        }
+        cursor.close();
+        return prices;
+    }
+
+    public List<Price> getAllPrices() {
+        List<Price> allPrices = new ArrayList<>();
+        Cursor cursor = databaseHandle.query(TABLE_PRICES, null, null, null, null, null, null);
+        Price price;
+        while (cursor.moveToNext()) {
+            price = new Price(cursor.getInt(cursor.getColumnIndex(COLUMN_STATION_ID)),
+                    getFuelType(cursor.getInt(cursor.getColumnIndex(COLUMN_FUELTYPE_ID))),
+                    cursor.getDouble(cursor.getColumnIndex(COLUMN_PRICE)),
+                    cursor.getString(cursor.getColumnIndex(COLUMN_LAST_UPDATED))
+            );
+            allPrices.add(price);
+        }
+        cursor.close();
+        return allPrices;
     }
 }
