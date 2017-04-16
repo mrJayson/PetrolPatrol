@@ -367,7 +367,6 @@ public class FuelCheckClient {
                 if (res.isSuccess()) {
                     // Add Brands and FuelTypes first, then stations
                     JSONArray JSONResponse;
-                    Gson gson = new Gson();
                     final SQLiteClient sqliteClient = new SQLiteClient(context);
 
                     try {
@@ -381,8 +380,21 @@ public class FuelCheckClient {
                         } else {
                             throw new JSONException("Invalid JSON");
                         }
+
+                        Gson brandGson = new GsonBuilder().registerTypeAdapter(Brand.class, new JsonDeserializer<Brand>() {
+                            @Override
+                            public Brand deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+                                JsonObject brandJson = jsonElement.getAsJsonObject();
+                                if (brandJson.has("id")) {
+                                    return new Brand(brandJson.get("id").getAsInt(), brandJson.get("name").getAsString());
+                                } else {
+                                    return new Brand(brandJson.get("name").getAsString());
+                                }
+                            }
+                        }).create();
+
                         Type brandListType = new TypeToken<ArrayList<Brand>>(){}.getType();
-                        List<Brand> brands = gson.fromJson(JSONResponse.toString(),brandListType);
+                        List<Brand> brands = brandGson.fromJson(JSONResponse.toString(),brandListType);
 
                         // Insert into database
                         sqliteClient.open();
@@ -401,8 +413,21 @@ public class FuelCheckClient {
                         } else {
                             throw new JSONException("Invalid JSON");
                         }
+
+                        Gson fuelTypeGson = new GsonBuilder().registerTypeAdapter(FuelType.class, new JsonDeserializer<FuelType>() {
+                            @Override
+                            public FuelType deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+                                JsonObject fuelTypeJson = jsonElement.getAsJsonObject();
+                                if (fuelTypeJson.has("id")) {
+                                    return new FuelType(fuelTypeJson.get("id").getAsInt(), fuelTypeJson.get("code").getAsString(),  fuelTypeJson.get("name").getAsString());
+                                } else {
+                                    return new FuelType(fuelTypeJson.get("code").getAsString(),  fuelTypeJson.get("name").getAsString());
+                                }
+                            }
+                        }).create();
+
                         Type fuelTypeListType = new TypeToken<ArrayList<FuelType>>(){}.getType();
-                        List<FuelType> fuelTypes = gson.fromJson(JSONResponse.toString(),fuelTypeListType);
+                        List<FuelType> fuelTypes = fuelTypeGson.fromJson(JSONResponse.toString(),fuelTypeListType);
 
                         // Insert into database
                         sqliteClient.open();
