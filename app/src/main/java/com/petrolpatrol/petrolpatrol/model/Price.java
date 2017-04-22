@@ -45,7 +45,6 @@ public class Price implements Parcelable {
         return lastUpdated;
     }
 
-
     protected Price(Parcel in) {
         id = in.readInt();
         stationID = in.readInt();

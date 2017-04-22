@@ -90,6 +90,11 @@ public class Station implements Parcelable {
         latitude = in.readDouble();
         longitude = in.readDouble();
         distance = in.readDouble();
+        prices = new HashMap<>();
+        int size = in.readInt();
+        for (int i = 0; i < size; i++) {
+            prices.put(in.readString(), (Price) in.readValue(Price.class.getClassLoader()));
+        }
     }
 
     @Override
@@ -106,6 +111,11 @@ public class Station implements Parcelable {
         dest.writeDouble(latitude);
         dest.writeDouble(longitude);
         dest.writeDouble(distance);
+        dest.writeInt(prices.size());
+        for(Map.Entry<String, Price> entry : prices.entrySet()) {
+            dest.writeString(entry.getKey());
+            dest.writeValue(entry.getValue());
+        }
     }
 
     @SuppressWarnings("unused")
