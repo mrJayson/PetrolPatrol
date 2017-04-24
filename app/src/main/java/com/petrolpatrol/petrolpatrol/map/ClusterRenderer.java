@@ -1,5 +1,6 @@
 package com.petrolpatrol.petrolpatrol.map;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -40,6 +41,7 @@ class ClusterRenderer extends DefaultClusterRenderer {
 
     private Bitmap getMarkerBitmapFromView(String price) {
 
+        @SuppressLint("InflateParams")
         View markerView = inflater.inflate(R.layout.marker_map, null);
         ImageView circleView = (ImageView) markerView.findViewById(R.id.marker_circle);
         TextView priceView = (TextView) markerView.findViewById(R.id.marker_price);

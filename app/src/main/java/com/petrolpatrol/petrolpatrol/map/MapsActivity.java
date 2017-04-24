@@ -29,7 +29,9 @@ import com.petrolpatrol.petrolpatrol.util.IDUtils;
 import com.petrolpatrol.petrolpatrol.util.Utils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
@@ -42,7 +44,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
 
     private static final String TAG = makeLogTag(MapsActivity.class);
 
-    // Custom intent action used in conjunction with Intent.ACTION_SEARCh
+    // Custom intent action used in conjunction with Intent.ACTION_SEARCH
     public static final String ACTION_GPS = "ACTION_GPS";
 
     private LocationServiceConnection locationServiceConnection;
@@ -56,7 +58,8 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
     // Handle to interact with the google Map UI
     private GoogleMap googleMap;
 
-    private List<Station> stationList;
+    private Map<Integer, Station> allStations;
+    private List<Station> visibleStations;
     private CameraPosition cameraPosition;
 
     private ClusterManager<Marker> clusterManager;
@@ -75,6 +78,8 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
         newLocationReceiver = new NewLocationReceiver(this);
 
         cancelMarkerUpdate = true;
+
+        allStations = new HashMap<>();
     }
 
     @Override
@@ -119,13 +124,13 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
         int id = item.getItemId();
         switch (id) {
             case R.id.list:
-                if (stationList != null) {
+                if (visibleStations != null) {
                     Intent intent = new Intent(getApplicationContext(), ListActivity.class);
                     Bundle bundle = intent.getExtras();
                     if (bundle == null) {
                         bundle = new Bundle();
                     }
-                    bundle.putParcelableArrayList(ListActivity.ARG_STATIONS, (ArrayList<? extends Parcelable>) stationList);
+                    bundle.putParcelableArrayList(ListActivity.ARG_STATIONS, (ArrayList<? extends Parcelable>) visibleStations);
                     intent.putExtras(bundle);
                     startActivity(intent);
                 }
@@ -186,9 +191,9 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
             if (cameraPosition != null) {
                 googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
             }
-            if (stationList != null) {
+            if (visibleStations != null) {
                 Preferences pref = Preferences.getInstance();
-                for (Station station : stationList) {
+                for (Station station : visibleStations) {
                     double price = station.getPrice(pref.getString(Preferences.Key.SELECTED_FUELTYPE)).getPrice();
                     Marker marker = new Marker(price, station.getLatitude(), station.getLongitude());
                     clusterManager.addItem(marker);
@@ -226,32 +231,15 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
 
     /**
      * To be called when there is a new list of stations that needs to be displayed on the map
-     * Old markers will be cleared and new markers will be placed and the camera will move to the new markers.
      *
      * @param res The new list of stations.
      * @param intentAction Indicate the context under which this method is called.
      */
     private void updateMarkersAndMoveCamera(List<Station> res, String intentAction) {
-        stationList = res;
-        clusterManager.clearItems();
-        // NSW is in the Southern Hemisphere, so latitudes are flipped
-        double northBound = -Constants.MAX_LATITUDE;
-        double southBound = Constants.MIN_LATITUDE;
-        double eastBound = Constants.MIN_LONGITUDE;
-        double westBound = Constants.MAX_LONGITUDE;
-        for (Station station : res) {
-            northBound = Math.max(northBound, station.getLatitude());
-            southBound = Math.min(southBound, station.getLatitude());
-            eastBound = Math.max(eastBound, station.getLongitude());
-            westBound = Math.min(westBound, station.getLongitude());
-            double price = station.getPrice(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)).getPrice();
-            Marker marker = new Marker(price, station.getLatitude(), station.getLongitude());
-            clusterManager.addItem(marker);
-        }
 
         // Move camera to location
         try {
-            LatLngBounds bounds = new LatLngBounds(new LatLng(southBound, westBound), new LatLng(northBound, eastBound));
+            LatLngBounds bounds = updateMarkers(res, true);
             int padding = 50; // amount of padding in px to apply to the map edges
             googleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
             cancelMarkerUpdate = true; // prevent the resulting onCameraIdle of the camera movement from executing
@@ -260,6 +248,42 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
             if (intentAction.equals(Intent.ACTION_SEARCH)) {
                 Toast.makeText(getBaseContext(), getString(R.string.search_invalid), Toast.LENGTH_SHORT).show();
             }
+        }
+    }
+
+    private LatLngBounds updateMarkers(List<Station> res, boolean returnBounds) {
+
+        // NSW is in the Southern Hemisphere, so latitudes are flipped
+        double northBound = -Constants.MAX_LATITUDE;
+        double southBound = Constants.MIN_LATITUDE;
+        double eastBound = Constants.MIN_LONGITUDE;
+        double westBound = Constants.MAX_LONGITUDE;
+
+        // The received list of stations should correspond to the new camera position and the visible stations
+        visibleStations = res;
+        for (Station station : res) {
+            if (!allStations.containsKey(station.getId())) {
+                allStations.put(station.getId(), station);
+                try {
+                    double price = station.getPrice(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)).getPrice();
+                    Marker marker = new Marker(price, station.getLatitude(), station.getLongitude());
+                    clusterManager.addItem(marker);
+                } catch (NullPointerException npe) {
+                    // The received list does not have the price that we want, should not have occurred
+                    // ignore as missing information does not warrant a marker
+                }
+            }
+            if (returnBounds) {
+                northBound = Math.max(northBound, station.getLatitude());
+                southBound = Math.min(southBound, station.getLatitude());
+                eastBound = Math.max(eastBound, station.getLongitude());
+                westBound = Math.min(westBound, station.getLongitude());
+            }
+        }
+        if (returnBounds) {
+            return new LatLngBounds(new LatLng(southBound, westBound), new LatLng(northBound, eastBound));
+        } else {
+            return null;
         }
     }
 
@@ -323,13 +347,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                             new FuelCheckClient.FuelCheckResponse<List<Station>>() {
                                 @Override
                                 public void onCompletion(List<Station> res) {
-                                    stationList = res;
-                                    clusterManager.clearItems();
-                                    for (Station station : res) {
-                                        double price = station.getPrice(pref.getString(Preferences.Key.SELECTED_FUELTYPE)).getPrice();
-                                        Marker marker = new Marker(price, station.getLatitude(), station.getLongitude());
-                                        clusterManager.addItem(marker);
-                                    }
+                                    updateMarkers(res, false);
                                     clusterManager.onCameraIdle();
                                 }
                             });
