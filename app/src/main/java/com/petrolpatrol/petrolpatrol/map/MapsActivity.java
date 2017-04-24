@@ -42,6 +42,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
 
     private static final String TAG = makeLogTag(MapsActivity.class);
 
+    // Custom intent action used in conjunction with Intent.ACTION_SEARCh
     public static final String ACTION_GPS = "ACTION_GPS";
 
     private LocationServiceConnection locationServiceConnection;

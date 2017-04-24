@@ -1,6 +1,7 @@
 package com.petrolpatrol.petrolpatrol.fuelcheck;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.widget.Toast;
 import com.android.volley.*;
 import com.android.volley.toolbox.JsonArrayRequest;
@@ -175,60 +176,70 @@ public class FuelCheckClient {
 
             @Override
             public void onCompletion(FuelCheckResult res) {
-                JSONArray JSONResponse;
-                GsonBuilder gsonBuilder = new GsonBuilder();
-                List<Station> orderedStationList = new ArrayList<>();
-                final SQLiteClient sqliteClient = new SQLiteClient(context);
+                new AsyncTask<FuelCheckResult, Integer, List<Station>>() {
+                    @Override
+                    protected List<Station> doInBackground(FuelCheckResult... res) {
+                        JSONArray JSONResponse;
+                        GsonBuilder gsonBuilder = new GsonBuilder();
+                        List<Station> orderedStationList = new ArrayList<>();
+                        final SQLiteClient sqliteClient = new SQLiteClient(context);
 
-                try {
-                    if (res.isSuccess() && res.dataIsObject()) {
-                        if (res.getDataAsObject().get("stations") instanceof JSONArray && res.getDataAsObject().get("prices") instanceof JSONArray) {
-                            JSONResponse = res.getDataAsObject().getJSONArray("stations");
+                        try {
+                            if (res[0].isSuccess() && res[0].dataIsObject()) {
+                                if (res[0].getDataAsObject().get("stations") instanceof JSONArray && res[0].getDataAsObject().get("prices") instanceof JSONArray) {
+                                    JSONResponse = res[0].getDataAsObject().getJSONArray("stations");
 
-                            final Map<Integer, Station> map = new HashMap<>();
-                            for (Station station : toStationObjects(JSONResponse)) {
-                                map.put(station.getId(), station);
-                            }
+                                    final Map<Integer, Station> map = new HashMap<>();
+                                    for (Station station : toStationObjects(JSONResponse)) {
+                                        map.put(station.getId(), station);
+                                    }
 
-                            // Custom deserializer needed to deal with non-primitive types in the Price class
-                            JsonDeserializer<Price> deserializer = new JsonDeserializer<Price>() {
-                                @Override
-                                public Price deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-                                    JsonObject priceJson = json.getAsJsonObject();
-                                    sqliteClient.open();
-                                    FuelType fuelType = sqliteClient.getFuelType(priceJson.get("fueltype").getAsString());
-                                    sqliteClient.close();
+                                    // Custom deserializer needed to deal with non-primitive types in the Price class
+                                    JsonDeserializer<Price> deserializer = new JsonDeserializer<Price>() {
+                                        @Override
+                                        public Price deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+                                            JsonObject priceJson = json.getAsJsonObject();
+                                            sqliteClient.open();
+                                            FuelType fuelType = sqliteClient.getFuelType(priceJson.get("fueltype").getAsString());
+                                            sqliteClient.close();
 
-                                    return new Price(
-                                            priceJson.get("stationcode").getAsInt(),
-                                            fuelType,
-                                            priceJson.get("price").getAsDouble(),
-                                            priceJson.get("lastupdated").getAsString()
+                                            return new Price(
+                                                    priceJson.get("stationcode").getAsInt(),
+                                                    fuelType,
+                                                    priceJson.get("price").getAsDouble(),
+                                                    priceJson.get("lastupdated").getAsString()
                                             );
+                                        }
+                                    };
+
+                                    JSONResponse = res[0].getDataAsObject().getJSONArray("prices");
+
+                                    gsonBuilder.registerTypeAdapter(Price.class, deserializer);
+                                    Gson gson = gsonBuilder.create();
+
+                                    for (int i = 0; i < JSONResponse.length(); i++) {
+                                        Price price = gson.fromJson(JSONResponse.get(i).toString(),Price.class);
+                                        Station station = (map.get(price.getStationID()));
+                                        station.setPrice(price);
+                                        orderedStationList.add(station);
+                                    }
+
+                                } else {
+                                    throw new JSONException("Invalid JSON");
                                 }
-                            };
-
-                            JSONResponse = res.getDataAsObject().getJSONArray("prices");
-
-                            gsonBuilder.registerTypeAdapter(Price.class, deserializer);
-                            Gson gson = gsonBuilder.create();
-
-                            for (int i = 0; i < JSONResponse.length(); i++) {
-                                Price price = gson.fromJson(JSONResponse.get(i).toString(),Price.class);
-                                Station station = (map.get(price.getStationID()));
-                                station.setPrice(price);
-                                orderedStationList.add(station);
                             }
-
-                        } else {
-                            throw new JSONException("Invalid JSON");
+                        } catch (Exception e) {
+                            LOGE(TAG, "Error occurred processing data");
+                            e.printStackTrace();
                         }
+                        return orderedStationList;
                     }
-                } catch (Exception e) {
-                    LOGE(TAG, "Error occurred processing data");
-                    e.printStackTrace();
-                }
-                completion.onCompletion(orderedStationList);
+
+                    @Override
+                    protected void onPostExecute(List<Station> stations) {
+                        completion.onCompletion(stations);
+                    }
+                }.execute(res);
             }
         });
     }
