@@ -10,12 +10,12 @@ class Marker implements ClusterItem {
     private final String snippet;
     private final double price;
 
-    Marker(double price, LatLng position) {
-        this(price, position, null, null);
+    Marker(double price, double latitude, double longitude) {
+        this(price, latitude, longitude, null, null);
     }
 
-    Marker(double price, double latitude, double longitude) {
-        this(price, new LatLng(latitude, longitude), null, null);
+    Marker(double price, double latitude, double longitude, String title) {
+        this(price, latitude, longitude, title, null);
     }
 
     Marker(double price, double latitude, double longitude, String title, String snippet) {

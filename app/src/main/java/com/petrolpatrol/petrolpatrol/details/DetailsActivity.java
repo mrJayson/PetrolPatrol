@@ -1,5 +1,7 @@
 package com.petrolpatrol.petrolpatrol.details;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -147,5 +149,14 @@ public class DetailsActivity extends BaseActivity {
         return toggleStatus;
     }
 
-
+    public static void displayDetails(int stationID, Activity sourceActivity) {
+        Intent intent = new Intent(sourceActivity.getApplicationContext(), DetailsActivity.class);
+        Bundle bundle = intent.getExtras();
+        if (bundle == null) {
+            bundle = new Bundle();
+        }
+        bundle.putInt(DetailsActivity.ARG_STATION_ID, stationID);
+        intent.putExtras(bundle);
+        sourceActivity.startActivity(intent);
+    }
 }

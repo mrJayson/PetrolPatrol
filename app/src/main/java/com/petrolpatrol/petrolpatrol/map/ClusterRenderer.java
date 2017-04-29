@@ -14,15 +14,18 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
+import com.google.maps.android.ui.IconGenerator;
 import com.petrolpatrol.petrolpatrol.R;
 
 class ClusterRenderer extends DefaultClusterRenderer {
 
+    private Context context;
     private LayoutInflater inflater;
     private final String notApplicable;
 
     ClusterRenderer(Context context, GoogleMap map, ClusterManager clusterManager) {
         super(context, map, clusterManager);
+        this.context = context;
         inflater = LayoutInflater.from(context);
         notApplicable = context.getString(R.string.not_applicable);
     }
@@ -41,7 +44,7 @@ class ClusterRenderer extends DefaultClusterRenderer {
 
     private Bitmap getMarkerBitmapFromView(String price) {
 
-        @SuppressLint("InflateParams")
+/*        @SuppressLint("InflateParams")
         View markerView = inflater.inflate(R.layout.marker_map, null);
         ImageView circleView = (ImageView) markerView.findViewById(R.id.marker_circle);
         TextView priceView = (TextView) markerView.findViewById(R.id.marker_price);
@@ -57,8 +60,14 @@ class ClusterRenderer extends DefaultClusterRenderer {
         //Bind a canvas to it
         Canvas canvas = new Canvas(bitmap);
 
-        markerView.draw(canvas);
+        markerView.draw(canvas);*/
 
-        return bitmap;
+        IconGenerator iconFactory = new IconGenerator(context);
+
+
+        iconFactory.setBackground(context.getDrawable(R.drawable.shape_marker));
+        return iconFactory.makeIcon(String.valueOf(price));
+
+        //return bitmap;
     }
 }

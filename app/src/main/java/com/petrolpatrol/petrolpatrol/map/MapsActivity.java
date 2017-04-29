@@ -7,19 +7,21 @@ import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
+import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 import com.google.android.gms.maps.*;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.maps.android.clustering.ClusterManager;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
+import com.petrolpatrol.petrolpatrol.details.DetailsActivity;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.fuelcheck.RequestTag;
 import com.petrolpatrol.petrolpatrol.list.ListActivity;
+import com.petrolpatrol.petrolpatrol.model.Price;
 import com.petrolpatrol.petrolpatrol.model.Station;
 import com.petrolpatrol.petrolpatrol.service.LocationServiceConnection;
 import com.petrolpatrol.petrolpatrol.service.NewLocationReceiver;
@@ -29,9 +31,7 @@ import com.petrolpatrol.petrolpatrol.util.IDUtils;
 import com.petrolpatrol.petrolpatrol.util.Utils;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
@@ -47,6 +47,9 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
     // Custom intent action used in conjunction with Intent.ACTION_SEARCH
     public static final String ACTION_GPS = "ACTION_GPS";
 
+    // Most recent action stored, used to identify action when refreshing
+    private String action;
+
     private LocationServiceConnection locationServiceConnection;
 
     private NewLocationReceiver newLocationReceiver;
@@ -58,11 +61,17 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
     // Handle to interact with the google Map UI
     private GoogleMap googleMap;
 
-    private Map<Integer, Station> allStations;
+    // Holds references to all stations loaded in this activity
+    private SparseArray<Station> visitedStations;
+
+    // Holds references to the visitedStations currently visible Google Map viewport
     private List<Station> visibleStations;
-    private CameraPosition cameraPosition;
+
+    private SparseArray<Marker> markerSet;
 
     private ClusterManager<Marker> clusterManager;
+
+    private String mostRecentQuery;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,8 +87,11 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
         newLocationReceiver = new NewLocationReceiver(this);
 
         cancelMarkerUpdate = true;
+        visitedStations = new SparseArray<>();
+        markerSet = new SparseArray<>();
 
-        allStations = new HashMap<>();
+        mostRecentQuery = null;
+
     }
 
     @Override
@@ -140,10 +152,57 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                     return Utils.fuelTypeSwitch(id, new Utils.Callback() {
                         @Override
                         public void execute() {
+                            Preferences pref = Preferences.getInstance();
                             item.setChecked(true);
-                            Preferences.getInstance().put(Preferences.Key.SELECTED_FUELTYPE, String.valueOf(item.getTitle()));
+                            pref.put(Preferences.Key.SELECTED_FUELTYPE, String.valueOf(item.getTitle()));
                             int iconID = IDUtils.identify(Utils.fuelTypeToIconName(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
                             fuelTypeMenuItem.setIcon(iconID);
+
+                            // all markers need to be refreshed, but stations do not have to be wiped
+                            // markers will be updated with the new fueltype
+
+                            FuelCheckClient client = new FuelCheckClient(getBaseContext());
+                            switch (action) {
+                                case ACTION_GPS:
+                                    if (googleMap != null && googleMap.getCameraPosition() != null)
+                                    client.getFuelPricesWithinRadius(
+                                            googleMap.getCameraPosition().target.latitude,
+                                            googleMap.getCameraPosition().target.longitude,
+                                            (int) Utils.zoomToRadius(googleMap.getCameraPosition().zoom),
+                                            pref.getString(Preferences.Key.SELECTED_SORTBY),
+                                            pref.getString(Preferences.Key.SELECTED_FUELTYPE),
+                                            new FuelCheckClient.FuelCheckResponse<List<Station>>() {
+                                                @Override
+                                                public void onCompletion(List<Station> res) {
+                                                    markerSet.clear();
+                                                    clusterManager.clearItems();
+
+                                                    updateMarkers(res, false);
+                                                    clusterManager.cluster();
+                                                }
+                                            });
+
+                                    break;
+                                case Intent.ACTION_SEARCH:
+                                    if (mostRecentQuery != null) {
+                                        client.getFuelPricesForLocation(
+                                                mostRecentQuery,
+                                                pref.getString(Preferences.Key.SELECTED_SORTBY),
+                                                pref.getString(Preferences.Key.SELECTED_FUELTYPE),
+                                                new FuelCheckClient.FuelCheckResponse<List<Station>>() {
+                                                    @Override
+                                                    public void onCompletion(List<Station> res) {
+                                                        markerSet.clear();
+                                                        clusterManager.clearItems();
+                                                        updateMarkersAndMoveCamera(res, action);
+                                                    }
+                                                });
+                                    }
+
+                                    break;
+                                default:
+                                    break;
+                            }
                         }
                     });
                 } catch (NoSuchFieldException e) {
@@ -161,7 +220,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
 
     @Override
     public void onLocationReceived(Location location) {
-        // only need one location update
+        // Only need one location update
         newLocationReceiver.unregister(getBaseContext());
         locationServiceConnection.stopLocating();
 
@@ -187,21 +246,12 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
     }
 
     private void handleIntent(final Intent intent) {
-        if (intent.getAction() == null) {
-            if (cameraPosition != null) {
-                googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-            }
-            if (visibleStations != null) {
-                Preferences pref = Preferences.getInstance();
-                for (Station station : visibleStations) {
-                    double price = station.getPrice(pref.getString(Preferences.Key.SELECTED_FUELTYPE)).getPrice();
-                    Marker marker = new Marker(price, station.getLatitude(), station.getLongitude());
-                    clusterManager.addItem(marker);
-                }
-                clusterManager.onCameraIdle();
-            }
-        } else {
-            if (intent.getAction().equals(ACTION_GPS)) {
+        action = intent.getAction();
+        Preferences pref = Preferences.getInstance();
+
+        switch (action) {
+            case ACTION_GPS:
+                // The GPS locate action is invoked
                 if (checkLocationPermission(Constants.PERMISSION_REQUEST_ACCESS_LOCATION)) {
                     newLocationReceiver.register(getBaseContext());
                     if (!locationServiceConnection.isBound()) {
@@ -210,10 +260,24 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                     // If service is not yet bound, the location request will be queued up
                     locationServiceConnection.startLocating();
                 }
-            } else if (intent.getAction().equals(Intent.ACTION_SEARCH)) {
+                break;
+
+            case Intent.ACTION_SEARCH:
+                // The search action is invoked
                 String query = intent.getStringExtra(SearchManager.QUERY);
 
-                final Preferences pref = Preferences.getInstance();
+                // Capitalise the first letter of each word because the API demands it
+                String capitalisedQuery = "";
+                for (String word : query.split(" ")) {
+                    word = word.substring(0,1).toUpperCase() + word.substring(1).toLowerCase();
+                    capitalisedQuery += word + " ";
+                }
+                capitalisedQuery.trim();
+                query = capitalisedQuery;
+
+                // Store query for later use in refreshing the page
+                mostRecentQuery = query;
+
                 FuelCheckClient client = new FuelCheckClient(getBaseContext());
                 client.getFuelPricesForLocation(
                         query,
@@ -225,14 +289,25 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                                 updateMarkersAndMoveCamera(res, intent.getAction());
                             }
                         });
-            }
+                break;
+
+            default:
+                // No action given, try to restore the activity from a previous state
+                if (googleMap.getCameraPosition() != null) {
+                    googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(googleMap.getCameraPosition()));
+                }
+                if (visibleStations != null) {
+                    updateMarkers(visibleStations, false);
+                    clusterManager.onCameraIdle();
+                }
+                break;
         }
     }
 
     /**
-     * To be called when there is a new list of stations that needs to be displayed on the map
+     * To be called when there is a new list of visitedStations that needs to be displayed on the map
      *
-     * @param res The new list of stations.
+     * @param res The new list of visitedStations.
      * @param intentAction Indicate the context under which this method is called.
      */
     private void updateMarkersAndMoveCamera(List<Station> res, String intentAction) {
@@ -240,7 +315,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
         // Move camera to location
         try {
             LatLngBounds bounds = updateMarkers(res, true);
-            int padding = 50; // amount of padding in px to apply to the map edges
+            int padding = 100; // amount of padding in px to apply to the map edges
             googleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
             cancelMarkerUpdate = true; // prevent the resulting onCameraIdle of the camera movement from executing
             clusterManager.onCameraIdle();
@@ -259,20 +334,30 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
         double eastBound = Constants.MIN_LONGITUDE;
         double westBound = Constants.MAX_LONGITUDE;
 
-        // The received list of stations should correspond to the new camera position and the visible stations
+        // The received list of visitedStations should correspond to the new camera position and the visible visitedStations
         visibleStations = res;
         for (Station station : res) {
-            if (!allStations.containsKey(station.getId())) {
-                allStations.put(station.getId(), station);
+            if (visitedStations.get(station.getId()) == null) {
+                // The current station has not been visited before, add to list
+                visitedStations.put(station.getId(), station);
+            } else {
+                // The current station has been visited before, update the associated price
+                Price updatePrice = station.getPrice(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE));
+                visitedStations.get(station.getId()).setPrice(updatePrice);
+            }
+
+            if (markerSet.get(station.getId()) == null) {
                 try {
                     double price = station.getPrice(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)).getPrice();
-                    Marker marker = new Marker(price, station.getLatitude(), station.getLongitude());
+                    Marker marker = new Marker(price, station.getLatitude(), station.getLongitude(), String.valueOf(station.getId()));
                     clusterManager.addItem(marker);
+                    markerSet.put(station.getId(), marker);
                 } catch (NullPointerException npe) {
                     // The received list does not have the price that we want, should not have occurred
                     // ignore as missing information does not warrant a marker
                 }
             }
+
             if (returnBounds) {
                 northBound = Math.max(northBound, station.getLatitude());
                 southBound = Math.min(southBound, station.getLatitude());
@@ -295,6 +380,9 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
 
         clusterManager = new ClusterManager<>(getBaseContext(), googleMap);
 
+        clusterManager.setRenderer(new ClusterRenderer(getBaseContext(), googleMap, clusterManager));
+        clusterManager.setAnimation(true);
+
         // Add styling to googleMaps
         googleMap.getUiSettings().setZoomControlsEnabled(true);
         googleMap.getUiSettings().setCompassEnabled(true);
@@ -313,8 +401,14 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
         // Set default camera position to Sydney
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(Constants.SYDNEY_LAT, Constants.SYDNEY_LONG), Constants.DEFAULT_ZOOM));
 
-        clusterManager.setRenderer(new ClusterRenderer(getBaseContext(), googleMap, clusterManager));
-        googleMap.setOnMarkerClickListener(clusterManager);
+        // Redirect to the Details page when the corresponding marker is clicked
+        googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(com.google.android.gms.maps.model.Marker marker) {
+                DetailsActivity.displayDetails(Integer.valueOf(marker.getTitle()), MapsActivity.this);
+                return true;
+            }
+        });
 
         // Update map data upon new camera position
         googleMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
@@ -332,25 +426,43 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                 }
                 else {
                     FuelCheckClient client = new FuelCheckClient(getBaseContext());
-                    client.cancelRequests(new RequestTag(RequestTag.GET_FUELPRICES_WITHIN_RADIUS));
-                    final Preferences pref = Preferences.getInstance();
-                    double latitude = googleMap.getCameraPosition().target.latitude;
-                    double longitude = googleMap.getCameraPosition().target.longitude;
-                    int radius = (int) Utils.zoomToRadius(googleMap.getCameraPosition().zoom);
-                    client.getFuelPricesWithinRadius(
-                            latitude,
-                            longitude,
-                            radius,
-                            pref.getString(Preferences.Key.SELECTED_SORTBY),
-                            pref.getString(Preferences.Key.SELECTED_FUELTYPE),
-                            new RequestTag(RequestTag.GET_FUELPRICES_WITHIN_RADIUS),
-                            new FuelCheckClient.FuelCheckResponse<List<Station>>() {
-                                @Override
-                                public void onCompletion(List<Station> res) {
-                                    updateMarkers(res, false);
-                                    clusterManager.onCameraIdle();
-                                }
-                            });
+                    Preferences pref = Preferences.getInstance();
+                    switch (action) {
+                        case (ACTION_GPS):
+                            client.cancelRequests(new RequestTag(RequestTag.GET_FUELPRICES_WITHIN_RADIUS));
+                            double latitude = googleMap.getCameraPosition().target.latitude;
+                            double longitude = googleMap.getCameraPosition().target.longitude;
+                            int radius = (int) Utils.zoomToRadius(googleMap.getCameraPosition().zoom);
+                            client.getFuelPricesWithinRadius(
+                                    latitude,
+                                    longitude,
+                                    radius,
+                                    pref.getString(Preferences.Key.SELECTED_SORTBY),
+                                    pref.getString(Preferences.Key.SELECTED_FUELTYPE),
+                                    new RequestTag(RequestTag.GET_FUELPRICES_WITHIN_RADIUS),
+                                    new FuelCheckClient.FuelCheckResponse<List<Station>>() {
+                                        @Override
+                                        public void onCompletion(List<Station> res) {
+                                            updateMarkers(res, false);
+                                            clusterManager.onCameraIdle();
+                                        }
+                                    });
+                            break;
+                        case (Intent.ACTION_SEARCH):
+                            client.getFuelPricesForLocation(
+                                    mostRecentQuery,
+                                    pref.getString(Preferences.Key.SELECTED_SORTBY),
+                                    pref.getString(Preferences.Key.SELECTED_FUELTYPE),
+                                    new FuelCheckClient.FuelCheckResponse<List<Station>>() {
+                                        @Override
+                                        public void onCompletion(List<Station> res) {
+                                            updateMarkers(res, false);
+                                            clusterManager.cluster();
+                                        }
+                                    });
+                            break;
+                    }
+
                 }
             }
         });

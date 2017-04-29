@@ -114,13 +114,6 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
 
     @Override
     public void displayDetails(int stationID) {
-        Intent intent = new Intent(getApplicationContext(), DetailsActivity.class);
-        Bundle bundle = intent.getExtras();
-        if (bundle == null) {
-            bundle = new Bundle();
-        }
-        bundle.putInt(DetailsActivity.ARG_STATION_ID, stationID);
-        intent.putExtras(bundle);
-        startActivity(intent);
+        DetailsActivity.displayDetails(stationID, this);
     }
 }
