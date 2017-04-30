@@ -5,6 +5,7 @@ import android.app.SearchManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.support.v4.view.GravityCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -46,17 +47,42 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
+    public boolean onCreateOptionsMenu(final Menu menu) {
 
         // Associate searchable configuration with the SearchView
-        MenuItem searchMenuItem = menu.findItem(R.id.search);
+
+        final MenuItem searchMenuItem = menu.findItem(R.id.search);
         if (searchMenuItem != null) {
             SearchView searchView = (SearchView) searchMenuItem.getActionView();
             SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
             searchView.setSearchableInfo(searchManager.getSearchableInfo(new ComponentName(getApplicationContext(), MapsActivity.class)));
             searchView.setSubmitButtonEnabled(true);
+
+            MenuItemCompat.setOnActionExpandListener(searchMenuItem, new MenuItemCompat.OnActionExpandListener() {
+                @Override
+                public boolean onMenuItemActionExpand(MenuItem menuItem) {
+                    setMenuVisibility(menu, searchMenuItem, false);
+                    return true;
+                }
+
+                @Override
+                public boolean onMenuItemActionCollapse(MenuItem menuItem) {
+                    setMenuVisibility(menu, searchMenuItem, true);
+                    invalidateOptionsMenu();
+                    return true;
+                }
+            });
         }
         return super.onCreateOptionsMenu(menu);
+    }
+
+    private void setMenuVisibility(final Menu menu, final MenuItem exception, final boolean visible) {
+        for (int i = 0; i < menu.size(); ++i) {
+            MenuItem item = menu.getItem(i);
+            if (item != exception)
+                item.setVisible(visible);
+        }
+
     }
 
     @Override

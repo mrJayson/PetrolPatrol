@@ -9,17 +9,27 @@ import android.view.MenuItem;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.details.DetailsActivity;
+import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.model.Station;
 import com.petrolpatrol.petrolpatrol.ui.BaseActivity;
+import com.petrolpatrol.petrolpatrol.util.Constants;
 import com.petrolpatrol.petrolpatrol.util.IDUtils;
 import com.petrolpatrol.petrolpatrol.util.Utils;
 
 import java.util.List;
 
+import static com.petrolpatrol.petrolpatrol.util.Constants.*;
+
 public class ListActivity extends BaseActivity implements ListAdapter.Listener{
 
     // Keys for bundles and intents
     public static final String ARG_STATIONS = "ARG_STATIONS";
+    public static final String ARG_LATITUDE = "ARG_LATITUDE";
+    public static final String ARG_LONGITUDE = "ARG_LONGITUDE";
+    public static final String ARG_ZOOM = "ARG_ZOOM";
+    public static final String ARG_QUERY = "ARG_QUERY";
+
+    private String action;
 
     private List<Station> stationList;
 
@@ -28,6 +38,13 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
     private ListAdapter adapter;
 
     private MenuItem fuelTypeMenuItem;
+
+    private double latitude;
+    private double longitude;
+    private float zoom;
+
+    private String query;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +57,21 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
             stationList = getIntent().getParcelableArrayListExtra(ARG_STATIONS);
         }
 
+        action = getIntent().getAction();
+
+        query = null;
+
+        switch (action) {
+            case Constants.ACTION_GPS:
+                latitude = getIntent().getDoubleExtra(ARG_LATITUDE, SYDNEY_LAT);
+                longitude = getIntent().getDoubleExtra(ARG_LONGITUDE, SYDNEY_LONG);
+                zoom = getIntent().getFloatExtra(ARG_ZOOM, DEFAULT_ZOOM);
+                break;
+            case Intent.ACTION_SEARCH:
+                query = getIntent().getStringExtra(ARG_QUERY);
+                break;
+        }
+
         getLayoutInflater().inflate(R.layout.activity_list, content);
 
         containerList = (RecyclerView) findViewById(R.id.container_list_list);
@@ -48,7 +80,7 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
 
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getBaseContext());
 
-        adapter = new ListAdapter(getBaseContext(), stationList, pref.getString(Preferences.Key.SELECTED_FUELTYPE), this);
+        adapter = new ListAdapter(getBaseContext(), stationList, this);
         containerList.setLayoutManager(layoutManager);
         containerList.setAdapter(adapter);
     }
@@ -104,6 +136,40 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
                             Preferences.getInstance().put(Preferences.Key.SELECTED_FUELTYPE, String.valueOf(item.getTitle()));
                             int iconID = IDUtils.identify(Utils.fuelTypeToIconName(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
                             fuelTypeMenuItem.setIcon(iconID);
+
+                            FuelCheckClient client = new FuelCheckClient(getBaseContext());
+                            final Preferences pref = Preferences.getInstance();
+                            switch (action) {
+                                case ACTION_GPS:
+                                    adapter.clear();
+                                    client.getFuelPricesWithinRadius(
+                                            latitude,
+                                            longitude,
+                                            (int) Utils.zoomToRadius(zoom),
+                                            pref.getString(Preferences.Key.SELECTED_SORTBY),
+                                            pref.getString(Preferences.Key.SELECTED_FUELTYPE),
+                                            new FuelCheckClient.FuelCheckResponse<List<Station>>() {
+                                                @Override
+                                                public void onCompletion(List<Station> res) {
+                                                    adapter.updateStations(res);
+                                                }
+                                            }
+                                    );
+                                    break;
+                                case Intent.ACTION_SEARCH:
+                                    adapter.clear();
+                                    client.getFuelPricesForLocation(
+                                            query,
+                                            pref.getString(Preferences.Key.SELECTED_SORTBY),
+                                            pref.getString(Preferences.Key.SELECTED_FUELTYPE),
+                                            new FuelCheckClient.FuelCheckResponse<List<Station>>() {
+                                                @Override
+                                                public void onCompletion(List<Station> res) {
+                                                    adapter.updateStations(res);
+                                                }
+                                            });
+                                    break;
+                            }
                         }
                     });
                 } catch (NoSuchFieldException e) {

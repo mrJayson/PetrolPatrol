@@ -44,9 +44,6 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
 
     private static final String TAG = makeLogTag(MapsActivity.class);
 
-    // Custom intent action used in conjunction with Intent.ACTION_SEARCH
-    public static final String ACTION_GPS = "ACTION_GPS";
-
     // Most recent action stored, used to identify action when refreshing
     private String action;
 
@@ -143,7 +140,21 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                         bundle = new Bundle();
                     }
                     bundle.putParcelableArrayList(ListActivity.ARG_STATIONS, (ArrayList<? extends Parcelable>) visibleStations);
+
+                    switch (action) {
+                        case Constants.ACTION_GPS:
+                            bundle.putDouble(ListActivity.ARG_LATITUDE, googleMap.getCameraPosition().target.latitude);
+                            bundle.putDouble(ListActivity.ARG_LONGITUDE, googleMap.getCameraPosition().target.longitude);
+                            bundle.putFloat(ListActivity.ARG_ZOOM, googleMap.getCameraPosition().zoom);
+                            break;
+                        case Intent.ACTION_SEARCH:
+                            bundle.putString(ListActivity.ARG_QUERY, mostRecentQuery);
+                            break;
+                    }
                     intent.putExtras(bundle);
+                    // Pass on whatever action this activity is in onto the next for corresponding refresh actions
+                    intent.setAction(action);
+
                     startActivity(intent);
                 }
                 return true;
@@ -163,7 +174,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
 
                             FuelCheckClient client = new FuelCheckClient(getBaseContext());
                             switch (action) {
-                                case ACTION_GPS:
+                                case Constants.ACTION_GPS:
                                     if (googleMap != null && googleMap.getCameraPosition() != null)
                                     client.getFuelPricesWithinRadius(
                                             googleMap.getCameraPosition().target.latitude,
@@ -250,7 +261,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
         Preferences pref = Preferences.getInstance();
 
         switch (action) {
-            case ACTION_GPS:
+            case Constants.ACTION_GPS:
                 // The GPS locate action is invoked
                 if (checkLocationPermission(Constants.PERMISSION_REQUEST_ACCESS_LOCATION)) {
                     newLocationReceiver.register(getBaseContext());
@@ -272,7 +283,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                     word = word.substring(0,1).toUpperCase() + word.substring(1).toLowerCase();
                     capitalisedQuery += word + " ";
                 }
-                capitalisedQuery.trim();
+                capitalisedQuery = capitalisedQuery.trim();
                 query = capitalisedQuery;
 
                 // Store query for later use in refreshing the page
@@ -428,7 +439,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                     FuelCheckClient client = new FuelCheckClient(getBaseContext());
                     Preferences pref = Preferences.getInstance();
                     switch (action) {
-                        case (ACTION_GPS):
+                        case Constants.ACTION_GPS:
                             client.cancelRequests(new RequestTag(RequestTag.GET_FUELPRICES_WITHIN_RADIUS));
                             double latitude = googleMap.getCameraPosition().target.latitude;
                             double longitude = googleMap.getCameraPosition().target.longitude;
@@ -448,7 +459,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                                         }
                                     });
                             break;
-                        case (Intent.ACTION_SEARCH):
+                        case Intent.ACTION_SEARCH:
                             client.getFuelPricesForLocation(
                                     mostRecentQuery,
                                     pref.getString(Preferences.Key.SELECTED_SORTBY),

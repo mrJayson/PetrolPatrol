@@ -28,6 +28,7 @@ import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.map.MapsActivity;
 import com.petrolpatrol.petrolpatrol.ui.BaseActivity;
+import com.petrolpatrol.petrolpatrol.util.Constants;
 import com.petrolpatrol.petrolpatrol.util.IDUtils;
 import com.petrolpatrol.petrolpatrol.util.Utils;
 
@@ -109,7 +110,7 @@ public class TrendActivity extends BaseActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
-                intent.setAction(MapsActivity.ACTION_GPS);
+                intent.setAction(Constants.ACTION_GPS);
                 startActivity(intent);
             }
         });

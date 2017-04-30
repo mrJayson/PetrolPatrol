@@ -29,4 +29,10 @@ public class Constants {
     public static final double MAX_LATITUDE = 90;
     public static final double MIN_LONGITUDE = -180;
     public static final double MAX_LONGITUDE = 180;
+
+    // Custom intent action used in conjunction with Intent.ACTION_SEARCH
+    public static final String ACTION_GPS = "ACTION_GPS";
+
+    // Hardcoded standard deviation of fuel prices
+    public static final int STANDARD_DEV = 8;
 }
