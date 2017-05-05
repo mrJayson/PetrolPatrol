@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimaryDark">@color/port_gore</color>
-    <color name="colorPrimary">@color/port_gore</color>
-    <color name="colorAccent">@color/denim</color>
+    <color name="colorPrimaryDark">@color/deep_sea_green</color>
+    <color name="colorPrimary">@color/deep_sea_green</color>
+    <color name="colorAccent">@color/mountain_meadow</color>
 
     <color name="material_indigo_500">#3F51B5</color>
     <color name="material_indigo_700">#303F9F</color>
@@ -17,13 +17,11 @@
     <color name="denim">#1560bd</color>
     <color name="jordy_blue">#6EA1DA</color>
 
-    <color name="cinnabar">#E1332F</color>
-    <color name="carrot_orange">#F4921F</color>
-    <color name="yellow_green">#8BC440</color>
+    <color name="deep_sea_green">#075e54</color>
+    <color name="mountain_meadow">#25D366</color>
 
-    <array name="gradient">
-        <item>@color/cinnabar</item>
-        <item>@color/carrot_orange</item>
-        <item>@color/yellow_green</item>
-    </array>
+    <color name="cinnabar">#E1332F</color>
+    <color name="school_bus_yellow">#FFD000</color>
+    <color name="sushi">#8BC440</color>
+
 </resources>
