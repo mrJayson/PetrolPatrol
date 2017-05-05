@@ -2,6 +2,8 @@ package com.petrolpatrol.petrolpatrol.map;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.view.LayoutInflater;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
@@ -14,7 +16,8 @@ import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.trend.TodayPrice;
-import com.petrolpatrol.petrolpatrol.util.Constants;
+import com.petrolpatrol.petrolpatrol.util.Colour;
+import com.petrolpatrol.petrolpatrol.util.Gradient;
 
 import java.util.Map;
 
@@ -57,42 +60,23 @@ class ClusterRenderer extends DefaultClusterRenderer {
 
     private Bitmap getMarkerBitmapFromView(String priceString) {
 
-/*        @SuppressLint("InflateParams")
-        View markerView = inflater.inflate(R.layout.marker_map, null);
-        ImageView circleView = (ImageView) markerView.findViewById(R.id.marker_circle);
-        TextView priceView = (TextView) markerView.findViewById(R.id.marker_price);
-        priceView.setText(price);
-
-        markerView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-        markerView.layout(0,0,markerView.getMeasuredWidth(), markerView.getMeasuredHeight());
-        markerView.buildDrawingCache();
-
-        //Define a bitmap with the same size as the view
-        Bitmap bitmap = Bitmap.createBitmap(markerView.getWidth(), markerView.getHeight(), Bitmap.Config.ARGB_8888);
-
-        //Bind a canvas to it
-        Canvas canvas = new Canvas(bitmap);
-
-        markerView.draw(canvas);*/
-
-
         String fuelType = Preferences.getInstance(context).getString(Preferences.Key.SELECTED_FUELTYPE);
         double fuelTypeMean = todayPrices.get(fuelType).getPrice();
         double priceNum = Double.valueOf(priceString);
-        if (priceNum < (fuelTypeMean - Constants.STANDARD_DEV)) {
-            // price is at the cheaper end of the distribution
-            iconFactory.setBackground(context.getDrawable(R.drawable.shape_marker_good));
 
+        Gradient grad = new Gradient(context,fuelTypeMean);
+
+        Colour tint = grad.gradiateColour(priceNum);
+        Drawable border = context.getDrawable(R.drawable.marker_border);
+        // Default border colour is black
+        if (border != null) {
+            border.setTint(tint.integer);
         }
-        else if (priceNum > (fuelTypeMean + Constants.STANDARD_DEV)) {
-            // price is at the expensive end of the distribution
-            iconFactory.setBackground(context.getDrawable(R.drawable.shape_marker_bad));
+        Drawable background = context.getDrawable(R.drawable.marker_background);
+        Drawable[] layers = {border, background};
+        LayerDrawable compositeDrawable = new LayerDrawable(layers);
+        iconFactory.setBackground(compositeDrawable);
 
-        } else {
-            // price is in the middle of the distribution
-            iconFactory.setBackground(context.getDrawable(R.drawable.shape_marker_neutral));
-
-        }
         iconFactory.setContentPadding(55,55,55,55);
         return iconFactory.makeIcon(String.valueOf(priceString));
 
