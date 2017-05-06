@@ -1,4 +1,4 @@
-package com.petrolpatrol.petrolpatrol.trend;
+package com.petrolpatrol.petrolpatrol.home;
 
 import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.formatter.IAxisValueFormatter;
@@ -7,18 +7,18 @@ import com.petrolpatrol.petrolpatrol.util.TimeUtils;
 import java.text.ParseException;
 import java.util.List;
 
-public class XAxisWeekValueFormatter implements IAxisValueFormatter {
+class XAxisYearValueFormatter implements IAxisValueFormatter {
 
     private List<String> xLabels;
 
-    public XAxisWeekValueFormatter(List<String> xLabels) {
+    XAxisYearValueFormatter(List<String> xLabels) {
         this.xLabels = xLabels;
     }
 
     @Override
     public String getFormattedValue(float value, AxisBase axis) {
         try {
-            return TimeUtils.dateToDayOfWeek(xLabels.get((int) value - 1));
+            return TimeUtils.dateToMonthOfYear(xLabels.get((int) value - 1));
         } catch (ParseException e) {
             return "";
         }

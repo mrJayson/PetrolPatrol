@@ -15,7 +15,7 @@ import com.google.maps.android.ui.IconGenerator;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
-import com.petrolpatrol.petrolpatrol.trend.TodayPrice;
+import com.petrolpatrol.petrolpatrol.model.Average;
 import com.petrolpatrol.petrolpatrol.util.Colour;
 import com.petrolpatrol.petrolpatrol.util.Gradient;
 
@@ -27,23 +27,17 @@ class ClusterRenderer extends DefaultClusterRenderer {
     private LayoutInflater inflater;
     private final String notApplicable;
 
-    private Map<String, TodayPrice> todayPrices;
+    private Map<String, Average> averages;
 
     private IconGenerator iconFactory;
 
-    ClusterRenderer(Context context, GoogleMap map, ClusterManager clusterManager) {
+    ClusterRenderer(Context context, GoogleMap map, ClusterManager clusterManager, Map<String, Average> averages) {
         super(context, map, clusterManager);
         this.context = context;
         inflater = LayoutInflater.from(context);
         notApplicable = context.getString(R.string.not_applicable);
-        FuelCheckClient client = new FuelCheckClient(context);
-        client.getTodayPrices(new FuelCheckClient.FuelCheckResponse<Map<String, TodayPrice>>() {
-            @Override
-            public void onCompletion(Map<String, TodayPrice> res) {
-                todayPrices = res;
-            }
-        });
-         iconFactory = new IconGenerator(context);
+        this.averages = averages;
+        iconFactory = new IconGenerator(context);
     }
 
     @Override
@@ -57,11 +51,10 @@ class ClusterRenderer extends DefaultClusterRenderer {
         markerOptions.icon(BitmapDescriptorFactory.fromBitmap(getMarkerBitmapFromView(priceOutput)));
     }
 
-
     private Bitmap getMarkerBitmapFromView(String priceString) {
 
         String fuelType = Preferences.getInstance(context).getString(Preferences.Key.SELECTED_FUELTYPE);
-        double fuelTypeMean = todayPrices.get(fuelType).getPrice();
+        double fuelTypeMean = averages.get(fuelType).getPrice();
         double priceNum = Double.valueOf(priceString);
 
         Gradient grad = new Gradient(context,fuelTypeMean);
@@ -79,7 +72,5 @@ class ClusterRenderer extends DefaultClusterRenderer {
 
         iconFactory.setContentPadding(55,55,55,55);
         return iconFactory.makeIcon(String.valueOf(priceString));
-
-        //return bitmap;
     }
 }

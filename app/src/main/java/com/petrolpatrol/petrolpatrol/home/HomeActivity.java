@@ -1,4 +1,4 @@
-package com.petrolpatrol.petrolpatrol.trend;
+package com.petrolpatrol.petrolpatrol.home;
 
 import android.content.Intent;
 import android.support.design.widget.FloatingActionButton;
@@ -27,6 +27,8 @@ import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.map.MapsActivity;
+import com.petrolpatrol.petrolpatrol.model.Average;
+import com.petrolpatrol.petrolpatrol.model.AverageParcel;
 import com.petrolpatrol.petrolpatrol.ui.BaseActivity;
 import com.petrolpatrol.petrolpatrol.util.Constants;
 import com.petrolpatrol.petrolpatrol.util.IDUtils;
@@ -40,15 +42,15 @@ import java.util.Map;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGE;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
-public class TrendActivity extends BaseActivity {
+public class HomeActivity extends BaseActivity {
 
-    private static final String TAG = makeLogTag(TrendActivity.class);
+    private static final String TAG = makeLogTag(HomeActivity.class);
 
-    private Map<String, TodayPrice> dataTodayPrices;
+    private Map<String, Average> averages;
 
-    private List<TrendData> dataWeek;
-    private List<TrendData> dataMonth;
-    private List<TrendData> dataYear;
+    private List<Trend> dataWeek;
+    private List<Trend> dataMonth;
+    private List<Trend> dataYear;
 
     private FrameLayout chartContainer;
     private LineChart chartWeek;
@@ -57,11 +59,11 @@ public class TrendActivity extends BaseActivity {
 
     private String chartFuelType;
 
-    private TrendResolution chartResolution;
+    private ChartResolution chartResolution;
 
 
     private MenuItem fuelTypeMenuItem;
-    private TextView todayPrice;
+    private TextView average;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,26 +71,26 @@ public class TrendActivity extends BaseActivity {
 
         getLayoutInflater().inflate(R.layout.activity_trend, content);
 
-        todayPrice = (TextView) findViewById(R.id.today_price);
+        average = (TextView) findViewById(R.id.today_price);
 
         chartContainer = (FrameLayout) findViewById(R.id.container_chart);
 
-        dataTodayPrices = new HashMap<>();
+        averages = new HashMap<>();
         dataWeek = new ArrayList<>();
         dataMonth = new ArrayList<>();
         dataYear = new ArrayList<>();
-        chartResolution = TrendResolution.WEEK; // The week tab is default
+        chartResolution = ChartResolution.WEEK; // The week tab is default
 
         // Initialise the tab UI functionality of the charts
         TabLayout tab = (TabLayout) findViewById(R.id.tab_chart);
-        for (TrendResolution trend : TrendResolution.values()) {
+        for (ChartResolution trend : ChartResolution.values()) {
             tab.addTab(tab.newTab().setText(trend.getHandle()));
         }
         tab.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
 
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                chartResolution = TrendResolution.toEnum(String.valueOf(tab.getText()));
+                chartResolution = ChartResolution.toEnum(String.valueOf(tab.getText()));
                 updateVisibility(chartResolution);
             }
 
@@ -111,16 +113,17 @@ public class TrendActivity extends BaseActivity {
             public void onClick(View view) {
                 Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
                 intent.setAction(Constants.ACTION_GPS);
+                intent.putExtra(AverageParcel.ARG_AVERAGE, new AverageParcel(averages));
                 startActivity(intent);
             }
         });
 
-        if (dataTodayPrices.isEmpty()) {
+        if (averages.isEmpty()) {
             FuelCheckClient client = new FuelCheckClient(getBaseContext());
-            client.getTodayPrices(new FuelCheckClient.FuelCheckResponse<Map<String, TodayPrice>>() {
+            client.getAverages(new FuelCheckClient.FuelCheckResponse<Map<String, Average>>() {
                 @Override
-                public void onCompletion(Map<String, TodayPrice> res) {
-                    dataTodayPrices = res;
+                public void onCompletion(Map<String, Average> res) {
+                    averages = res;
                 }
             });
         }
@@ -140,10 +143,10 @@ public class TrendActivity extends BaseActivity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         // Preselect the menu_list items recorded in Preferences
-        int fuelTypeResID = IDUtils.identify(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE), "id", getBaseContext());
+        int fuelTypeResID = IDUtils.identify(Preferences.getInstance(getBaseContext()).getString(Preferences.Key.SELECTED_FUELTYPE), "id", getBaseContext());
         MenuItem fuelType = menu.findItem(fuelTypeResID);
         fuelType.setChecked(true);
-        int iconID = IDUtils.identify(Utils.fuelTypeToIconName(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
+        int iconID = IDUtils.identify(Utils.fuelTypeToIconName(Preferences.getInstance(getBaseContext()).getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
         fuelTypeMenuItem.setIcon(iconID);
         return true;
     }
@@ -155,19 +158,19 @@ public class TrendActivity extends BaseActivity {
         invalidateOptionsMenu();
 
         // Initialise or update the line charts
-        if (!Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE).equals(chartFuelType) ||
+        if (!Preferences.getInstance(getBaseContext()).getString(Preferences.Key.SELECTED_FUELTYPE).equals(chartFuelType) ||
                 dataWeek.isEmpty() || dataMonth.isEmpty() || dataYear.isEmpty()) {
-            retrieveTrendsData(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE));
+            retrieveTrendsData(Preferences.getInstance(getBaseContext()).getString(Preferences.Key.SELECTED_FUELTYPE));
         } else {
             // If data already exists, no need to re-fetch
             if (!dataWeek.isEmpty()) {
-                chartWeek = drawChart(dataWeek, TrendResolution.WEEK, chartWeek);
+                chartWeek = drawChart(dataWeek, ChartResolution.WEEK, chartWeek);
             }
             if (!dataMonth.isEmpty()) {
-                chartMonth = drawChart(dataMonth, TrendResolution.MONTH, chartMonth);
+                chartMonth = drawChart(dataMonth, ChartResolution.MONTH, chartMonth);
             }
             if (!dataYear.isEmpty()) {
-                chartYear = drawChart(dataYear, TrendResolution.YEAR, chartYear);
+                chartYear = drawChart(dataYear, ChartResolution.YEAR, chartYear);
             }
             updateVisibility(chartResolution);
         }
@@ -181,10 +184,10 @@ public class TrendActivity extends BaseActivity {
                 @Override
                 public void execute() {
                     item.setChecked(true);
-                    Preferences.getInstance().put(Preferences.Key.SELECTED_FUELTYPE, String.valueOf(item.getTitle()));
-                    int iconID = IDUtils.identify(Utils.fuelTypeToIconName(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
+                    Preferences.getInstance(getBaseContext()).put(Preferences.Key.SELECTED_FUELTYPE, String.valueOf(item.getTitle()));
+                    int iconID = IDUtils.identify(Utils.fuelTypeToIconName(Preferences.getInstance(getBaseContext()).getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
                     fuelTypeMenuItem.setIcon(iconID);
-                    retrieveTrendsData(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE));
+                    retrieveTrendsData(Preferences.getInstance(getBaseContext()).getString(Preferences.Key.SELECTED_FUELTYPE));
                 }
             });
         } catch (NoSuchFieldException e) {
@@ -199,16 +202,16 @@ public class TrendActivity extends BaseActivity {
      */
     private void retrieveTrendsData(final String fuelType) {
         FuelCheckClient client = new FuelCheckClient(getBaseContext());
-        client.getTrend(fuelType, new FuelCheckClient.FuelCheckResponse<List<TrendData>>() {
+        client.getTrend(fuelType, new FuelCheckClient.FuelCheckResponse<List<Trend>>() {
             @Override
-            public void onCompletion(List<TrendData> res) {
+            public void onCompletion(List<Trend> res) {
                 dataWeek.clear();
                 dataMonth.clear();
                 dataYear.clear();
                 chartFuelType = fuelType; // Keep track of which fuel type is currently being displayed
 
-                for (TrendData data : res) {
-                    switch (TrendResolution.toEnum(data.getPeriod())) {
+                for (Trend data : res) {
+                    switch (ChartResolution.toEnum(data.getPeriod())) {
                         case WEEK:
                             dataWeek.add(data);
                             break;
@@ -220,19 +223,19 @@ public class TrendActivity extends BaseActivity {
                     }
                 }
                 if (!dataWeek.isEmpty()) {
-                    chartWeek = drawChart(dataWeek, TrendResolution.WEEK, chartWeek);
+                    chartWeek = drawChart(dataWeek, ChartResolution.WEEK, chartWeek);
                 }
                 if (!dataMonth.isEmpty()) {
-                    chartMonth = drawChart(dataMonth, TrendResolution.MONTH, chartMonth);
+                    chartMonth = drawChart(dataMonth, ChartResolution.MONTH, chartMonth);
                 }
                 if (!dataYear.isEmpty()) {
-                    chartYear = drawChart(dataYear, TrendResolution.YEAR, chartYear);
+                    chartYear = drawChart(dataYear, ChartResolution.YEAR, chartYear);
                 }
                 updateVisibility(chartResolution);
 
-                if (!dataTodayPrices.isEmpty()) {
-                    TodayPrice tp = dataTodayPrices.get(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE));
-                    todayPrice.setText(String.valueOf(tp.getPrice()));
+                if (!averages.isEmpty()) {
+                    Average tp = averages.get(Preferences.getInstance(getBaseContext()).getString(Preferences.Key.SELECTED_FUELTYPE));
+                    average.setText(String.valueOf(tp.getPrice()));
                 }
             }
         });
@@ -245,7 +248,7 @@ public class TrendActivity extends BaseActivity {
      * @param chart The currently existing line chart so that it may be overridden.
      * @return The updated line chart
      */
-    private LineChart drawChart(List<TrendData> dataList, TrendResolution resolution, LineChart chart) {
+    private LineChart drawChart(List<Trend> dataList, ChartResolution resolution, LineChart chart) {
         // Remove existing chart if there is one
         if (chart != null) {
             chartContainer.removeView(chart);
@@ -268,13 +271,13 @@ public class TrendActivity extends BaseActivity {
         List<Entry> data = new ArrayList<>();
         List<String> xLabels = new ArrayList<>();
         int i = 1; // Start at 1 so that x axis drawing will not be off
-        for (TrendData trendData : dataList) {
-            if (trendData.getPeriod().equals(resolution.getHandle())) {
+        for (Trend trend : dataList) {
+            if (trend.getPeriod().equals(resolution.getHandle())) {
                 try {
                     data.add(
                             new Entry((float) i++
-                                    , (float) trendData.getPrice()));
-                    xLabels.add(trendData.getCaptured());
+                                    , (float) trend.getPrice()));
+                    xLabels.add(trend.getCaptured());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -337,7 +340,7 @@ public class TrendActivity extends BaseActivity {
         chart.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
 
         // Month view needs different customisations because of there are more data points
-        if (resolution == TrendResolution.MONTH) {
+        if (resolution == ChartResolution.MONTH) {
             // Month view starts off fully zoomed out
             chart.getAxisLeft().setDrawLabels(true);
             chart.getAxisLeft().setDrawGridLines(true);
@@ -405,7 +408,7 @@ public class TrendActivity extends BaseActivity {
      * Changes which chart is displayed to the user.
      * @param resolution The selected trend resolution to display.
      */
-    private void updateVisibility(TrendResolution resolution) {
+    private void updateVisibility(ChartResolution resolution) {
         switch (resolution) {
             case WEEK:
                 chartWeek.setVisibility(View.VISIBLE);
@@ -423,5 +426,15 @@ public class TrendActivity extends BaseActivity {
                 chartYear.setVisibility(View.VISIBLE);
                 break;
         }
+    }
+
+    @Override
+    public void startActivity(Intent intent) {
+        // Check if search intent
+        if (intent.getAction().equals(Intent.ACTION_SEARCH)) {
+            intent.putExtra(AverageParcel.ARG_AVERAGE, new AverageParcel(averages));
+        }
+
+        super.startActivity(intent);
     }
 }

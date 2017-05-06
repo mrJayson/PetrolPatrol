@@ -1,11 +1,11 @@
-package com.petrolpatrol.petrolpatrol.trend;
+package com.petrolpatrol.petrolpatrol.home;
 
-public class TrendData {
+public class Trend {
     private String period;
     private String captured;
     private double price;
 
-    public TrendData(String period, String captured, double price) {
+    public Trend(String period, String captured, double price) {
         this.period = period;
         this.captured = captured;
         this.price = price;

@@ -11,9 +11,9 @@ import com.google.gson.reflect.TypeToken;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.datastore.SQLiteClient;
+import com.petrolpatrol.petrolpatrol.model.Average;
 import com.petrolpatrol.petrolpatrol.model.*;
-import com.petrolpatrol.petrolpatrol.trend.TodayPrice;
-import com.petrolpatrol.petrolpatrol.trend.TrendData;
+import com.petrolpatrol.petrolpatrol.home.Trend;
 import com.petrolpatrol.petrolpatrol.util.IDUtils;
 import com.petrolpatrol.petrolpatrol.util.TimeUtils;
 import org.json.JSONArray;
@@ -43,7 +43,7 @@ public class FuelCheckClient {
         void onCompletion(T res);
     }
 
-    public void getTrend(String fuelType, final FuelCheckResponse<List<TrendData>> completion) {
+    public void getTrend(String fuelType, final FuelCheckResponse<List<Trend>> completion) {
         String url = "http://api.onegov.nsw.gov.au/FuelCheckApp/v1/fuel/prices/trends/";
 
         JSONObjectRequestGET(url + fuelType, new FuelCheckResponse<FuelCheckResult>() {
@@ -56,7 +56,7 @@ public class FuelCheckClient {
                             JSONResponse = res.getDataAsObject().getJSONArray("AveragePrices");
 
 
-                            completion.onCompletion(toTrendDataObjects(JSONResponse));
+                            completion.onCompletion(toTrendObjects(JSONResponse));
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -66,7 +66,7 @@ public class FuelCheckClient {
         });
     }
 
-    public void getTodayPrices(final FuelCheckResponse<Map<String, TodayPrice>> completion) {
+    public void getAverages(final FuelCheckResponse<Map<String, Average>> completion) {
         String url = "http://api.onegov.nsw.gov.au/FuelCheckApp/v1/fuel/prices/currenttrend";
         JSONArrayRequestGET(url, new FuelCheckResponse<FuelCheckResult>() {
             @Override
@@ -74,7 +74,7 @@ public class FuelCheckClient {
 
                 if (res.isSuccess() && res.dataIsArray()) {
                     JSONArray JSONResponse = res.getDataAsArray();
-                    completion.onCompletion(toTodayPriceObjects(JSONResponse));
+                    completion.onCompletion(toAverageObjects(JSONResponse));
                 }
             }
         });
@@ -574,7 +574,7 @@ public class FuelCheckClient {
         };
 
         // Hand the request over to the request queue
-        VolleyQueue.getInstance().addToRequestQueue(jsonArrayRequest);
+        VolleyQueue.getInstance(context).addToRequestQueue(jsonArrayRequest);
     }
 
     private void JSONObjectRequestGET(String url, FuelCheckResponse<FuelCheckResult> completion) {
@@ -642,7 +642,7 @@ public class FuelCheckClient {
         };
 
         // Hand the request over to the request queue
-        VolleyQueue.getInstance().addToRequestQueue(jsonObjectRequest);
+        VolleyQueue.getInstance(context).addToRequestQueue(jsonObjectRequest);
     }
 
     private void requestPOST(final String url, final Map<String, String> headerMap, final JSONObject jsonBody, final FuelCheckResponse<FuelCheckResult> completion) {
@@ -714,7 +714,7 @@ public class FuelCheckClient {
             jsonObjectRequest.setTag(tag.getTag());
         }
         // Hand the request over to the request queue
-        VolleyQueue.getInstance().addToRequestQueue(jsonObjectRequest);
+        VolleyQueue.getInstance(context).addToRequestQueue(jsonObjectRequest);
     }
 
     private List<Price> toPriceObjects(JSONArray JSON, final int stationCode) {
@@ -798,74 +798,74 @@ public class FuelCheckClient {
         return stations;
     }
 
-    private Map<String, TodayPrice> toTodayPriceObjects(JSONArray JSON) {
+    private Map<String, Average> toAverageObjects(JSONArray JSON) {
 
         final SQLiteClient sqliteClient = new SQLiteClient(context);
-        Map<String, TodayPrice> todayPrices = new HashMap<>();
+        Map<String, Average> averages = new HashMap<>();
 
-        JsonDeserializer<TodayPrice> deserializer = new JsonDeserializer<TodayPrice>() {
+        JsonDeserializer<Average> deserializer = new JsonDeserializer<Average>() {
 
             @Override
-            public TodayPrice deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-                JsonObject todayPriceJson = json.getAsJsonObject();
+            public Average deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+                JsonObject averageJson = json.getAsJsonObject();
                 sqliteClient.open();
-                FuelType fuelType = sqliteClient.getFuelType(todayPriceJson.get("Code").getAsString());
+                FuelType fuelType = sqliteClient.getFuelType(averageJson.get("Code").getAsString());
                 sqliteClient.close();
 
-                return new TodayPrice(
+                return new Average(
                         fuelType,
-                        todayPriceJson.get("Price").getAsDouble(),
-                        todayPriceJson.get("Variance").getAsDouble());
+                        averageJson.get("Price").getAsDouble(),
+                        averageJson.get("Variance").getAsDouble());
             }
         };
         GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.registerTypeAdapter(TodayPrice.class, deserializer);
+        gsonBuilder.registerTypeAdapter(Average.class, deserializer);
         Gson customGson = gsonBuilder.create();
         try {
             for (int i = 0; i < JSON.length(); i++) {
-                TodayPrice todayPrice = customGson.fromJson(JSON.get(i).toString(), TodayPrice.class);
-                todayPrices.put(todayPrice.getFuelType().getCode(), todayPrice);
+                Average average = customGson.fromJson(JSON.get(i).toString(), Average.class);
+                averages.put(average.getFuelType().getCode(), average);
             }
         } catch (JSONException e) {
-            LOGE(TAG, "Error occurred processing JSONTodayPrices");
+            LOGE(TAG, "Error occurred processing JSONAverages");
             e.printStackTrace();
         }
-        return todayPrices;
+        return averages;
         }
 
-    private List<TrendData> toTrendDataObjects(JSONArray JSON) {
+    private List<Trend> toTrendObjects(JSONArray JSON) {
 
-        final List<TrendData> trendData = new ArrayList<>();
+        final List<Trend> trend = new ArrayList<>();
 
-        JsonDeserializer<TrendData> deserializer = new JsonDeserializer<TrendData>() {
+        JsonDeserializer<Trend> deserializer = new JsonDeserializer<Trend>() {
             @Override
-            public TrendData deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-                JsonObject trendDataJson = json.getAsJsonObject();
-                return new TrendData(
-                        trendDataJson.get("Period").getAsString(),
-                        trendDataJson.get("Captured").getAsString(),
-                        trendDataJson.get("Price").getAsDouble()
+            public Trend deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+                JsonObject trendJson = json.getAsJsonObject();
+                return new Trend(
+                        trendJson.get("Period").getAsString(),
+                        trendJson.get("Captured").getAsString(),
+                        trendJson.get("Price").getAsDouble()
                 );
 
             }
         };
 
         GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.registerTypeAdapter(TrendData.class, deserializer);
+        gsonBuilder.registerTypeAdapter(Trend.class, deserializer);
         Gson customGson = gsonBuilder.create();
         try {
             for (int i = 0; i < JSON.length(); i++) {
-                trendData.add(customGson.fromJson(JSON.get(i).toString(), TrendData.class));
+                trend.add(customGson.fromJson(JSON.get(i).toString(), Trend.class));
             }
         } catch (JSONException e) {
-            LOGE(TAG, "Error occurred processing JSONTrendData");
+            LOGE(TAG, "Error occurred processing JSONTrend");
             e.printStackTrace();
         }
 
-        return trendData;
+        return trend;
     }
 
     public void cancelRequests(RequestTag tag) {
-        VolleyQueue.getInstance().cancelRequests(tag);
+        VolleyQueue.getInstance(context).cancelRequests(tag);
     }
 }

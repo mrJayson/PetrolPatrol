@@ -10,6 +10,8 @@ import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.details.DetailsActivity;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
+import com.petrolpatrol.petrolpatrol.model.Average;
+import com.petrolpatrol.petrolpatrol.model.AverageParcel;
 import com.petrolpatrol.petrolpatrol.model.Station;
 import com.petrolpatrol.petrolpatrol.ui.BaseActivity;
 import com.petrolpatrol.petrolpatrol.util.Constants;
@@ -17,6 +19,7 @@ import com.petrolpatrol.petrolpatrol.util.IDUtils;
 import com.petrolpatrol.petrolpatrol.util.Utils;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.petrolpatrol.petrolpatrol.util.Constants.*;
 
@@ -45,16 +48,23 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
 
     private String query;
 
+    private Map<String, Average> averages;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         stationList = null;
+        AverageParcel averageParcel;
         if (savedInstanceState != null) {
             stationList = savedInstanceState.getParcelableArrayList(ARG_STATIONS);
+            averageParcel = savedInstanceState.getParcelable(AverageParcel.ARG_AVERAGE);
         } else {
             stationList = getIntent().getParcelableArrayListExtra(ARG_STATIONS);
+            averageParcel = getIntent().getParcelableExtra(AverageParcel.ARG_AVERAGE);
+        }
+        if (averageParcel != null) {
+            averages = averageParcel.getAverages();
         }
 
         action = getIntent().getAction();
@@ -76,7 +86,7 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
 
         containerList = (RecyclerView) findViewById(R.id.container_list_list);
 
-        Preferences pref = Preferences.getInstance();
+        Preferences pref = Preferences.getInstance(getBaseContext());
 
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getBaseContext());
 
@@ -100,13 +110,13 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
 
-        Preferences pref = Preferences.getInstance();
+        Preferences pref = Preferences.getInstance(getBaseContext());
         // Preselect the menu_list items recorded in Preferences
         int fuelTypeResID = IDUtils.identify(pref.getString(Preferences.Key.SELECTED_FUELTYPE), "id", getBaseContext());
         MenuItem fuelType = menu.findItem(fuelTypeResID);
         fuelType.setChecked(true);
 
-        int iconID = IDUtils.identify(Utils.fuelTypeToIconName(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
+        int iconID = IDUtils.identify(Utils.fuelTypeToIconName(Preferences.getInstance(getBaseContext()).getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
         fuelTypeMenuItem.setIcon(iconID);
 
         int sortByResID = IDUtils.identify("sort_" + pref.getString(Preferences.Key.SELECTED_SORTBY).toLowerCase(), "id", getBaseContext());
@@ -124,7 +134,7 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
             case R.id.sort_price:
             case R.id.sort_distance:
                 item.setChecked(true);
-                Preferences.getInstance().put(Preferences.Key.SELECTED_SORTBY, String.valueOf(item.getTitle()));
+                Preferences.getInstance(getBaseContext()).put(Preferences.Key.SELECTED_SORTBY, String.valueOf(item.getTitle()));
                 adapter.sort(String.valueOf(item.getTitle()));
                 return true;
             default:
@@ -133,12 +143,12 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
                         @Override
                         public void execute() {
                             item.setChecked(true);
-                            Preferences.getInstance().put(Preferences.Key.SELECTED_FUELTYPE, String.valueOf(item.getTitle()));
-                            int iconID = IDUtils.identify(Utils.fuelTypeToIconName(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
+                            Preferences.getInstance(getBaseContext()).put(Preferences.Key.SELECTED_FUELTYPE, String.valueOf(item.getTitle()));
+                            int iconID = IDUtils.identify(Utils.fuelTypeToIconName(Preferences.getInstance(getBaseContext()).getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
                             fuelTypeMenuItem.setIcon(iconID);
 
                             FuelCheckClient client = new FuelCheckClient(getBaseContext());
-                            final Preferences pref = Preferences.getInstance();
+                            final Preferences pref = Preferences.getInstance(getBaseContext());
                             switch (action) {
                                 case ACTION_GPS:
                                     adapter.clear();
@@ -179,7 +189,17 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
     }
 
     @Override
+    public void startActivity(Intent intent) {
+        // Check if search intent
+        if (intent.getAction().equals(Intent.ACTION_SEARCH)) {
+            intent.putExtra(AverageParcel.ARG_AVERAGE, new AverageParcel(averages));
+        }
+
+        super.startActivity(intent);
+    }
+
+    @Override
     public void displayDetails(int stationID) {
-        DetailsActivity.displayDetails(stationID, this);
+        DetailsActivity.displayDetails(stationID, averages, this);
     }
 }

@@ -25,7 +25,7 @@
     <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            tools:context=".trend.TrendActivity">
+            tools:context=".home.HomeActivity">
 
         <LinearLayout
                 android:layout_width="match_parent"

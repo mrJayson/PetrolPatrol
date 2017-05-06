@@ -1,6 +1,6 @@
-package com.petrolpatrol.petrolpatrol.trend;
+package com.petrolpatrol.petrolpatrol.home;
 
-public enum TrendResolution {
+enum ChartResolution {
 
     WEEK("Week"),
     MONTH("Month"),
@@ -8,7 +8,7 @@ public enum TrendResolution {
 
     private String handle;
 
-    TrendResolution(String handle) {
+    ChartResolution(String handle) {
         this.handle = handle;
     }
 
@@ -16,7 +16,7 @@ public enum TrendResolution {
         return handle;
     }
 
-    public static TrendResolution toEnum(String handle) {
+    public static ChartResolution toEnum(String handle) {
         switch (handle) {
             case "Week":
                 return WEEK;

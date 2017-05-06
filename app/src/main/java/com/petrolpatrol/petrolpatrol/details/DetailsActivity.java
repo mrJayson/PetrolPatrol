@@ -13,11 +13,14 @@ import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.datastore.SQLiteClient;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
+import com.petrolpatrol.petrolpatrol.model.Average;
+import com.petrolpatrol.petrolpatrol.model.AverageParcel;
 import com.petrolpatrol.petrolpatrol.model.Price;
 import com.petrolpatrol.petrolpatrol.model.Station;
 import com.petrolpatrol.petrolpatrol.ui.BaseActivity;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGE;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
@@ -37,21 +40,29 @@ public class DetailsActivity extends BaseActivity {
 
     private MenuItem favouritesMenuItem;
 
+    private Map<String, Average> averages;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         station = null;
+        AverageParcel averageParcel;
         if (savedInstanceState != null) {
             SQLiteClient client = new SQLiteClient(getBaseContext());
             client.open();
             station = client.getStation(savedInstanceState.getInt(ARG_STATION_ID));
             client.close();
+            averageParcel = savedInstanceState.getParcelable(AverageParcel.ARG_AVERAGE);
         } else {
             SQLiteClient client = new SQLiteClient(getBaseContext());
             client.open();
             station = client.getStation(getIntent().getIntExtra(ARG_STATION_ID, 0));
             client.close();
+            averageParcel = getIntent().getParcelableExtra(AverageParcel.ARG_AVERAGE);
+        }
+        if (averageParcel != null) {
+            averages = averageParcel.getAverages();
         }
 
         getLayoutInflater().inflate(R.layout.activity_details, content);
@@ -104,7 +115,7 @@ public class DetailsActivity extends BaseActivity {
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        Preferences pref = Preferences.getInstance();
+        Preferences pref = Preferences.getInstance(getBaseContext());
         List<Integer> favourites = pref.getFavourites();
         if (favourites.contains(station.getId())) {
             favouritesMenuItem.setIcon(R.drawable.ic_favorite_enabled_24dp);
@@ -134,7 +145,7 @@ public class DetailsActivity extends BaseActivity {
     }
 
     private boolean toggleFavourites(int stationID) {
-        Preferences pref = Preferences.getInstance();
+        Preferences pref = Preferences.getInstance(getBaseContext());
         List<Integer> favourites = pref.getFavourites();
         boolean toggleStatus;
         if (favourites.contains(stationID)) {
@@ -149,14 +160,25 @@ public class DetailsActivity extends BaseActivity {
         return toggleStatus;
     }
 
-    public static void displayDetails(int stationID, Activity sourceActivity) {
+    public static void displayDetails(int stationID, Map<String, Average> averages, Activity sourceActivity) {
         Intent intent = new Intent(sourceActivity.getApplicationContext(), DetailsActivity.class);
         Bundle bundle = intent.getExtras();
         if (bundle == null) {
             bundle = new Bundle();
         }
         bundle.putInt(DetailsActivity.ARG_STATION_ID, stationID);
+        bundle.putParcelable(AverageParcel.ARG_AVERAGE, new AverageParcel(averages));
         intent.putExtras(bundle);
         sourceActivity.startActivity(intent);
+    }
+
+    @Override
+    public void startActivity(Intent intent) {
+        // Check if search intent
+        if (intent.getAction().equals(Intent.ACTION_SEARCH)) {
+            intent.putExtra(AverageParcel.ARG_AVERAGE, new AverageParcel(averages));
+        }
+
+        super.startActivity(intent);
     }
 }

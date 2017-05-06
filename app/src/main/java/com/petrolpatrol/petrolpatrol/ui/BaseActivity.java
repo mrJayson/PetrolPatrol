@@ -4,6 +4,7 @@ import android.app.ActivityManager;
 import android.app.SearchManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -16,13 +17,14 @@ import android.view.MenuItem;
 import android.widget.FrameLayout;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.map.MapsActivity;
-import com.petrolpatrol.petrolpatrol.trend.TrendActivity;
+import com.petrolpatrol.petrolpatrol.home.HomeActivity;
+import com.petrolpatrol.petrolpatrol.model.AverageParcel;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
 public class BaseActivity extends AppCompatActivity {
 
-    private static final String TAG = makeLogTag(TrendActivity.class);
+    private static final String TAG = makeLogTag(HomeActivity.class);
 
     private DrawerLayout drawer;
     private Toolbar toolbar;

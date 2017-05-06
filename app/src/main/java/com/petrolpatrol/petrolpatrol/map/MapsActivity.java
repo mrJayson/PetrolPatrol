@@ -21,6 +21,8 @@ import com.petrolpatrol.petrolpatrol.details.DetailsActivity;
 import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.fuelcheck.RequestTag;
 import com.petrolpatrol.petrolpatrol.list.ListActivity;
+import com.petrolpatrol.petrolpatrol.model.Average;
+import com.petrolpatrol.petrolpatrol.model.AverageParcel;
 import com.petrolpatrol.petrolpatrol.model.Price;
 import com.petrolpatrol.petrolpatrol.model.Station;
 import com.petrolpatrol.petrolpatrol.service.LocationServiceConnection;
@@ -32,6 +34,7 @@ import com.petrolpatrol.petrolpatrol.util.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
@@ -70,6 +73,8 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
 
     private String mostRecentQuery;
 
+    private Map<String, Average> averages;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,6 +94,15 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
 
         mostRecentQuery = null;
 
+        AverageParcel averageParcel;
+        if (savedInstanceState != null) {
+            averageParcel = savedInstanceState.getParcelable(AverageParcel.ARG_AVERAGE);
+        } else {
+            averageParcel = getIntent().getParcelableExtra(AverageParcel.ARG_AVERAGE);
+        }
+        if (averageParcel != null) {
+            averages = averageParcel.getAverages();
+        }
     }
 
     @Override
@@ -119,10 +133,10 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         // Preselect the menu_list items recorded in Preferences
-        int fuelTypeResID = IDUtils.identify(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE), "id", getBaseContext());
+        int fuelTypeResID = IDUtils.identify(Preferences.getInstance(getBaseContext()).getString(Preferences.Key.SELECTED_FUELTYPE), "id", getBaseContext());
         MenuItem fuelType = menu.findItem(fuelTypeResID);
         fuelType.setChecked(true);
-        int iconID = IDUtils.identify(Utils.fuelTypeToIconName(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
+        int iconID = IDUtils.identify(Utils.fuelTypeToIconName(Preferences.getInstance(getBaseContext()).getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
         fuelTypeMenuItem.setIcon(iconID);
         return true;
     }
@@ -151,6 +165,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                             bundle.putString(ListActivity.ARG_QUERY, mostRecentQuery);
                             break;
                     }
+                    bundle.putParcelable(AverageParcel.ARG_AVERAGE, new AverageParcel(averages));
                     intent.putExtras(bundle);
                     // Pass on whatever action this activity is in onto the next for corresponding refresh actions
                     intent.setAction(action);
@@ -163,10 +178,10 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                     return Utils.fuelTypeSwitch(id, new Utils.Callback() {
                         @Override
                         public void execute() {
-                            Preferences pref = Preferences.getInstance();
+                            Preferences pref = Preferences.getInstance(getBaseContext());
                             item.setChecked(true);
                             pref.put(Preferences.Key.SELECTED_FUELTYPE, String.valueOf(item.getTitle()));
-                            int iconID = IDUtils.identify(Utils.fuelTypeToIconName(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
+                            int iconID = IDUtils.identify(Utils.fuelTypeToIconName(Preferences.getInstance(getBaseContext()).getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
                             fuelTypeMenuItem.setIcon(iconID);
 
                             // all markers need to be refreshed, but stations do not have to be wiped
@@ -240,7 +255,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
 
         // Get fuel data with current location
         FuelCheckClient client = new FuelCheckClient(getBaseContext());
-        final Preferences pref = Preferences.getInstance();
+        final Preferences pref = Preferences.getInstance(getBaseContext());
         // Map view uses only price sorted list
         client.getFuelPricesWithinRadius(
                 latitude,
@@ -258,7 +273,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
 
     private void handleIntent(final Intent intent) {
         action = intent.getAction();
-        Preferences pref = Preferences.getInstance();
+        Preferences pref = Preferences.getInstance(getBaseContext());
 
         switch (action) {
             case Constants.ACTION_GPS:
@@ -353,13 +368,13 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                 visitedStations.put(station.getId(), station);
             } else {
                 // The current station has been visited before, update the associated price
-                Price updatePrice = station.getPrice(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE));
+                Price updatePrice = station.getPrice(Preferences.getInstance(getBaseContext()).getString(Preferences.Key.SELECTED_FUELTYPE));
                 visitedStations.get(station.getId()).setPrice(updatePrice);
             }
 
             if (markerSet.get(station.getId()) == null) {
                 try {
-                    double price = station.getPrice(Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE)).getPrice();
+                    double price = station.getPrice(Preferences.getInstance(getBaseContext()).getString(Preferences.Key.SELECTED_FUELTYPE)).getPrice();
                     Marker marker = new Marker(price, station.getLatitude(), station.getLongitude(), String.valueOf(station.getId()));
                     clusterManager.addItem(marker);
                     markerSet.put(station.getId(), marker);
@@ -391,7 +406,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
 
         clusterManager = new ClusterManager<>(getBaseContext(), googleMap);
 
-        clusterManager.setRenderer(new ClusterRenderer(getBaseContext(), googleMap, clusterManager));
+        clusterManager.setRenderer(new ClusterRenderer(getBaseContext(), googleMap, clusterManager, averages));
         clusterManager.setAnimation(true);
 
         // Add styling to googleMaps
@@ -416,7 +431,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
         googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(com.google.android.gms.maps.model.Marker marker) {
-                DetailsActivity.displayDetails(Integer.valueOf(marker.getTitle()), MapsActivity.this);
+                DetailsActivity.displayDetails(Integer.valueOf(marker.getTitle()), averages, MapsActivity.this);
                 return true;
             }
         });
@@ -437,7 +452,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                 }
                 else {
                     FuelCheckClient client = new FuelCheckClient(getBaseContext());
-                    Preferences pref = Preferences.getInstance();
+                    Preferences pref = Preferences.getInstance(getBaseContext());
                     switch (action) {
                         case Constants.ACTION_GPS:
                             client.cancelRequests(new RequestTag(RequestTag.GET_FUELPRICES_WITHIN_RADIUS));
@@ -520,6 +535,16 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
             default:
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
+    }
+
+    @Override
+    public void startActivity(Intent intent) {
+        // Check if search intent
+        if (intent.getAction().equals(Intent.ACTION_SEARCH)) {
+            intent.putExtra(AverageParcel.ARG_AVERAGE, new AverageParcel(averages));
+        }
+
+        super.startActivity(intent);
     }
 
     /**
