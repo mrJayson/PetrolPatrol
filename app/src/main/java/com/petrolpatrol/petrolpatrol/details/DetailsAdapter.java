@@ -9,12 +9,16 @@ import android.view.ViewGroup;
 import android.widget.ListView;
 import android.widget.TextView;
 import com.petrolpatrol.petrolpatrol.R;
+import com.petrolpatrol.petrolpatrol.model.Average;
 import com.petrolpatrol.petrolpatrol.model.Price;
+import com.petrolpatrol.petrolpatrol.util.Colour;
+import com.petrolpatrol.petrolpatrol.util.Gradient;
 import com.petrolpatrol.petrolpatrol.util.TimeUtils;
 
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
@@ -25,6 +29,7 @@ class DetailsAdapter extends RecyclerView.Adapter<DetailsAdapter.ViewHolder> {
 
     static class ViewHolder extends RecyclerView.ViewHolder {
 
+        View colour;
         TextView price;
         TextView fuelTypeShort;
         TextView fuelTypeLong;
@@ -33,6 +38,7 @@ class DetailsAdapter extends RecyclerView.Adapter<DetailsAdapter.ViewHolder> {
         ViewHolder(View itemView) {
             super(itemView);
 
+            colour = itemView.findViewById(R.id.item_details_colour);
             price = (TextView) itemView.findViewById(R.id.item_details_price);
             fuelTypeShort = (TextView) itemView.findViewById(R.id.item_details_fueltype_short);
             fuelTypeLong = (TextView) itemView.findViewById(R.id.item_details_fueltype_long);
@@ -41,15 +47,20 @@ class DetailsAdapter extends RecyclerView.Adapter<DetailsAdapter.ViewHolder> {
     }
 
     private List<Price> prices;
+    private Map<String, Average> averages;
     private Context context;
 
-    DetailsAdapter(Context context) {
-        this(new ArrayList<Price>(), context);
+    private Gradient gradient;
+
+    DetailsAdapter(Map<String, Average> averages, Context context) {
+        this(new ArrayList<Price>(), averages, context);
     }
 
-    DetailsAdapter(List<Price> prices, Context context) {
+    DetailsAdapter(List<Price> prices, Map<String, Average> averages, Context context) {
         this.prices = prices;
         this.context = context;
+        this.averages = averages;
+        this.gradient = new Gradient(context);
     }
 
     @Override
@@ -63,6 +74,11 @@ class DetailsAdapter extends RecyclerView.Adapter<DetailsAdapter.ViewHolder> {
     public void onBindViewHolder(ViewHolder holder, int position) {
 
         Price price = prices.get(position);
+
+        gradient.setMeanPrice(averages.get(price.getFuelType().getCode()).getPrice());
+
+        Colour c = gradient.gradiateColour(price.getPrice());
+        holder.colour.setBackgroundColor(c.integer);
 
         holder.price.setText(String.valueOf(price.getPrice()));
         holder.fuelTypeShort.setText(price.getFuelType().getCode());

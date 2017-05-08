@@ -90,7 +90,7 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
 
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getBaseContext());
 
-        adapter = new ListAdapter(getBaseContext(), stationList, this);
+        adapter = new ListAdapter(getBaseContext(), stationList, averages, this);
         containerList.setLayoutManager(layoutManager);
         containerList.setAdapter(adapter);
     }
@@ -191,10 +191,9 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
     @Override
     public void startActivity(Intent intent) {
         // Check if search intent
-        if (intent.getAction().equals(Intent.ACTION_SEARCH)) {
+        if (!intent.hasExtra(AverageParcel.ARG_AVERAGE)) {
             intent.putExtra(AverageParcel.ARG_AVERAGE, new AverageParcel(averages));
         }
-
         super.startActivity(intent);
     }
 

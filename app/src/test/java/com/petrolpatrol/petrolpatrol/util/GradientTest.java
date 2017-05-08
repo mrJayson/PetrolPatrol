@@ -17,7 +17,8 @@ public class GradientTest {
 
     @Test
     public void testColourConversion() {
-    Gradient g = new Gradient(RuntimeEnvironment.application, 114.5);
+    Gradient g = new Gradient(RuntimeEnvironment.application);
+        g.setMeanPrice(114.5);
 
         for (double i = 100; i < 140; i++) {
             Colour c = g.gradiateColour(i);

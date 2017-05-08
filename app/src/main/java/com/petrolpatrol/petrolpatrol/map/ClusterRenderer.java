@@ -57,7 +57,8 @@ class ClusterRenderer extends DefaultClusterRenderer {
         double fuelTypeMean = averages.get(fuelType).getPrice();
         double priceNum = Double.valueOf(priceString);
 
-        Gradient grad = new Gradient(context,fuelTypeMean);
+        Gradient grad = new Gradient(context);
+        grad.setMeanPrice(fuelTypeMean);
 
         Colour tint = grad.gradiateColour(priceNum);
         Drawable border = context.getDrawable(R.drawable.marker_border);

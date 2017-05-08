@@ -4,27 +4,30 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/list_item_height">
         <!-- default layout direction is ltr -->
+
+        <View
+                android:id="@+id/item_list_colour"
+                android:layout_width="@dimen/item_colour_gradient_width"
+                android:layout_height="match_parent"
+                android:background="@color/gray"
+                android:layout_alignParentStart="true"/>
+
         <FrameLayout
                 android:id="@+id/container_list_price"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
                 android:layout_centerVertical="true"
+                android:layout_toEndOf="@id/item_list_colour"
                 android:paddingStart="@dimen/activity_horizontal_margin"
                 android:paddingEnd="@dimen/activity_horizontal_margin"
                 android:paddingTop="@dimen/activity_vertical_margin"
                 android:paddingBottom="@dimen/activity_vertical_margin">
-            <ImageView
-                    android:id="@+id/item_list_colour_gradient"
-                    android:layout_width="@dimen/icon_width"
-                    android:layout_height="@dimen/icon_height"
-                    android:src="@drawable/circle"
-                    android:contentDescription="@string/circle_content_description"/>
 
             <TextView
                     android:id="@+id/item_list_price"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:textSize="20sp"
                     android:layout_gravity="center"/>
         </FrameLayout>
 

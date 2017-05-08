@@ -69,7 +69,7 @@ public class HomeActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        getLayoutInflater().inflate(R.layout.activity_trend, content);
+        getLayoutInflater().inflate(R.layout.activity_home, content);
 
         average = (TextView) findViewById(R.id.today_price);
 
@@ -132,7 +132,7 @@ public class HomeActivity extends BaseActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_search, menu);
-        getMenuInflater().inflate(R.menu.menu_trend, menu);
+        getMenuInflater().inflate(R.menu.menu_home, menu);
         MenuItem menuItem = menu.findItem(R.id.fueltype);
         getMenuInflater().inflate(R.menu.submenu_fueltypes, menuItem.getSubMenu());
 

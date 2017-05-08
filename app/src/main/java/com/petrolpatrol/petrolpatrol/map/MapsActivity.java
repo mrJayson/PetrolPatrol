@@ -431,7 +431,11 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
         googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(com.google.android.gms.maps.model.Marker marker) {
-                DetailsActivity.displayDetails(Integer.valueOf(marker.getTitle()), averages, MapsActivity.this);
+                try {
+                    DetailsActivity.displayDetails(Integer.valueOf(marker.getTitle()), averages, MapsActivity.this);
+                } catch (NumberFormatException nfe) {
+                    return true;
+                }
                 return true;
             }
         });
@@ -488,7 +492,6 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                                     });
                             break;
                     }
-
                 }
             }
         });
@@ -540,10 +543,9 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
     @Override
     public void startActivity(Intent intent) {
         // Check if search intent
-        if (intent.getAction().equals(Intent.ACTION_SEARCH)) {
+        if (!intent.hasExtra(AverageParcel.ARG_AVERAGE)) {
             intent.putExtra(AverageParcel.ARG_AVERAGE, new AverageParcel(averages));
         }
-
         super.startActivity(intent);
     }
 

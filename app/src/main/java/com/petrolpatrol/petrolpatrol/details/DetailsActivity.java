@@ -76,7 +76,7 @@ public class DetailsActivity extends BaseActivity {
 
         // assign the adapter
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getBaseContext());
-        adapter = new DetailsAdapter(getBaseContext());
+        adapter = new DetailsAdapter(averages, getBaseContext());
         containerDetailsListView.setLayoutManager(layoutManager);
         containerDetailsListView.setAdapter(adapter);
 
@@ -90,17 +90,18 @@ public class DetailsActivity extends BaseActivity {
                 // Without clearing, it looks like nothing is happening
                 adapter.clear();
                 retrievePrices();
-                swipeContainer.setRefreshing(false);
             }
         });
     }
 
     private void retrievePrices() {
+        swipeContainer.setRefreshing(true);
         FuelCheckClient client = new FuelCheckClient(getBaseContext());
         client.getFuelPricesForStation(station.getId(), new FuelCheckClient.FuelCheckResponse<List<Price>>() {
             @Override
             public void onCompletion(List<Price> res) {
                 adapter.updatePrices(res);
+                swipeContainer.setRefreshing(false);
             }
         });
     }

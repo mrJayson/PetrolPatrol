@@ -12,18 +12,29 @@ public class Gradient {
     private final Colour midColour;
     private final Colour highColour;
 
-    private final double meanPrice;
+    private double meanPrice;
+    private boolean meanPriceInitialised;
 
-    public Gradient(Context context, double meanPrice) {
+    public Gradient(Context context) {
 
         this.lowColour = new Colour(Integer.toHexString(ContextCompat.getColor(context, R.color.sushi)).substring(2));
         this.midColour = new Colour(Integer.toHexString(ContextCompat.getColor(context, R.color.school_bus_yellow)).substring(2));
         this.highColour = new Colour(Integer.toHexString(ContextCompat.getColor(context, R.color.cinnabar)).substring(2));
 
+        this.meanPriceInitialised = false;
+    }
+
+    public void setMeanPrice(double meanPrice) {
         this.meanPrice = meanPrice;
+        this.meanPriceInitialised = true;
     }
 
     public Colour gradiateColour(double price) {
+
+        if (!this.meanPriceInitialised) {
+            // not initialised yet, cannot gradiate without a reference price
+            throw new IllegalStateException("Mean price has not been set yet.");
+        }
         int intPrice = (int) price;
         int intMeanPrice = (int) meanPrice;
 

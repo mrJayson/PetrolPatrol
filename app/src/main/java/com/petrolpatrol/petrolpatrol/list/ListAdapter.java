@@ -9,11 +9,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
+import com.petrolpatrol.petrolpatrol.model.Average;
 import com.petrolpatrol.petrolpatrol.model.Station;
+import com.petrolpatrol.petrolpatrol.util.Colour;
+import com.petrolpatrol.petrolpatrol.util.Gradient;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGI;
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
@@ -23,34 +27,36 @@ class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
     private static final String TAG = makeLogTag(ListAdapter.class);
 
     static class ViewHolder extends RecyclerView.ViewHolder {
+        View colour;
         TextView price;
         TextView name;
         TextView address;
         TextView distance;
-        ImageView colourGradient;
 
         ViewHolder(View itemView) {
             super(itemView);
+            colour = itemView.findViewById(R.id.item_list_colour);
             price = (TextView) itemView.findViewById(R.id.item_list_price);
             name = (TextView) itemView.findViewById(R.id.item_list_name);
             address = (TextView) itemView.findViewById(R.id.item_list_address);
             distance = (TextView) itemView.findViewById(R.id.item_list_distance);
-            colourGradient = (ImageView) itemView.findViewById(R.id.item_list_colour_gradient);
         }
     }
 
     private List<Station> stations;
+    private Map<String, Average> averages;
     private Context context;
 
     private Listener listener;
 
+    private Gradient gradient;
 
-
-
-    ListAdapter(Context context, List<Station> stations, Listener listener) {
-        this.stations = stations;
+    ListAdapter(Context context, List<Station> stations, Map<String, Average> averages, Listener listener) {
         this.context = context;
+        this.stations = stations;
+        this.averages = averages;
         this.listener = listener;
+        this.gradient = new Gradient(context);
     }
 
     @Override
@@ -65,14 +71,18 @@ class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
 
         final Station station = stations.get(position);
 
+        gradient.setMeanPrice(averages.get(Preferences.getInstance(context).getString(Preferences.Key.SELECTED_FUELTYPE)).getPrice());
+
         if (station.getPrice(Preferences.getInstance(context).getString(Preferences.Key.SELECTED_FUELTYPE)) != null) {
             // leave blank if there isn't a price to be found, better than crashing
-            holder.price.setText(String.valueOf(station.getPrice(Preferences.getInstance(context).getString(Preferences.Key.SELECTED_FUELTYPE)).getPrice()));
+            double price = station.getPrice(Preferences.getInstance(context).getString(Preferences.Key.SELECTED_FUELTYPE)).getPrice();
+            holder.price.setText(String.valueOf(price));
+            Colour c = gradient.gradiateColour(price);
+            holder.colour.setBackgroundColor(c.integer);
         }
         holder.name.setText(station.getName());
         holder.address.setText(station.getAddress());
         holder.distance.setText(context.getString(R.string.item_list_distance, station.getDistance()));
-        //holder.colourGradient.setImageBitmap(generateBitMap(String.valueOf(station.getPrice(Preferences.getInstance(context).getString(Preferences.Key.SELECTED_FUELTYPE)).getPrice())));
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
