@@ -5,6 +5,8 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -61,9 +63,11 @@ public class HomeActivity extends BaseActivity {
 
     private ChartResolution chartResolution;
 
+    private RecyclerView containerFavouritesListView;
+    private FavouritesAdapter adapter;
 
     private MenuItem fuelTypeMenuItem;
-    private TextView average;
+    private TextView averageTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,9 +75,11 @@ public class HomeActivity extends BaseActivity {
 
         getLayoutInflater().inflate(R.layout.activity_home, content);
 
-        average = (TextView) findViewById(R.id.today_price);
+        averageTextView = (TextView) findViewById(R.id.today_price);
 
         chartContainer = (FrameLayout) findViewById(R.id.container_chart);
+
+        containerFavouritesListView = (RecyclerView) findViewById(R.id.container_list_favourites);
 
         averages = new HashMap<>();
         dataWeek = new ArrayList<>();
@@ -124,6 +130,15 @@ public class HomeActivity extends BaseActivity {
                 @Override
                 public void onCompletion(Map<String, Average> res) {
                     averages = res;
+                    // Display the current averageTextView
+                    updateAverage(Preferences.getInstance(getBaseContext()).getString(Preferences.Key.SELECTED_FUELTYPE));
+
+                    // assign the adapter
+                    RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getBaseContext());
+                    adapter = new FavouritesAdapter(averages, getBaseContext());
+                    adapter.setEmptyView(findViewById(R.id.empty_view_favourites));
+                    containerFavouritesListView.setLayoutManager(layoutManager);
+                    containerFavouritesListView.setAdapter(adapter);
                 }
             });
         }
@@ -174,6 +189,10 @@ public class HomeActivity extends BaseActivity {
             }
             updateVisibility(chartResolution);
         }
+
+        if (adapter != null) {
+            adapter.refresh();
+        }
     }
 
     @Override
@@ -188,6 +207,9 @@ public class HomeActivity extends BaseActivity {
                     int iconID = IDUtils.identify(Utils.fuelTypeToIconName(Preferences.getInstance(getBaseContext()).getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
                     fuelTypeMenuItem.setIcon(iconID);
                     retrieveTrendsData(Preferences.getInstance(getBaseContext()).getString(Preferences.Key.SELECTED_FUELTYPE));
+                    updateAverage(Preferences.getInstance(getBaseContext()).getString(Preferences.Key.SELECTED_FUELTYPE));
+                    adapter.refresh();
+
                 }
             });
         } catch (NoSuchFieldException e) {
@@ -232,11 +254,6 @@ public class HomeActivity extends BaseActivity {
                     chartYear = drawChart(dataYear, ChartResolution.YEAR, chartYear);
                 }
                 updateVisibility(chartResolution);
-
-                if (!averages.isEmpty()) {
-                    Average tp = averages.get(Preferences.getInstance(getBaseContext()).getString(Preferences.Key.SELECTED_FUELTYPE));
-                    average.setText(String.valueOf(tp.getPrice()));
-                }
             }
         });
     }
@@ -425,6 +442,17 @@ public class HomeActivity extends BaseActivity {
                 chartMonth.setVisibility(View.GONE);
                 chartYear.setVisibility(View.VISIBLE);
                 break;
+        }
+    }
+
+    /**
+     * Changes the average price that is displayed to the user based on the selected fueltype.
+     * @param selectedFuelType The new fueltype to display
+     */
+    private void updateAverage(String selectedFuelType) {
+        Average average = averages.get(selectedFuelType);
+        if (average != null) {
+            averageTextView.setText(String.valueOf(average.getPrice()));
         }
     }
 

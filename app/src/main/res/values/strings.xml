@@ -33,7 +33,13 @@
     <string name="fueltype_EV">EV</string>
     <string name="fueltype_H2">H2</string>
 
-    <string name="circle_content_description">heat circle</string>
+    <string name="title_home_average_price">Current Average Price</string>
+
+    <string name="title_home_price_history">Price History</string>
+
+    <string name="title_home_favourites">Favourites</string>
+
+    <string name="Message_home_no_favourites">You have no favourited any stations yet! Favourited stations will appear here</string>
 
     <!-- Maps Toolbar Menu Items -->
 
@@ -46,7 +52,6 @@
     <!-- Details Item Content -->
     <string name="item_details_lastupdated">Last Updated: %1$s</string>
     <string name="item_details_icon_brand_content_description">brand logo</string>
-    <string name="item_details_icon_circle_content_description">@string/circle_content_description</string>
 
     <!-- Navigation Drawer Menu Items -->
 

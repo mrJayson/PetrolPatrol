@@ -68,7 +68,7 @@ public class DetailsActivity extends BaseActivity {
         getLayoutInflater().inflate(R.layout.activity_details, content);
 
         swipeContainer = (SwipeRefreshLayout) findViewById(R.id.container_swipe_refresh);
-        containerDetailsListView = (RecyclerView) findViewById(R.id.container_list_list);
+        containerDetailsListView = (RecyclerView) findViewById(R.id.container_list_details);
         TextView name = (TextView) findViewById(R.id.details_name);
         name.setText(station.getName());
         TextView address = (TextView) findViewById(R.id.details_address);
