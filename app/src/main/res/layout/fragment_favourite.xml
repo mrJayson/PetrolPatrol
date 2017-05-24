@@ -1,0 +1,26 @@
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+    <android.support.v7.widget.RecyclerView
+            android:id="@+id/container_list_favourites"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="vertical"/>
+
+    <TextView
+            android:id="@+id/empty_view_favourites"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/vertical_margin"
+            android:paddingEnd="@dimen/vertical_margin"
+            android:paddingTop="@dimen/horizontal_margin"
+            android:paddingBottom="@dimen/horizontal_margin"
+            android:textColor="@color/colorPrimary"
+            android:textSize="@dimen/font_size_body_2"
+            android:textAlignment="center"
+            android:text="@string/Message_home_no_favourites"/>
+
+</LinearLayout>

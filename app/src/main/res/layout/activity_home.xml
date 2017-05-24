@@ -1,165 +1,40 @@
-<FrameLayout
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
         xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/main_content"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true">
 
-    <ScrollView
+    <android.support.design.widget.AppBarLayout
+            android:id="@+id/appbar"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-        <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:isScrollContainer="true">
-
-            <android.support.percent.PercentFrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="0dp"
-                        android:orientation="vertical"
-                        app:layout_widthPercent="100%"
-                        app:layout_aspectRatio="178%"
-                        android:background="@color/colorPrimary"
-                        android:paddingStart="@dimen/vertical_margin"
-                        android:paddingEnd="@dimen/vertical_margin"
-                        android:paddingTop="@dimen/horizontal_margin"
-                        android:paddingBottom="@dimen/horizontal_margin">
-
-                    <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textSize="@dimen/font_size_title"
-                            android:textColor="@color/white"
-                            android:text="@string/title_home_average_price"/>
-
-                    <TextView
-                            android:id="@+id/today_price"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:textSize="@dimen/font_size_display_1"
-                            android:textColor="@color/white"/>
-
-                </LinearLayout>
-
-            </android.support.percent.PercentFrameLayout>
-
-            <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    tools:context=".home.HomeActivity">
-
-                <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:orientation="vertical"
-                        android:paddingStart="@dimen/vertical_margin"
-                        android:paddingEnd="@dimen/vertical_margin"
-                        android:paddingTop="@dimen/horizontal_margin"
-                        android:paddingBottom="@dimen/horizontal_margin">
-
-                    <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textSize="@dimen/font_size_subheading"
-                            android:textColor="@color/colorPrimary"
-                            android:text="@string/title_home_price_history"/>
-
-                    <android.support.v7.widget.CardView
-                            xmlns:card_view="http://schemas.android.com/apk/res-auto"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:paddingTop="@dimen/horizontal_margin"
-                            card_view:cardCornerRadius="4dp">
-
-                        <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:orientation="vertical">
-
-                            <android.support.percent.PercentFrameLayout
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content">
-
-                                <FrameLayout
-                                        android:id="@+id/container_chart"
-                                        android:layout_width="0dp"
-                                        android:layout_height="0dp"
-                                        app:layout_widthPercent="100%"
-                                        app:layout_aspectRatio="133%">
-                                        <!-- ChartViews are inserted programmatically here -->
-                                </FrameLayout>
-
-                            </android.support.percent.PercentFrameLayout>
-
-                            <android.support.design.widget.TabLayout
-                                    android:id="@+id/tab_chart"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="@dimen/trend_tab_height">
-                                <!-- Tabs are inserted programmatically here -->
-                            </android.support.design.widget.TabLayout>
-
-                        </LinearLayout>
-
-                    </android.support.v7.widget.CardView>
-
-                    <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textSize="@dimen/font_size_subheading"
-                            android:textColor="@color/colorPrimary"
-                            android:text="@string/title_home_favourites"
-                            android:paddingTop="@dimen/vertical_margin"/>
-
-                    <android.support.v7.widget.CardView
-                            xmlns:card_view="http://schemas.android.com/apk/res-auto"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:paddingTop="@dimen/horizontal_margin"
-                            card_view:cardCornerRadius="4dp">
-
-                    <android.support.v7.widget.RecyclerView
-                            android:id="@+id/container_list_favourites"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:scrollbars="vertical"
-                            android:paddingTop="@dimen/horizontal_margin"/>
-
-                    <TextView
-                            android:id="@+id/empty_view_favourites"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:paddingStart="@dimen/vertical_margin"
-                            android:paddingEnd="@dimen/vertical_margin"
-                            android:paddingTop="@dimen/horizontal_margin"
-                            android:paddingBottom="@dimen/horizontal_margin"
-                            android:textColor="@color/colorPrimary"
-                            android:textSize="@dimen/font_size_body_2"
-                            android:textAlignment="center"
-                            android:text="@string/Message_home_no_favourites"/>
-
-                    </android.support.v7.widget.CardView>
-
-                </LinearLayout>
-
-            </FrameLayout>
-
-        </LinearLayout>
-
-    </ScrollView>
-
-    <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fab_gps"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            app:useCompatPadding="true"
-            android:layout_margin="@dimen/fab_margin"
-            android:src="@drawable/ic_my_location_black_24dp"/>
+            android:paddingTop="@dimen/appbar_padding_top"
+            android:theme="@style/AppTheme.AppBarOverlay">
 
-</FrameLayout>
+        <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="?attr/colorPrimary"
+                app:popupTheme="@style/AppTheme.PopupOverlay"
+                app:layout_scrollFlags="scroll|enterAlways">
+
+        </android.support.v7.widget.Toolbar>
+
+        <android.support.design.widget.TabLayout
+                android:id="@+id/tabs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <android.support.v4.view.ViewPager
+            android:id="@+id/container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+
+</android.support.design.widget.CoordinatorLayout>

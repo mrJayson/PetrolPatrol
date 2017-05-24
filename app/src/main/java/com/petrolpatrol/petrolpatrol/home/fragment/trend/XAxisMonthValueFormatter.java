@@ -1,4 +1,4 @@
-package com.petrolpatrol.petrolpatrol.home;
+package com.petrolpatrol.petrolpatrol.home.fragment.trend;
 
 import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.formatter.IAxisValueFormatter;

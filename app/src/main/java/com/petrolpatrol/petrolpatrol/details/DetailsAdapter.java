@@ -1,12 +1,11 @@
 package com.petrolpatrol.petrolpatrol.details;
 
 import android.content.Context;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
-import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
 import android.widget.TextView;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.model.Average;
@@ -15,7 +14,6 @@ import com.petrolpatrol.petrolpatrol.util.Colour;
 import com.petrolpatrol.petrolpatrol.util.Gradient;
 import com.petrolpatrol.petrolpatrol.util.TimeUtils;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -52,11 +50,11 @@ class DetailsAdapter extends RecyclerView.Adapter<DetailsAdapter.ViewHolder> {
 
     private Gradient gradient;
 
-    DetailsAdapter(Map<String, Average> averages, Context context) {
-        this(new ArrayList<Price>(), averages, context);
+    DetailsAdapter(Context context, Map<String, Average> averages) {
+        this(context, new ArrayList<Price>(), averages);
     }
 
-    DetailsAdapter(List<Price> prices, Map<String, Average> averages, Context context) {
+    DetailsAdapter(Context context, List<Price> prices, Map<String, Average> averages) {
         this.prices = prices;
         this.context = context;
         this.averages = averages;
@@ -75,10 +73,19 @@ class DetailsAdapter extends RecyclerView.Adapter<DetailsAdapter.ViewHolder> {
 
         Price price = prices.get(position);
 
-        gradient.setMeanPrice(averages.get(price.getFuelType().getCode()).getPrice());
+//        gradient.setMeanPrice(averages.get(price.getFuelType().getCode()).getPrice());
+//
+//        Colour c = gradient.gradiateColour(price.getPrice());
+//        holder.colour.setBackgroundColor(c.integer);
 
-        Colour c = gradient.gradiateColour(price.getPrice());
-        holder.colour.setBackgroundColor(c.integer);
+        // If the averages are not available, then set the default colour
+        if (averages != null && averages.get(price.getFuelType().getCode()) != null) {
+            gradient.setMeanPrice(averages.get(price.getFuelType().getCode()).getPrice());
+            Colour c = gradient.gradiateColour(price.getPrice());
+            holder.colour.setBackgroundColor(c.integer);
+        } else {
+            holder.colour.setBackgroundColor(ContextCompat.getColor(context, R.color.gray));
+        }
 
         holder.price.setText(String.valueOf(price.getPrice()));
         holder.fuelTypeShort.setText(price.getFuelType().getCode());

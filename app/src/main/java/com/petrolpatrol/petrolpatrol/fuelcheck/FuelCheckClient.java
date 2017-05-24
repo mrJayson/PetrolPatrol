@@ -13,7 +13,7 @@ import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.datastore.SQLiteClient;
 import com.petrolpatrol.petrolpatrol.model.Average;
 import com.petrolpatrol.petrolpatrol.model.*;
-import com.petrolpatrol.petrolpatrol.home.Trend;
+import com.petrolpatrol.petrolpatrol.model.Trend;
 import com.petrolpatrol.petrolpatrol.util.IDUtils;
 import com.petrolpatrol.petrolpatrol.util.TimeUtils;
 import org.json.JSONArray;

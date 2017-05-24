@@ -1,4 +1,4 @@
-package com.petrolpatrol.petrolpatrol.home;
+package com.petrolpatrol.petrolpatrol.model;
 
 public class Trend {
     private String period;

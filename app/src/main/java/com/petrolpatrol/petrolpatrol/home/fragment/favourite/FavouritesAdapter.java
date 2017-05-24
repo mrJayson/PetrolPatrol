@@ -1,6 +1,7 @@
-package com.petrolpatrol.petrolpatrol.home;
+package com.petrolpatrol.petrolpatrol.home.fragment.favourite;
 
 import android.content.Context;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -47,12 +48,20 @@ class FavouritesAdapter extends RecyclerView.Adapter<FavouritesAdapter.ViewHolde
     private List<Integer> favourites;
     private View emptyView;
 
-    FavouritesAdapter(Map<String, Average> averages, Context context) {
+    private Listener listener;
+
+    FavouritesAdapter(Context context, View emptyView, Listener listener) {
+        this(context, null, emptyView, listener);
+    }
+
+    FavouritesAdapter(Context context, Map<String, Average> averages, View emptyView, Listener listener) {
         this.context = context;
         this.averages = averages;
         this.gradient = new Gradient(context);
         this.favourites = new ArrayList<>();
         this.favourites = Preferences.getInstance(context).getFavourites();
+        this.emptyView = emptyView;
+        this.listener = listener;
     }
 
     @Override
@@ -79,20 +88,33 @@ class FavouritesAdapter extends RecyclerView.Adapter<FavouritesAdapter.ViewHolde
                     station.setPrice(p);
                 }
                 String selectedFuelType = Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE);
-                if (averages.get(selectedFuelType) != null) {
+
+                // If the averages are not available, then set the default colour
+                if (averages != null && averages.get(selectedFuelType) != null) {
                     gradient.setMeanPrice(averages.get(selectedFuelType).getPrice());
                     Colour c = gradient.gradiateColour(station.getPrice(selectedFuelType).getPrice());
                     holder.colour.setBackgroundColor(c.integer);
-
-                    holder.price.setText(String.valueOf(station.getPrice(selectedFuelType).getPrice()));
-                    holder.name.setText(station.getName());
-                    holder.address.setText(station.getAddress());
+                } else {
+                    holder.colour.setBackgroundColor(ContextCompat.getColor(context, R.color.gray));
                 }
+
+                holder.price.setText(String.valueOf(station.getPrice(selectedFuelType).getPrice()));
+                holder.name.setText(station.getName());
+                holder.address.setText(station.getAddress());
+
+                holder.itemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if(listener != null) {
+                            listener.displayDetails(station.getId());
+                        }
+                    }
+                });
             }
         });
     }
 
-    public void refresh() {
+    void refresh() {
         List<Integer> refreshedList = Preferences.getInstance(context).getFavourites();
         if (favourites.size() != refreshedList.size() || !favourites.containsAll(refreshedList) || !refreshedList.containsAll(favourites)) {
             favourites = refreshedList;
@@ -100,22 +122,28 @@ class FavouritesAdapter extends RecyclerView.Adapter<FavouritesAdapter.ViewHolde
             updateEmptyView();
         }
         notifyDataSetChanged();
+        updateEmptyView();
+
     }
 
-    public void setEmptyView(View view) {
-        emptyView = view;
+    void updateAverages(Map<String, Average> averages) {
+        this.averages = averages;
+        refresh();
     }
 
     private void updateEmptyView() {
-        if (emptyView != null && favourites != null) {
-            boolean showEmptyView = getItemCount() == 0;
+        if (favourites != null) {
+            boolean showEmptyView = (getItemCount() == 0);
             emptyView.setVisibility(showEmptyView ? VISIBLE : GONE);
-
         }
     }
 
     @Override
     public int getItemCount() {
         return favourites.size();
+    }
+
+    interface Listener {
+        void displayDetails(int stationID);
     }
 }

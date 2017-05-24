@@ -6,7 +6,7 @@ import com.petrolpatrol.petrolpatrol.R;
 
 public class Gradient {
 
-    private static int gradientRange = 20;
+    private static int gradientRange = 15;
 
     private final Colour lowColour;
     private final Colour midColour;

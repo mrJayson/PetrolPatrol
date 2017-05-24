@@ -17,14 +17,12 @@ import android.view.MenuItem;
 import android.widget.FrameLayout;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.map.MapsActivity;
-import com.petrolpatrol.petrolpatrol.home.HomeActivity;
-import com.petrolpatrol.petrolpatrol.model.AverageParcel;
 
 import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
 public class BaseActivity extends AppCompatActivity {
 
-    private static final String TAG = makeLogTag(HomeActivity.class);
+    private static final String TAG = makeLogTag(BaseActivity.class);
 
     private DrawerLayout drawer;
     private Toolbar toolbar;

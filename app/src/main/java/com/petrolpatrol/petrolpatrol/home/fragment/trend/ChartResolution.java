@@ -1,4 +1,4 @@
-package com.petrolpatrol.petrolpatrol.home;
+package com.petrolpatrol.petrolpatrol.home.fragment.trend;
 
 enum ChartResolution {
 

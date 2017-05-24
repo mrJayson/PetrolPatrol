@@ -76,7 +76,7 @@ public class DetailsActivity extends BaseActivity {
 
         // assign the adapter
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getBaseContext());
-        adapter = new DetailsAdapter(averages, getBaseContext());
+        adapter = new DetailsAdapter(getBaseContext(), averages);
         containerDetailsListView.setLayoutManager(layoutManager);
         containerDetailsListView.setAdapter(adapter);
 
@@ -119,7 +119,7 @@ public class DetailsActivity extends BaseActivity {
         Preferences pref = Preferences.getInstance(getBaseContext());
         List<Integer> favourites = pref.getFavourites();
         if (favourites.contains(station.getId())) {
-            favouritesMenuItem.setIcon(R.drawable.ic_favorite_enabled_24dp);
+            favouritesMenuItem.setIcon(R.drawable.ic_favorite_white_24dp);
         }
         return super.onPrepareOptionsMenu(menu);
     }
@@ -133,10 +133,10 @@ public class DetailsActivity extends BaseActivity {
                     boolean toggled = toggleFavourites(station.getId());
                     if (toggled) {
                         // set into enabled state
-                        item.setIcon(R.drawable.ic_favorite_enabled_24dp);
+                        item.setIcon(R.drawable.ic_favorite_white_24dp);
                     } else {
                         // set into un-enabled state
-                        item.setIcon(R.drawable.ic_favorite_unenabled_24dp);
+                        item.setIcon(R.drawable.ic_favorite_border_white_24dp);
                     }
                 }
                 return true;
@@ -168,7 +168,9 @@ public class DetailsActivity extends BaseActivity {
             bundle = new Bundle();
         }
         bundle.putInt(DetailsActivity.ARG_STATION_ID, stationID);
-        bundle.putParcelable(AverageParcel.ARG_AVERAGE, new AverageParcel(averages));
+        if (averages != null) {
+            bundle.putParcelable(AverageParcel.ARG_AVERAGE, new AverageParcel(averages));
+        }
         intent.putExtras(bundle);
         sourceActivity.startActivity(intent);
     }

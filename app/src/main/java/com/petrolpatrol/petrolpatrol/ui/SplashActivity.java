@@ -24,7 +24,11 @@ public class SplashActivity extends AppCompatActivity {
         Preferences.getInstance(getApplicationContext()); // Initialize sharedPreferences singleton
         Preferences.getInstance(getApplicationContext()).initialize(); // Populate entries in Preferences if necessary
         VolleyQueue.getInstance(getApplicationContext()); // Initialize volley singleton
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
         // Perform a reference data check upon start up
         new FuelCheckClient(getApplicationContext()).getReferenceData(new FuelCheckClient.FuelCheckResponse<Object>() {
             @Override
@@ -35,7 +39,5 @@ public class SplashActivity extends AppCompatActivity {
                 finish(); // End this activity, don't want the splash screen to linger in the background
             }
         });
-
-
     }
 }

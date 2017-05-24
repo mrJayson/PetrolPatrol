@@ -39,7 +39,9 @@
 
     <string name="title_home_favourites">Favourites</string>
 
-    <string name="Message_home_no_favourites">You have no favourited any stations yet! Favourited stations will appear here</string>
+    <string name="Message_home_no_favourites">You have no favourited any stations yet! Favourited stations will appear
+        here
+    </string>
 
     <!-- Maps Toolbar Menu Items -->
 
@@ -70,5 +72,9 @@
 
     <!-- Toast Messages -->
     <string name="location_permission_denied">Permission denied, location features not enabled</string>
+    <string name="title_activity_home1">Home1Activity</string>
+    <string name="action_settings">Settings</string>
+    <string name="section_format">Hello World from section: %1$d</string>
+
 
 </resources>
