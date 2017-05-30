@@ -12,7 +12,7 @@ import android.widget.TextView;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.datastore.SQLiteClient;
-import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
+import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheck;
 import com.petrolpatrol.petrolpatrol.model.Average;
 import com.petrolpatrol.petrolpatrol.model.AverageParcel;
 import com.petrolpatrol.petrolpatrol.model.Price;
@@ -96,8 +96,8 @@ public class DetailsActivity extends BaseActivity {
 
     private void retrievePrices() {
         swipeContainer.setRefreshing(true);
-        FuelCheckClient client = new FuelCheckClient(getBaseContext());
-        client.getFuelPricesForStation(station.getId(), new FuelCheckClient.FuelCheckResponse<List<Price>>() {
+        FuelCheck client = new FuelCheck(getBaseContext());
+        client.getFuelPricesForStation(station.getId(), new FuelCheck.OnResponseListener<List<Price>>() {
             @Override
             public void onCompletion(List<Price> res) {
                 adapter.updatePrices(res);

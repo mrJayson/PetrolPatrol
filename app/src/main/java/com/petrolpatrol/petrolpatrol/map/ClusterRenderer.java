@@ -14,7 +14,6 @@ import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.google.maps.android.ui.IconGenerator;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
-import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
 import com.petrolpatrol.petrolpatrol.model.Average;
 import com.petrolpatrol.petrolpatrol.util.Colour;
 import com.petrolpatrol.petrolpatrol.util.Gradient;

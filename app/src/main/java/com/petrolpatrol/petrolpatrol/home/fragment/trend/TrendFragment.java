@@ -26,7 +26,7 @@ import com.github.mikephil.charting.listener.ChartTouchListener;
 import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
-import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
+import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheck;
 import com.petrolpatrol.petrolpatrol.map.MapsActivity;
 import com.petrolpatrol.petrolpatrol.model.Average;
 import com.petrolpatrol.petrolpatrol.model.AverageParcel;
@@ -100,7 +100,6 @@ public class TrendFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
 
-        LOGE(TAG, "onCreate");
         super.onCreate(savedInstanceState);
 
         dataWeek = new ArrayList<>();
@@ -196,75 +195,30 @@ public class TrendFragment extends Fragment {
             }
             updateVisibility(chartResolution);
         }
+    }
 
-        // Handle savedInstanceState
-        if (savedInstanceState != null) {
-
-            // set remembered chart resolution
-            chartResolution = ChartResolution.valueOf(savedInstanceState.getString(ARG_RESOLUTION));
-            updateVisibility(chartResolution);
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        if (averages != null) {
+            outState.putParcelable(AverageParcel.ARG_AVERAGE, new AverageParcel(averages));
         }
+        super.onSaveInstanceState(outState);
     }
 
     @Override
     public void onStart() {
-        LOGE(TAG, "onStart");
         super.onStart();
         // Check if there has been a change in the menu context
         refresh();
     }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        LOGE(TAG, "onResume");
-    }
-
-    @Override
-    public void onPause() {
-        LOGE(TAG, "onPause");
-        super.onPause();
-    }
-
-    @Override
-    public void onStop() {
-        LOGE(TAG, "onStop");
-        super.onStop();
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-        LOGE(TAG, "fragment create options");
-    }
-
 
     public void refresh() {
         retrieveTrendsData(Preferences.getInstance(getContext()).getString(Preferences.Key.SELECTED_FUELTYPE));
         displayAverage(Preferences.getInstance(getContext()).getString(Preferences.Key.SELECTED_FUELTYPE));
     }
 
-    /**
-     * This hook is called whenever an item in your options menu is selected.
-     * The default implementation simply returns false to have the normal
-     * processing happen (calling the item's Runnable or sending a message to
-     * its Handler as appropriate).  You can use this method for any items
-     * for which you would like to do processing without those other
-     * facilities.
-     * <p>
-     * <p>Derived classes should call through to the base class for it to
-     * perform the default menu handling.
-     *
-     * @param item The menu item that was selected.
-     * @return boolean Return false to allow normal menu processing to
-     * proceed, true to consume it here.
-     * @see #onCreateOptionsMenu
-     */
     @Override
     public boolean onOptionsItemSelected(final MenuItem item) {
-
-        LOGE(TAG, "trends selected");
-
         int id = item.getItemId();
         try {
             Utils.fuelTypeSwitch(id, new Utils.Callback() {
@@ -273,18 +227,6 @@ public class TrendFragment extends Fragment {
                     item.setChecked(true);
                     Preferences.getInstance(getContext()).put(Preferences.Key.SELECTED_FUELTYPE, String.valueOf(item.getTitle()));
                     int iconID = IDUtils.identify(Utils.fuelTypeToIconName(Preferences.getInstance(getContext()).getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getContext());
-                    //fuelTypeMenuItem.setIcon(iconID);
-                    //item.
-
-//                    TrendFragment tf = (TrendFragment) pagerAdapter.getItem(0);
-//                    FavouriteFragment ff = (FavouriteFragment) pagerAdapter.getItem(1);
-//
-//                    pagerAdapter.getTrendFragment()
-//
-//                    tf.retrieveTrendsData(Preferences.getInstance(getBaseContext()).getString(Preferences.Key.SELECTED_FUELTYPE));
-//                    tf.updateAverage(Preferences.getInstance(getBaseContext()).getString(Preferences.Key.SELECTED_FUELTYPE));
-//                    ((FavouritesAdapter)ff.getAdapter()).refresh();
-
                 }
             });
             return false;
@@ -299,8 +241,8 @@ public class TrendFragment extends Fragment {
      *                 this parameter selects which fuel type trend data to retrieve.
      */
     public void retrieveTrendsData(final String fuelType) {
-        FuelCheckClient client = new FuelCheckClient(getContext());
-        client.getTrend(fuelType, new FuelCheckClient.FuelCheckResponse<List<Trend>>() {
+        FuelCheck client = new FuelCheck(getContext());
+        client.getTrend(fuelType, new FuelCheck.OnResponseListener<List<Trend>>() {
             @Override
             public void onCompletion(List<Trend> res) {
                 dataWeek.clear();

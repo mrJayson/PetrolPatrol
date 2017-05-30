@@ -10,7 +10,7 @@ import android.widget.TextView;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.datastore.SQLiteClient;
-import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
+import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheck;
 import com.petrolpatrol.petrolpatrol.model.Average;
 import com.petrolpatrol.petrolpatrol.model.Price;
 import com.petrolpatrol.petrolpatrol.model.Station;
@@ -34,7 +34,6 @@ class FavouritesAdapter extends RecyclerView.Adapter<FavouritesAdapter.ViewHolde
         TextView address;
         ViewHolder(View itemView) {
             super(itemView);
-
             colour = itemView.findViewById(R.id.item_favourites_colour);
             price = (TextView) itemView.findViewById(R.id.item_favourites_price);
             name = (TextView) itemView.findViewById(R.id.item_favourites_name);
@@ -80,8 +79,8 @@ class FavouritesAdapter extends RecyclerView.Adapter<FavouritesAdapter.ViewHolde
         station = client.getStation(favourites.get(position));
         client.close();
 
-        FuelCheckClient fuelClient = new FuelCheckClient(context);
-        fuelClient.getFuelPricesForStation(station.getId(), new FuelCheckClient.FuelCheckResponse<List<Price>>() {
+        FuelCheck fuelClient = new FuelCheck(context);
+        fuelClient.getFuelPricesForStation(station.getId(), new FuelCheck.OnResponseListener<List<Price>>() {
             @Override
             public void onCompletion(List<Price> res) {
                 for (Price p : res) {
@@ -90,7 +89,7 @@ class FavouritesAdapter extends RecyclerView.Adapter<FavouritesAdapter.ViewHolde
                 String selectedFuelType = Preferences.getInstance().getString(Preferences.Key.SELECTED_FUELTYPE);
 
                 // If the averages are not available, then set the default colour
-                if (averages != null && averages.get(selectedFuelType) != null) {
+                if (averages != null && averages.get(selectedFuelType) != null && station.getPrice(selectedFuelType) != null) {
                     gradient.setMeanPrice(averages.get(selectedFuelType).getPrice());
                     Colour c = gradient.gradiateColour(station.getPrice(selectedFuelType).getPrice());
                     holder.colour.setBackgroundColor(c.integer);
@@ -98,7 +97,11 @@ class FavouritesAdapter extends RecyclerView.Adapter<FavouritesAdapter.ViewHolde
                     holder.colour.setBackgroundColor(ContextCompat.getColor(context, R.color.gray));
                 }
 
-                holder.price.setText(String.valueOf(station.getPrice(selectedFuelType).getPrice()));
+                if (station.getPrice(selectedFuelType) == null) {
+                    holder.price.setText(context.getString(R.string.not_applicable));
+                } else {
+                    holder.price.setText(String.valueOf(station.getPrice(selectedFuelType).getPrice()));
+                }
                 holder.name.setText(station.getName());
                 holder.address.setText(station.getAddress());
 
@@ -115,15 +118,8 @@ class FavouritesAdapter extends RecyclerView.Adapter<FavouritesAdapter.ViewHolde
     }
 
     void refresh() {
-        List<Integer> refreshedList = Preferences.getInstance(context).getFavourites();
-        if (favourites.size() != refreshedList.size() || !favourites.containsAll(refreshedList) || !refreshedList.containsAll(favourites)) {
-            favourites = refreshedList;
-            notifyDataSetChanged();
-            updateEmptyView();
-        }
         notifyDataSetChanged();
         updateEmptyView();
-
     }
 
     void updateAverages(Map<String, Average> averages) {
@@ -136,6 +132,10 @@ class FavouritesAdapter extends RecyclerView.Adapter<FavouritesAdapter.ViewHolde
             boolean showEmptyView = (getItemCount() == 0);
             emptyView.setVisibility(showEmptyView ? VISIBLE : GONE);
         }
+    }
+
+    private void recursiveFetch() {
+
     }
 
     @Override

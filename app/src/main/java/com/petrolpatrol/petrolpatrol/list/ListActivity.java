@@ -2,6 +2,7 @@ package com.petrolpatrol.petrolpatrol.list;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
@@ -9,7 +10,7 @@ import android.view.MenuItem;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.details.DetailsActivity;
-import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
+import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheck;
 import com.petrolpatrol.petrolpatrol.model.Average;
 import com.petrolpatrol.petrolpatrol.model.AverageParcel;
 import com.petrolpatrol.petrolpatrol.model.Station;
@@ -18,12 +19,17 @@ import com.petrolpatrol.petrolpatrol.util.Constants;
 import com.petrolpatrol.petrolpatrol.util.IDUtils;
 import com.petrolpatrol.petrolpatrol.util.Utils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import static com.petrolpatrol.petrolpatrol.util.Constants.*;
+import static com.petrolpatrol.petrolpatrol.util.LogUtils.LOGE;
+import static com.petrolpatrol.petrolpatrol.util.LogUtils.makeLogTag;
 
-public class ListActivity extends BaseActivity implements ListAdapter.Listener{
+public class ListActivity extends BaseActivity implements ListAdapter.Listener {
+
+    private static final String TAG = makeLogTag(ListActivity.class);
 
     // Keys for bundles and intents
     public static final String ARG_STATIONS = "ARG_STATIONS";
@@ -137,6 +143,10 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
                 Preferences.getInstance(getBaseContext()).put(Preferences.Key.SELECTED_SORTBY, String.valueOf(item.getTitle()));
                 adapter.sort(String.valueOf(item.getTitle()));
                 return true;
+            case R.id.map:
+                finish();
+                LOGE(TAG, "finished");
+                return true;
             default:
                 try {
                     return Utils.fuelTypeSwitch(id, new Utils.Callback() {
@@ -147,7 +157,7 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
                             int iconID = IDUtils.identify(Utils.fuelTypeToIconName(Preferences.getInstance(getBaseContext()).getString(Preferences.Key.SELECTED_FUELTYPE)), "drawable", getBaseContext());
                             fuelTypeMenuItem.setIcon(iconID);
 
-                            FuelCheckClient client = new FuelCheckClient(getBaseContext());
+                            FuelCheck client = new FuelCheck(getBaseContext());
                             final Preferences pref = Preferences.getInstance(getBaseContext());
                             switch (action) {
                                 case ACTION_GPS:
@@ -158,7 +168,7 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
                                             (int) Utils.zoomToRadius(zoom),
                                             pref.getString(Preferences.Key.SELECTED_SORTBY),
                                             pref.getString(Preferences.Key.SELECTED_FUELTYPE),
-                                            new FuelCheckClient.FuelCheckResponse<List<Station>>() {
+                                            new FuelCheck.OnResponseListener<List<Station>>() {
                                                 @Override
                                                 public void onCompletion(List<Station> res) {
                                                     adapter.updateStations(res);
@@ -172,7 +182,7 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
                                             query,
                                             pref.getString(Preferences.Key.SELECTED_SORTBY),
                                             pref.getString(Preferences.Key.SELECTED_FUELTYPE),
-                                            new FuelCheckClient.FuelCheckResponse<List<Station>>() {
+                                            new FuelCheck.OnResponseListener<List<Station>>() {
                                                 @Override
                                                 public void onCompletion(List<Station> res) {
                                                     adapter.updateStations(res);
@@ -186,6 +196,13 @@ public class ListActivity extends BaseActivity implements ListAdapter.Listener{
                     return super.onOptionsItemSelected(item);
                 }
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putParcelableArrayList(ARG_STATIONS, (ArrayList<? extends Parcelable>) stationList);
+        outState.putParcelable(AverageParcel.ARG_AVERAGE, new AverageParcel(averages));
+        super.onSaveInstanceState(outState);
     }
 
     @Override

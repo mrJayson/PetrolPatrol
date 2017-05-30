@@ -3,7 +3,7 @@ package com.petrolpatrol.petrolpatrol.fuelcheck;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class FuelCheckResult {
+public class Response {
 
     private boolean success;
     private String message;

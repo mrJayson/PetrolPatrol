@@ -18,7 +18,7 @@ import com.google.maps.android.clustering.ClusterManager;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
 import com.petrolpatrol.petrolpatrol.details.DetailsActivity;
-import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheckClient;
+import com.petrolpatrol.petrolpatrol.fuelcheck.FuelCheck;
 import com.petrolpatrol.petrolpatrol.fuelcheck.RequestTag;
 import com.petrolpatrol.petrolpatrol.list.ListActivity;
 import com.petrolpatrol.petrolpatrol.model.Average;
@@ -187,7 +187,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                             // all markers need to be refreshed, but stations do not have to be wiped
                             // markers will be updated with the new fueltype
 
-                            FuelCheckClient client = new FuelCheckClient(getBaseContext());
+                            FuelCheck client = new FuelCheck(getBaseContext());
                             switch (action) {
                                 case Constants.ACTION_GPS:
                                     if (googleMap != null && googleMap.getCameraPosition() != null)
@@ -197,7 +197,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                                             (int) Utils.zoomToRadius(googleMap.getCameraPosition().zoom),
                                             pref.getString(Preferences.Key.SELECTED_SORTBY),
                                             pref.getString(Preferences.Key.SELECTED_FUELTYPE),
-                                            new FuelCheckClient.FuelCheckResponse<List<Station>>() {
+                                            new FuelCheck.OnResponseListener<List<Station>>() {
                                                 @Override
                                                 public void onCompletion(List<Station> res) {
                                                     markerSet.clear();
@@ -215,7 +215,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                                                 mostRecentQuery,
                                                 pref.getString(Preferences.Key.SELECTED_SORTBY),
                                                 pref.getString(Preferences.Key.SELECTED_FUELTYPE),
-                                                new FuelCheckClient.FuelCheckResponse<List<Station>>() {
+                                                new FuelCheck.OnResponseListener<List<Station>>() {
                                                     @Override
                                                     public void onCompletion(List<Station> res) {
                                                         markerSet.clear();
@@ -254,7 +254,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
         final double longitude = location.getLongitude();
 
         // Get fuel data with current location
-        FuelCheckClient client = new FuelCheckClient(getBaseContext());
+        FuelCheck client = new FuelCheck(getBaseContext());
         final Preferences pref = Preferences.getInstance(getBaseContext());
         // Map view uses only price sorted list
         client.getFuelPricesWithinRadius(
@@ -263,7 +263,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                 pref.getString(Preferences.Key.SELECTED_SORTBY),
                 pref.getString(Preferences.Key.SELECTED_FUELTYPE),
                 new RequestTag(RequestTag.GET_FUELPRICES_WITHIN_RADIUS),
-                new FuelCheckClient.FuelCheckResponse<List<Station>>() {
+                new FuelCheck.OnResponseListener<List<Station>>() {
                     @Override
                     public void onCompletion(List<Station> res) {
                         updateMarkersAndMoveCamera(res, getIntent().getAction());
@@ -304,12 +304,12 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                 // Store query for later use in refreshing the page
                 mostRecentQuery = query;
 
-                FuelCheckClient client = new FuelCheckClient(getBaseContext());
+                FuelCheck client = new FuelCheck(getBaseContext());
                 client.getFuelPricesForLocation(
                         query,
                         pref.getString(Preferences.Key.SELECTED_SORTBY),
                         pref.getString(Preferences.Key.SELECTED_FUELTYPE),
-                        new FuelCheckClient.FuelCheckResponse<List<Station>>() {
+                        new FuelCheck.OnResponseListener<List<Station>>() {
                             @Override
                             public void onCompletion(List<Station> res) {
                                 updateMarkersAndMoveCamera(res, intent.getAction());
@@ -455,7 +455,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                     cancelMarkerUpdate = false;
                 }
                 else {
-                    FuelCheckClient client = new FuelCheckClient(getBaseContext());
+                    FuelCheck client = new FuelCheck(getBaseContext());
                     Preferences pref = Preferences.getInstance(getBaseContext());
                     switch (action) {
                         case Constants.ACTION_GPS:
@@ -470,7 +470,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                                     pref.getString(Preferences.Key.SELECTED_SORTBY),
                                     pref.getString(Preferences.Key.SELECTED_FUELTYPE),
                                     new RequestTag(RequestTag.GET_FUELPRICES_WITHIN_RADIUS),
-                                    new FuelCheckClient.FuelCheckResponse<List<Station>>() {
+                                    new FuelCheck.OnResponseListener<List<Station>>() {
                                         @Override
                                         public void onCompletion(List<Station> res) {
                                             updateMarkers(res, false);
@@ -483,7 +483,7 @@ public class MapsActivity extends BaseActivity implements OnMapReadyCallback, Ne
                                     mostRecentQuery,
                                     pref.getString(Preferences.Key.SELECTED_SORTBY),
                                     pref.getString(Preferences.Key.SELECTED_FUELTYPE),
-                                    new FuelCheckClient.FuelCheckResponse<List<Station>>() {
+                                    new FuelCheck.OnResponseListener<List<Station>>() {
                                         @Override
                                         public void onCompletion(List<Station> res) {
                                             updateMarkers(res, false);

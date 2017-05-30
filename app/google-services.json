@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "540581962843",
+    "firebase_url": "https://petrol-patrol.firebaseio.com",
+    "project_id": "petrol-patrol",
+    "storage_bucket": "petrol-patrol.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:540581962843:android:731bfe4c95f88915",
+        "android_client_info": {
+          "package_name": "com.petrolpatrol.petrolpatrol"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "540581962843-bqr2a70n3obgos2fht40gajlvsqo2j8f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAFIz-4Rh2ejX2WMB4XD3Y-g8DT95MekWI"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -4,18 +4,10 @@
         xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-            android:id="@id/fueltype"
-            android:title="@string/menu_fueltype"
-            app:showAsAction="ifRoom">
-
-        <menu><!-- include: submenu_fueltypes.xml --></menu>
-    </item>
-
-    <item
             android:id="@id/sort"
             android:title="@string/menu_sort"
             android:icon="@drawable/ic_sort_white_24dp"
-            app:showAsAction="ifRoom">
+            app:showAsAction="always">
         <menu>
             <group android:checkableBehavior="single">
                 <item
@@ -32,5 +24,21 @@
                 </item>
             </group>
         </menu>
+    </item>
+
+    <item
+            android:id="@id/fueltype"
+            android:title="@string/menu_fueltype"
+            app:showAsAction="always">
+
+        <menu><!-- include: submenu_fueltypes.xml --></menu>
+    </item>
+
+    <item
+            android:id="@+id/map"
+            android:title=""
+            android:icon="@drawable/ic_map_white_24dp"
+            app:showAsAction="always">
+
     </item>
 </menu>

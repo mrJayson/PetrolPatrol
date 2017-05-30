@@ -78,9 +78,7 @@ public class FavouriteFragment extends Fragment implements FavouritesAdapter.Lis
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_favourite, container, false);
-
         containerFavouritesListView = (RecyclerView) view.findViewById(R.id.container_list_favourites);
-
         return view;
     }
 
@@ -103,35 +101,17 @@ public class FavouriteFragment extends Fragment implements FavouritesAdapter.Lis
     @Override
     public void onStart() {
         super.onStart();
-        LOGE(TAG, "onStart");
         if (adapter != null) {
             adapter.refresh();
         }
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        LOGE(TAG, "onResume");
-    }
-
-    @Override
-    public void onPause() {
-        LOGE(TAG, "onPause");
-        super.onPause();
-    }
-
-    @Override
-    public void onStop() {
-        LOGE(TAG, "onStop");
-
-        super.onStop();
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        LOGE(TAG, "favourites selected");
-        return false;
+    public void onSaveInstanceState(Bundle outState) {
+        if (averages != null) {
+            outState.putParcelable(AverageParcel.ARG_AVERAGE, new AverageParcel(averages));
+        }
+        super.onSaveInstanceState(outState);
     }
 
     public void refresh() {
