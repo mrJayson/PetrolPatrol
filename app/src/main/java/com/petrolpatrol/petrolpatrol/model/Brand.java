@@ -1,5 +1,6 @@
 package com.petrolpatrol.petrolpatrol.model;
 
+import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -25,6 +26,11 @@ public class Brand implements Parcelable {
 
     public String getName() {
         return name;
+    }
+
+    public String getImageName() {
+        // need to convert image name into one that adheres to drawable naming conventions
+        return "logo_" + name.replaceAll("[ -]", "_").toLowerCase();
     }
 
     protected Brand(Parcel in) {

@@ -30,10 +30,10 @@
                     android:layout_toStartOf="@+id/details_brand"/>
             <ImageView
                     android:id="@id/details_brand"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
                     android:layout_alignParentEnd="true"
-                    android:src="@mipmap/ic_launcher"
+                    android:src="@drawable/logo_independent"
                     android:contentDescription="@string/item_details_icon_brand_content_description"/>
         </RelativeLayout>
 

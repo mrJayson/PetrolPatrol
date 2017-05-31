@@ -8,6 +8,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ImageView;
 import android.widget.TextView;
 import com.petrolpatrol.petrolpatrol.R;
 import com.petrolpatrol.petrolpatrol.datastore.Preferences;
@@ -73,6 +74,15 @@ public class DetailsActivity extends BaseActivity {
         name.setText(station.getName());
         TextView address = (TextView) findViewById(R.id.details_address);
         address.setText(station.getAddress());
+        ImageView icon = (ImageView) findViewById(R.id.details_brand);
+        int res = getBaseContext().getResources().getIdentifier(station.getBrand().getImageName(), "drawable", getBaseContext().getPackageName());
+        if (res == 0) {
+            // no icon can be found, use Independent as default
+            icon.setImageResource(R.drawable.logo_independent);
+        } else {
+            icon.setImageResource(res);
+        }
+        LOGE(TAG, String.valueOf(res));
 
         // assign the adapter
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getBaseContext());
