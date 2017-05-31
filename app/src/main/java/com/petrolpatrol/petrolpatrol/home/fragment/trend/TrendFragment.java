@@ -10,6 +10,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.view.*;
 
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 import com.github.mikephil.charting.charts.LineChart;
@@ -159,8 +160,8 @@ public class TrendFragment extends Fragment {
         });
 
         // Initialise floating action button
-        FloatingActionButton locateFab = (FloatingActionButton) view.findViewById(R.id.fab_gps);
-        locateFab.setOnClickListener(new View.OnClickListener() {
+        Button buttonLocate = (Button) view.findViewById(R.id.button_locate);
+        buttonLocate.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View view) {
