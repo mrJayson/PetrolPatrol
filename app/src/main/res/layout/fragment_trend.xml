@@ -48,7 +48,7 @@
                     android:id="@+id/button_locate"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="find cheapest fuel nearby"
+                    android:text="@string/locate_button_text"
                     android:textColor="@color/colorPrimary"
                     android:background="@drawable/button_pill"/>
 

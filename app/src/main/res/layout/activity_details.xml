@@ -34,7 +34,9 @@
                     android:layout_height="60dp"
                     android:layout_alignParentEnd="true"
                     android:src="@drawable/logo_independent"
-                    android:contentDescription="@string/item_details_icon_brand_content_description"/>
+                    android:contentDescription="@string/item_details_icon_brand_content_description"
+                    android:layout_marginStart="@dimen/vertical_margin"
+            />
         </RelativeLayout>
 
     <View style="@style/Divider"/>
